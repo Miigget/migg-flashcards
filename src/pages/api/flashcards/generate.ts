@@ -7,7 +7,7 @@ import type { AIGenerateFlashcardsCommand } from "../../../types";
 const generateFlashcardsSchema = z.object({
   text: z
     .string()
-    .min(1, { message: "Text cannot be empty" })
+    .min(100, { message: "Text cannot be less than 100 characters" })
     .max(10000, { message: "Text cannot exceed 10,000 characters" }),
 });
 
