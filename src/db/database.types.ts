@@ -103,7 +103,7 @@ export interface Database {
           accepted_unedited_count: number | null;
           created_at: string;
           generated_count: number;
-          generation_duration: unknown;
+          generation_duration: number;
           generation_id: number;
           model: string;
           source_text_hash: string;
@@ -115,7 +115,7 @@ export interface Database {
           accepted_unedited_count?: number | null;
           created_at?: string;
           generated_count: number;
-          generation_duration: unknown;
+          generation_duration: number;
           generation_id?: number;
           model: string;
           source_text_hash: string;
@@ -127,7 +127,7 @@ export interface Database {
           accepted_unedited_count?: number | null;
           created_at?: string;
           generated_count?: number;
-          generation_duration?: unknown;
+          generation_duration?: number;
           generation_id?: number;
           model?: string;
           source_text_hash?: string;
