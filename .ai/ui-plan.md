@@ -136,11 +136,11 @@ Aplikacja implementuje trzy kluczowe przepływy użytkownika:
   - Autosave dla zapobiegania utracie danych
 
 ### 2.8. Generowanie fiszek przez AI
-- **Ścieżka**: `/create/ai`
+- **Ścieżka**: `/generate`
 - **Główny cel**: Generowanie fiszek przy pomocy AI na podstawie wprowadzonego tekstu
 - **Kluczowe informacje**: 
   - Trzyetapowy proces:
-    1. Wprowadzanie tekstu źródłowego (max 10000 znaków)
+    1. Wprowadzanie tekstu źródłowego (od 100 do 10000 znaków)
     2. Proces generowania (wskaźnik postępu)
     3. Przeglądanie wygenerowanych kandydatów (Accept/Edit/Discard)
   - Bulk zapis zaakceptowanych fiszek
@@ -208,8 +208,8 @@ Aplikacja implementuje trzy kluczowe przepływy użytkownika:
 
 ### 3.2. Generowanie fiszek przez AI
 1. Użytkownik klika "Create" w nawigacji głównej i wybiera "AI Generation"
-2. Na stronie `/create/ai`:
-   - Wkleja tekst źródłowy (do 10000 znaków)
+2. Na stronie `/generate`:
+   - Wkleja tekst źródłowy (od 100 do 10000 znaków)
    - Wybiera kolekcję docelową
    - Klika przycisk "Generate Flashcards"
 3. Podczas generowania widzi wskaźnik postępu
@@ -240,7 +240,7 @@ Aplikacja implementuje trzy kluczowe przepływy użytkownika:
 - **Collections** - przekierowanie do listy kolekcji (`/collections`)
 - **Create** - menu rozwijane:
   - **Manual** - przekierowanie do ręcznego tworzenia (`/create`)
-  - **AI Generation** - przekierowanie do generowania przez AI (`/create/ai`)
+  - **AI Generation** - przekierowanie do generowania przez AI (`/generate`)
 - **Study** - przekierowanie do wyboru kolekcji do nauki (`/collections`) z aktywnym filtrem "study mode"
 - **Settings** - przekierowanie do ustawień konta (`/settings`)
 
