@@ -86,7 +86,7 @@ Manualne tworzenie wysokiej jakości fiszek edukacyjnych jest czasochłonne i sk
   - Zmiany są zapisywane i widoczne po edycji.
 
 ### US-008: Walidacja wprowadzanego tekstu
-- Opis: Jako użytkownik chcę otrzymać informację, gdy wklejony tekst przekracza limit 10000 znaków, aby system mógł odpowiednio obsłużyć błędy.
+- Opis: Jako użytkownik chcę otrzymać informację, gdy wklejony tekst nie spełnia kryterium od 100 do 10000 znaków, aby system mógł odpowiednio obsłużyć błędy.
 - Kryteria akceptacji:
   - System weryfikuje długość wprowadzanego tekstu.
   - Po przekroczeniu limitu wyświetlany jest wyraźny komunikat o błędzie.

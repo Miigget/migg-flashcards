@@ -56,7 +56,7 @@
 ### 2.2 AI Flashcards Generation
 
 - **POST /api/flashcards/generate**
-  - Description: Generate flashcard candidates by submitting input text (up to 10,000 characters) to the AI service.
+  - Description: Generate flashcard candidates by submitting input text (from 100 to 10,000 characters) to the AI service.
   - Request Payload:
     ```json
     {
