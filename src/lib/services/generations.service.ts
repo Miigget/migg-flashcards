@@ -44,3 +44,37 @@ export async function getGenerationsForUser(
     total: count || 0,
   };
 }
+
+/**
+ * Retrieves a generation by its ID and user ID for authorization
+ *
+ * @param supabase Supabase client instance
+ * @param generation_id ID of the generation to retrieve
+ * @param user_id User ID for authorization check
+ * @returns The generation or null if not found
+ */
+export async function getGenerationById(
+  supabase: SupabaseClientType,
+  generation_id: number,
+  user_id: string
+): Promise<{ generation: GenerationDTO | null; error: Error | null }> {
+  try {
+    const { data, error } = await supabase
+      .from("generations")
+      .select("*")
+      .eq("generation_id", generation_id)
+      .eq("user_id", user_id)
+      .single();
+
+    if (error) {
+      return { generation: null, error: new Error(error.message) };
+    }
+
+    return { generation: data, error: null };
+  } catch (error) {
+    return {
+      generation: null,
+      error: error instanceof Error ? error : new Error("Unknown error occurred"),
+    };
+  }
+}
