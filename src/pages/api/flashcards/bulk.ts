@@ -1,36 +1,59 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
+import { FlashcardServiceError } from "../../../lib/services/flashcard.service";
+import { FlashcardsBulkService } from "../../../lib/services/flashcards-bulk.service";
+import { DEFAULT_USER_ID } from "../../../db/supabase.client";
 import type { BulkCreateFlashcardsCommand } from "../../../types";
 
-// Schema dla walidacji pojedynczej fiszki
-const flashcardSchema = z.object({
+// Validation schema for a single flashcard candidate
+const flashcardCandidateSchema = z.object({
   front: z
     .string()
-    .min(1, { message: "Front side cannot be empty" })
-    .max(200, { message: "Front side cannot exceed 200 characters" }),
+    .min(1, { message: "Front text cannot be empty" })
+    .max(200, { message: "Front text cannot exceed 200 characters" }),
   back: z
     .string()
-    .min(1, { message: "Back side cannot be empty" })
-    .max(500, { message: "Back side cannot exceed 500 characters" }),
-  collection: z.string().min(1, { message: "Collection name is required" }),
-  source: z.enum(["ai-full", "ai-edited"]),
+    .min(1, { message: "Back text cannot be empty" })
+    .max(500, { message: "Back text cannot exceed 500 characters" }),
+  collection: z.string().min(1, { message: "Collection name cannot be empty" }),
+  source: z.enum(["ai-full", "ai-edited"], {
+    message: "Source must be 'ai-full' or 'ai-edited' for bulk creation",
+  }),
+  generation_id: z.string().min(1, { message: "Generation ID is required for AI-generated flashcards" }),
 });
 
-// Schema dla walidacji zbiorczych fiszek
-const bulkFlashcardsSchema = z
-  .array(flashcardSchema)
-  .min(1, { message: "At least one flashcard is required" })
-  .max(100, { message: "Cannot save more than 100 flashcards at once" });
+// Validation schema for the bulk creation command
+const bulkCreateFlashcardsSchema = z
+  .array(flashcardCandidateSchema)
+  .min(1, {
+    message: "At least one flashcard must be provided",
+  })
+  .max(100, {
+    message: "Maximum 100 flashcards can be created in a single request",
+  });
 
 export const prerender = false;
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, locals }) => {
   try {
-    // Parsowanie ciała żądania
+    // Get supabase client from locals
+    const supabase = locals.supabase;
+    if (!supabase) {
+      return new Response(
+        JSON.stringify({
+          error: "Internal Server Error",
+          message: "Database client is not available",
+          status: 500,
+        }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    // Extract request body
     const body = (await request.json()) as BulkCreateFlashcardsCommand;
 
-    // Walidacja danych wejściowych
-    const validation = bulkFlashcardsSchema.safeParse(body);
+    // Validate input data
+    const validation = bulkCreateFlashcardsSchema.safeParse(body);
 
     if (!validation.success) {
       return new Response(
@@ -43,35 +66,38 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    // Symulacja zapisywania wielu fiszek
-    const savedFlashcards = validation.data.map((flashcard, index) => ({
-      id: `flashcard-${Date.now()}-${index}`,
-      ...flashcard,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }));
+    // Create flashcards using the bulk service
+    const flashcardsBulkService = new FlashcardsBulkService(supabase);
+    const validatedData = validation.data;
 
-    // Symulacja opóźnienia odpowiedzi API
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    // Use DEFAULT_USER_ID for development instead of requiring authentication
+    const result = await flashcardsBulkService.bulkCreateFlashcards(validatedData, DEFAULT_USER_ID);
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        saved_count: savedFlashcards.length,
-        flashcards: savedFlashcards,
-      }),
-      {
-        status: 201,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
+    // Return response
+    return new Response(JSON.stringify(result), {
+      status: 201,
+      headers: { "Content-Type": "application/json" },
+    });
   } catch (error) {
-    console.error("Error saving flashcards:", error);
+    console.error("Error creating flashcards in bulk:", error);
 
+    // Handle service-specific errors
+    if (error instanceof FlashcardServiceError) {
+      return new Response(
+        JSON.stringify({
+          error: error.code,
+          message: error.message,
+          status: error.statusCode,
+        }),
+        { status: error.statusCode, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    // Handle unexpected errors
     return new Response(
       JSON.stringify({
         error: "Internal Server Error",
-        message: "An error occurred while saving flashcards",
+        message: "An error occurred while creating flashcards in bulk",
         status: 500,
       }),
       { status: 500, headers: { "Content-Type": "application/json" } }
