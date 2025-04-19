@@ -13,7 +13,7 @@ const flashcardSchema = z.object({
     .min(1, { message: "Back side cannot be empty" })
     .max(500, { message: "Back side cannot exceed 500 characters" }),
   collection: z.string().min(1, { message: "Collection name is required" }),
-  source: z.literal("manual"),
+  source: z.enum(["ai-full", "ai-edited"]),
 });
 
 // Schema dla walidacji zbiorczych fiszek
