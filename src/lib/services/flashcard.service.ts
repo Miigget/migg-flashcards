@@ -1,4 +1,4 @@
-import type { CreateFlashcardCommand, FlashcardDTO } from "../../types";
+import type { CreateFlashcardCommand, FlashcardDTO, UpdateFlashcardCommand } from "../../types";
 import type { SupabaseClientType } from "../../db/supabase.client";
 
 /**
@@ -205,6 +205,102 @@ export class FlashcardService {
       console.error("Unexpected error in getFlashcardById:", error);
       throw new FlashcardServiceError(
         "An unexpected error occurred while fetching the flashcard",
+        "UNKNOWN_ERROR",
+        500,
+        error
+      );
+    }
+  }
+
+  /**
+   * Updates an existing flashcard
+   * @param flashcardId ID of the flashcard to update
+   * @param command Data for updating the flashcard
+   * @param userId Current user ID
+   * @returns The updated flashcard
+   * @throws FlashcardServiceError if flashcard not found or other errors occur
+   */
+  async updateFlashcard(flashcardId: number, command: UpdateFlashcardCommand, userId: string): Promise<FlashcardDTO> {
+    // Input validation
+    if (!userId) {
+      throw new FlashcardServiceError("User ID is required", "VALIDATION_ERROR", 400);
+    }
+
+    if (!flashcardId || flashcardId <= 0) {
+      throw new FlashcardServiceError("Valid flashcard ID is required", "VALIDATION_ERROR", 400);
+    }
+
+    // Ensure there's at least one field to update
+    if (Object.keys(command).length === 0) {
+      throw new FlashcardServiceError("At least one field must be provided for update", "VALIDATION_ERROR", 400);
+    }
+
+    try {
+      // First check if the flashcard exists and belongs to the user
+      const { data: existingFlashcard, error: checkError } = await this.supabase
+        .from("flashcards")
+        .select("flashcard_id")
+        .eq("flashcard_id", flashcardId)
+        .eq("user_id", userId)
+        .single();
+
+      if (checkError) {
+        if (checkError.code === "PGRST116") {
+          throw new FlashcardServiceError(
+            "The flashcard was not found or you don't have permission to update it",
+            "NOT_FOUND",
+            404,
+            checkError
+          );
+        }
+        throw new FlashcardServiceError(`Database error: ${checkError.message}`, "DATABASE_ERROR", 500, checkError);
+      }
+
+      if (!existingFlashcard) {
+        throw new FlashcardServiceError("Flashcard not found", "NOT_FOUND", 404);
+      }
+
+      // Perform the update
+      const { data, error } = await this.supabase
+        .from("flashcards")
+        .update({
+          ...(command.front !== undefined && { front: command.front }),
+          ...(command.back !== undefined && { back: command.back }),
+          ...(command.collection !== undefined && { collection: command.collection }),
+        })
+        .eq("flashcard_id", flashcardId)
+        .eq("user_id", userId)
+        .select()
+        .single();
+
+      // Handle database errors
+      if (error) {
+        console.error("Error updating flashcard:", error);
+
+        if (error.code === "42P01") {
+          throw new FlashcardServiceError("Table 'flashcards' does not exist", "DATABASE_ERROR", 500, error);
+        } else if (error.code?.startsWith("23")) {
+          throw new FlashcardServiceError(`Constraint violation: ${error.message}`, "DATABASE_ERROR", 500, error);
+        } else {
+          throw new FlashcardServiceError(`Database error: ${error.message}`, "DATABASE_ERROR", 500, error);
+        }
+      }
+
+      if (!data) {
+        throw new FlashcardServiceError("Failed to update flashcard", "DATABASE_ERROR", 500);
+      }
+
+      return data;
+    } catch (error) {
+      // Rethrow FlashcardServiceError instances
+      if (error instanceof FlashcardServiceError) {
+        throw error;
+      }
+
+      // Handle unexpected errors
+      console.error("Unexpected error in updateFlashcard:", error);
+      throw new FlashcardServiceError(
+        "An unexpected error occurred while updating the flashcard",
         "UNKNOWN_ERROR",
         500,
         error
