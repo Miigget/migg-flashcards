@@ -139,6 +139,78 @@ export class FlashcardService {
       );
     }
   }
+
+  /**
+   * Retrieves a single flashcard by ID
+   * @param flashcardId ID of the flashcard to retrieve
+   * @param userId Current user ID
+   * @returns The requested flashcard
+   * @throws FlashcardServiceError if flashcard not found or other errors occur
+   */
+  async getFlashcardById(flashcardId: number, userId: string): Promise<FlashcardDTO> {
+    // Input validation
+    if (!userId) {
+      throw new FlashcardServiceError("User ID is required", "VALIDATION_ERROR", 400);
+    }
+
+    if (!flashcardId || flashcardId <= 0) {
+      throw new FlashcardServiceError("Valid flashcard ID is required", "VALIDATION_ERROR", 400);
+    }
+
+    try {
+      // Query the database for the specific flashcard
+      const { data, error } = await this.supabase
+        .from("flashcards")
+        .select("*")
+        .eq("flashcard_id", flashcardId)
+        .eq("user_id", userId)
+        .single();
+
+      // Handle database errors
+      if (error) {
+        console.error("Error fetching flashcard by ID:", error);
+
+        // Handle not found specifically
+        if (error.code === "PGRST116") {
+          throw new FlashcardServiceError(
+            "The requested flashcard was not found or you don't have access to it",
+            "NOT_FOUND",
+            404,
+            error
+          );
+        }
+
+        // Handle other database-specific errors
+        if (error.code === "42P01") {
+          throw new FlashcardServiceError("Table 'flashcards' does not exist", "DATABASE_ERROR", 500, error);
+        } else if (error.code?.startsWith("23")) {
+          throw new FlashcardServiceError(`Constraint violation: ${error.message}`, "DATABASE_ERROR", 500, error);
+        } else {
+          throw new FlashcardServiceError(`Database error: ${error.message}`, "DATABASE_ERROR", 500, error);
+        }
+      }
+
+      if (!data) {
+        throw new FlashcardServiceError("Flashcard not found", "NOT_FOUND", 404);
+      }
+
+      return data;
+    } catch (error) {
+      // Rethrow FlashcardServiceError instances
+      if (error instanceof FlashcardServiceError) {
+        throw error;
+      }
+
+      // Handle unexpected errors
+      console.error("Unexpected error in getFlashcardById:", error);
+      throw new FlashcardServiceError(
+        "An unexpected error occurred while fetching the flashcard",
+        "UNKNOWN_ERROR",
+        500,
+        error
+      );
+    }
+  }
 }
 
 // Not exporting an instance as we'll use supabase from context.locals
