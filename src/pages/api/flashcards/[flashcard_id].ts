@@ -232,3 +232,94 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
     );
   }
 };
+
+export const DELETE: APIRoute = async ({ params, locals }) => {
+  try {
+    // Extract flashcard_id from params
+    const { flashcard_id } = params;
+
+    // Validate flashcard_id
+    const validationResult = flashcardIdSchema.safeParse(flashcard_id);
+
+    if (!validationResult.success) {
+      return new Response(
+        JSON.stringify({
+          error: "Bad Request",
+          message: "Invalid flashcard ID format. It must be a positive integer.",
+          status: 400,
+        }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    // Get validated flashcard_id
+    const validatedFlashcardId = validationResult.data;
+
+    // Get supabase client from context
+    const supabase = locals.supabase;
+    if (!supabase) {
+      return new Response(
+        JSON.stringify({
+          error: "Internal Server Error",
+          message: "Database client is not available",
+          status: 500,
+        }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    // Create flashcard service and delete the flashcard
+    const flashcardService = new FlashcardService(supabase);
+
+    try {
+      await flashcardService.deleteFlashcard(
+        validatedFlashcardId,
+        DEFAULT_USER_ID // Using default user ID for development
+      );
+
+      // Return success response
+      return new Response(
+        JSON.stringify({
+          message: "Flashcard deleted successfully",
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      );
+    } catch (serviceError) {
+      console.error("Error in flashcard service:", serviceError);
+
+      // Handle specific service errors with appropriate status codes
+      if (serviceError instanceof FlashcardServiceError) {
+        return new Response(
+          JSON.stringify({
+            error: serviceError.code,
+            message: serviceError.message,
+            status: serviceError.statusCode,
+          }),
+          { status: serviceError.statusCode, headers: { "Content-Type": "application/json" } }
+        );
+      }
+
+      // Handle other errors
+      return new Response(
+        JSON.stringify({
+          error: "Service Error",
+          message: serviceError instanceof Error ? serviceError.message : "An error occurred in the flashcard service",
+          status: 500,
+        }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
+    }
+  } catch (error) {
+    console.error("Unexpected error in DELETE /api/flashcards/[flashcard_id]:", error);
+
+    // Handle unexpected errors
+    return new Response(
+      JSON.stringify({
+        error: "Internal Server Error",
+        message: "An unexpected error occurred while processing your request",
+        status: 500,
+      }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+};

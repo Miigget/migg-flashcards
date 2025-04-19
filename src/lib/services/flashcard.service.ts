@@ -307,6 +307,84 @@ export class FlashcardService {
       );
     }
   }
+
+  /**
+   * Deletes a flashcard by ID
+   * @param flashcardId ID of the flashcard to delete
+   * @param userId Current user ID
+   * @returns void
+   * @throws FlashcardServiceError if flashcard not found or other errors occur
+   */
+  async deleteFlashcard(flashcardId: number, userId: string): Promise<void> {
+    // Input validation
+    if (!userId) {
+      throw new FlashcardServiceError("User ID is required", "VALIDATION_ERROR", 400);
+    }
+
+    if (!flashcardId || flashcardId <= 0) {
+      throw new FlashcardServiceError("Valid flashcard ID is required", "VALIDATION_ERROR", 400);
+    }
+
+    try {
+      // First check if the flashcard exists and belongs to the user
+      const { data: existingFlashcard, error: checkError } = await this.supabase
+        .from("flashcards")
+        .select("flashcard_id")
+        .eq("flashcard_id", flashcardId)
+        .eq("user_id", userId)
+        .single();
+
+      if (checkError) {
+        if (checkError.code === "PGRST116") {
+          throw new FlashcardServiceError(
+            "The flashcard was not found or you don't have permission to delete it",
+            "NOT_FOUND",
+            404,
+            checkError
+          );
+        }
+        throw new FlashcardServiceError(`Database error: ${checkError.message}`, "DATABASE_ERROR", 500, checkError);
+      }
+
+      if (!existingFlashcard) {
+        throw new FlashcardServiceError("Flashcard not found", "NOT_FOUND", 404);
+      }
+
+      // Perform the delete operation
+      const { error } = await this.supabase
+        .from("flashcards")
+        .delete()
+        .eq("flashcard_id", flashcardId)
+        .eq("user_id", userId);
+
+      // Handle database errors
+      if (error) {
+        console.error("Error deleting flashcard:", error);
+
+        if (error.code === "42P01") {
+          throw new FlashcardServiceError("Table 'flashcards' does not exist", "DATABASE_ERROR", 500, error);
+        } else if (error.code?.startsWith("23")) {
+          throw new FlashcardServiceError(`Constraint violation: ${error.message}`, "DATABASE_ERROR", 500, error);
+        } else {
+          throw new FlashcardServiceError(`Database error: ${error.message}`, "DATABASE_ERROR", 500, error);
+        }
+      }
+    } catch (error) {
+      // Rethrow FlashcardServiceError instances
+      if (error instanceof FlashcardServiceError) {
+        throw error;
+      }
+
+      // Handle unexpected errors
+      console.error("Unexpected error in deleteFlashcard:", error);
+      throw new FlashcardServiceError(
+        "An unexpected error occurred while deleting the flashcard",
+        "UNKNOWN_ERROR",
+        500,
+        error
+      );
+    }
+  }
 }
 
 // Not exporting an instance as we'll use supabase from context.locals
