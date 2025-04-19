@@ -2,7 +2,7 @@ import type { APIRoute } from "astro";
 import { z } from "zod";
 import type { UpdateCollectionCommand } from "../../../types";
 import { DEFAULT_USER_ID } from "../../../db/supabase.client";
-import { renameCollection } from "../../../lib/services/collections";
+import { renameCollection, deleteCollection } from "../../../lib/services/collections";
 
 export const prerender = false;
 
@@ -10,6 +10,9 @@ export const prerender = false;
 const updateCollectionSchema = z.object({
   new_name: z.string().min(1).max(30),
 });
+
+// Schema validation for collection name parameter
+const collectionNameSchema = z.string().min(1).max(30);
 
 export const PUT: APIRoute = async ({ params, request, locals }) => {
   try {
@@ -111,6 +114,76 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
     }
   } catch (error) {
     console.error("Error updating collection:", error);
+
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+};
+
+export const DELETE: APIRoute = async ({ params, locals }) => {
+  try {
+    // 1. Extract collection_name from URL parameters
+    const { collection_name } = params;
+
+    if (!collection_name) {
+      return new Response(JSON.stringify({ error: "Collection name is required" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    // 2. Validate collection_name parameter
+    const validationResult = collectionNameSchema.safeParse(collection_name);
+    if (!validationResult.success) {
+      return new Response(
+        JSON.stringify({
+          error: "Invalid collection name",
+          details: validationResult.error.format(),
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // 3. Get supabase instance from context.locals
+    const supabase = locals.supabase;
+
+    // Get user ID from authentication
+    const userId = DEFAULT_USER_ID; // TODO: Replace with actual authenticated user ID
+
+    // 4. Delete the collection using the service function
+    const { count, collectionExists } = await deleteCollection(supabase, userId, collection_name);
+
+    if (!collectionExists) {
+      return new Response(
+        JSON.stringify({
+          error: "Collection not found",
+          message: `No flashcards found in collection '${collection_name}'`,
+        }),
+        {
+          status: 404,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // 5. Return success response with count of deleted items
+    return new Response(
+      JSON.stringify({
+        message: `Collection '${collection_name}' deleted successfully.`,
+        deletedCount: count,
+      }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  } catch (error) {
+    console.error("Error deleting collection:", error);
 
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,

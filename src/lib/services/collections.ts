@@ -173,3 +173,46 @@ export async function renameCollection(
     throw error;
   }
 }
+
+/**
+ * Deletes a collection by removing all flashcards with the specified collection name
+ * @param supabase The Supabase client instance
+ * @param userId The user ID to delete collections for
+ * @param collectionName The name of the collection to delete
+ * @returns Object containing the count of deleted flashcards and collectionExists flag
+ */
+export async function deleteCollection(
+  supabase: SupabaseClientType,
+  userId: string,
+  collectionName: string
+): Promise<{ count: number; collectionExists: boolean }> {
+  try {
+    // First, check if the collection exists
+    const collectionExists = await checkCollectionExists(supabase, userId, collectionName);
+
+    if (!collectionExists) {
+      console.log(`Collection "${collectionName}" does not exist for user ${userId}`);
+      return { count: 0, collectionExists: false };
+    }
+
+    // Count flashcards before deletion to determine actual count
+    const flashcardsCount = await getFlashcardsInCollectionCount(supabase, userId, collectionName);
+    console.log(`Found ${flashcardsCount} flashcards in collection "${collectionName}" before deletion`);
+
+    // Delete all flashcards in the collection
+    const { error } = await supabase.from("flashcards").delete().eq("user_id", userId).eq("collection", collectionName);
+
+    if (error) {
+      console.error("Database error:", error);
+      throw error;
+    }
+
+    // Log successful operation
+    console.log(`Collection "${collectionName}" deleted for user ${userId}. ${flashcardsCount} flashcards deleted.`);
+
+    return { count: flashcardsCount, collectionExists: true };
+  } catch (error) {
+    console.error("Error deleting collection:", error);
+    throw error;
+  }
+}
