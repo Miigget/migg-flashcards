@@ -1,7 +1,7 @@
 # API Endpoint Implementation Plan: POST /api/flashcards/generate
 
 ## 1. Przegląd punktu końcowego
-Endpoint `/api/flashcards/generate` umożliwia generowanie kandydatów na fiszki przy użyciu sztucznej inteligencji na podstawie dostarczonego tekstu. Użytkownicy mogą przesłać tekst źródłowy (do 10 000 znaków), który zostanie przetworzony przez serwis AI w celu utworzenia zestawu fiszek do nauki. Wygenerowane kandydaty na fiszki są zwracane użytkownikowi wraz z identyfikatorem sesji generowania (`generation_id`) oraz liczbą wygenerowanych fiszek (`generated_count`).
+Endpoint `/api/flashcards/generate` umożliwia generowanie kandydatów na fiszki przy użyciu sztucznej inteligencji na podstawie dostarczonego tekstu. Użytkownicy mogą przesłać tekst źródłowy (od 100 do 10 000 znaków), który zostanie przetworzony przez serwis AI w celu utworzenia zestawu fiszek do nauki. Wygenerowane kandydaty na fiszki są zwracane użytkownikowi wraz z identyfikatorem sesji generowania (`generation_id`) oraz liczbą wygenerowanych fiszek (`generated_count`).
 
 ## 2. Szczegóły żądania
 - **Metoda HTTP**: POST
@@ -37,7 +37,7 @@ import { z } from 'zod';
 // Schema walidacji
 const generateFlashcardsSchema = z.object({
   text: z.string()
-    .min(1, { message: "Tekst nie może być pusty" })
+    .min(100, { message: "Tekst nie może być krótszy niż 100" })
     .max(10000, { message: "Tekst nie może przekraczać 10 000 znaków" })
 });
 ```

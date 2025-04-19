@@ -85,35 +85,27 @@
   - Query Parameters: Optional filters and pagination.
   - Response: List of error logs, including error codes and messages.
 
-### 2.5 Collections (Logical Grouping)
+### 2.5 Collections (Logical Grouping and Management)
+
+Note: In the database, there is no dedicated table for collections; a collection is represented as a value of the `collection` field in the `flashcards` table. A collection is automatically created when a flashcard is created and disappears when the last flashcard in that collection is deleted. Additionally, users can sort flashcards by the `collection` field.
 
 - **GET /api/collections**
-  - Description: Retrieve a list of distinct collection names for the authenticated user.
-  - Response: Array of collection names.
-
-- **POST /api/collections**
-  - Description: Create a new collection.
-  - Request Payload:
-    ```json
-    {
-      "name": "New Collection Name"
-    }
-    ```
-  - Response: Confirmation and details of the created collection.
+  - Description: Retrieves a list of unique collection names associated with the user's flashcards. This endpoint allows users to browse available collections, facilitating filtering and sorting of flashcards by collection.
+  - Response: An array of collection names (e.g., a JSON array containing unique strings).
 
 - **PUT /api/collections/{collection_name}**
-  - Description: Rename an existing collection.
+  - Description: Renames an existing collection. It updates all flashcards that have the `collection` field equal to `{collection_name}` with the new name provided in the request. Validation must ensure that the new name is not empty.
   - Request Payload:
     ```json
     {
       "new_name": "Updated Collection Name"
     }
     ```
-  - Response: Confirmation and updated collection details.
+  - Response: A confirmation of the operation along with details of the changes, such as the number of flashcards whose collection name was updated.
 
 - **DELETE /api/collections/{collection_name}**
-  - Description: Delete a collection. Business rules should clarify if associated flashcards are deleted or set as unassigned.
-  - Response: Confirmation message.
+  - Description: Removes a collection by deleting all flashcards associated with the specified collection. According to the assumptions, if a flashcard is the only one in a collection, its deletion results in the collection being removed.
+  - Response: A confirmation message indicating that the collection has been deleted, along with the number of deleted flashcards.
 
 ## 3. Authentication and Authorization
 
