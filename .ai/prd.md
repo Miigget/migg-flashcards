@@ -11,9 +11,8 @@ Manualne tworzenie wysokiej jakości fiszek edukacyjnych jest czasochłonne i sk
 - Proces generowania jest synchroniczny, a kandydaci na fiszki podlegają recenzji przez użytkownika (opcje: Accept, Edit, Discard).
 - Funkcjonalność bulk zapisu zatwierdzonych fiszek do bazy danych.
 - Możliwość ręcznego tworzenia fiszek.
-- Tworzenie fiszek odbywa się w uprzednio stworzonym zestawie/kolekcji (każda fiszka musi przynależeć do przynajmniej jednej kolekcji)
 - System rejestracji i logowania użytkowników.
-- Zarządzanie kolekcjami fiszek (tworzenie, przeglądanie, edycja, usuwanie).
+- Zarządzanie kolekcjami fiszek (przeglądanie, edycja, usuwanie).
 - W sekcji Settings użytkownik może edytować hasło oraz usunąć konto.
 - Struktura fiszek:
   - Przód: do 200 znaków, z opcjonalnymi odpowiedziami.
@@ -61,9 +60,8 @@ Manualne tworzenie wysokiej jakości fiszek edukacyjnych jest czasochłonne i sk
   - Zatwierdzone fiszki są poprawnie zapisywane w bazie danych.
 
 ### US-005: Zarządzanie kolekcjami fiszek
-- Opis: Jako użytkownik chcę móc tworzyć, przeglądać, edytować i usuwać kolekcje fiszek, aby mieć porządek i łatwy dostęp do moich zestawów.
+- Opis: Jako użytkownik chcę móc przeglądać, edytować i usuwać kolekcje fiszek, aby mieć porządek i łatwy dostęp do moich zestawów.
 - Kryteria akceptacji:
-  - Użytkownik może utworzyć nową kolekcję(sekcja/przycisk New Collection).
   - Użytkownik może usunąć istniejącą kolekcję.
   - Użytkownik może przeglądać listę swoich kolekcji(sekcja/przycisk My Collections).
   - Użytkownik może dodawać, edytować i usuwać fiszki w obrębie danej kolekcji.
