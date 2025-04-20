@@ -200,7 +200,7 @@ Zalecane jest użycie customowego hooka React, np. `useGenerateFlashcards`, któ
        - `collection = selectedCollection` (z `GenerateFlashcardsViewModel`).
        - `generation_id` (z `GenerateFlashcardsViewModel`).
        - `source = (candidate.front !== candidate.originalFront || candidate.back !== candidate.originalBack) ? 'ai-edited' : 'ai-full'`.
-  - **Odpowiedź (Sukces):** `BulkCreateApiResponse` (`FlashcardDTO[]`) -> Wyświetl komunikat sukcesu (Toast), zresetuj stan widoku lub przekieruj użytkownika (np. do listy kolekcji).
+  - **Odpowiedź (Sukces):** `BulkCreateApiResponse` (`FlashcardDTO[]`) -> Wyświetl komunikat sukcesu (używając `Sonner`), zresetuj stan widoku lub przekieruj użytkownika (np. do listy kolekcji).
   - **Odpowiedź (Błąd):** Ustaw `saveApiError`.
 
 ## 8. Interakcje użytkownika
