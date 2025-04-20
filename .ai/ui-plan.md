@@ -2,293 +2,226 @@
 
 ## 1. Przegląd struktury UI
 
-Aplikacja Migg Flashcards zostanie zbudowana jako nowoczesna aplikacja webowa wykorzystująca Astro 5, React 19, TypeScript 5, Tailwind 4 i komponenty shadcn/ui. Architektura interfejsu użytkownika składa się z następujących kluczowych elementów:
+Struktura interfejsu użytkownika Migg Flashcards składa się z dwóch głównych sekcji: Auth (uwierzytelnianie) i App (główna funkcjonalność). Aplikacja wykorzystuje topbar na desktopach i menu hamburgerowe na urządzeniach mobilnych, zaimplementowane z użyciem Navigation Menu z biblioteki shadcn/ui. 
 
-- **Układ główny**: Topbar z nawigacją główną, zawierający linki do głównych sekcji aplikacji.
-- **System routingu**: Oparty na Astro z middleware chroniącym strony wymagające autoryzacji.
-- **Główne widoki**: Dashboard, Kolekcje, Tworzenie fiszek, Generowanie AI, Nauka, Ustawienia i strony autoryzacji.
-- **Organizacja komponentów**: Zgodna z podejściem atomic design (atomy, molekuły, organizmy, szablony, strony).
-- **Wzorce projektowe**: Mobile First dla responsywności, Skeleton UI dla stanów ładowania, Toast dla powiadomień.
-
-Aplikacja implementuje trzy kluczowe przepływy użytkownika:
-1. Rejestracja i pierwsze kroki
-2. Generowanie fiszek przez AI
-3. Sesja nauki z algorytmem powtórek
+Nawigacja jest intuicyjna, z czytelną hierarchią widoków zgodną z głównymi przepływami użytkownika. Interfejs jest responsywny, z podejściem Mobile First i układami jednokolumnowymi rozszerzającymi się na wielokolumnowe na większych ekranach. Komunikacja z użytkownikiem odbywa się poprzez system powiadomień (Toast), wskaźniki ładowania (Skeleton) i modalne potwierdzenia dla krytycznych operacji.
 
 ## 2. Lista widoków
 
-### 2.1. Strona Logowania (auth/login)
+### Sekcja Auth:
+
+#### Login
 - **Ścieżka**: `/auth/login`
 - **Główny cel**: Umożliwienie użytkownikowi zalogowania się do systemu
-- **Kluczowe informacje**: 
-  - Formularz logowania z polami email i hasło
-  - Linki do rejestracji i resetowania hasła
-  - Logo aplikacji
-- **Kluczowe komponenty**: 
-  - `LoginForm` z walidacją w czasie rzeczywistym
-  - Przyciski "Zaloguj się" i "Zarejestruj się"
-  - Link "Zapomniałem hasła"
-- **UX, dostępność i bezpieczeństwo**: 
-  - Responsywny formularz działający na wszystkich urządzeniach
-  - Walidacja pól w czasie rzeczywistym
-  - Komunikaty błędów widoczne pod każdym polem
-  - Obsługa stanu ładowania podczas wysyłania formularza
-  - Bezpieczna transmisja danych przez HTTPS
+- **Kluczowe informacje**: Formularz logowania
+- **Kluczowe komponenty**: Formularz (e-mail, password), przyciski (Log in, Register, Forgot Password)
+- **UX, dostępność, bezpieczeństwo**: Walidacja danych wejściowych, komunikaty błędów, bezpieczne przechowywanie tokenów JWT
 
-### 2.2. Strona Rejestracji (auth/register)
+#### Register
 - **Ścieżka**: `/auth/register`
-- **Główny cel**: Umożliwienie nowym użytkownikom utworzenia konta
-- **Kluczowe informacje**: 
-  - Formularz rejestracji z polami email, hasło, potwierdzenie hasła
-  - Link do logowania
-  - Logo aplikacji
-- **Kluczowe komponenty**: 
-  - `RegisterForm` z walidacją
-  - Przycisk "Zarejestruj się"
-  - Link "Powrót do logowania"
-- **UX, dostępność i bezpieczeństwo**: 
-  - Informacja o wymaganiach dotyczących hasła
-  - Wyraźne komunikaty błędów
-  - Potwierdzenie rejestracji z instrukcją weryfikacji email
+- **Główny cel**: Umożliwienie utworzenia nowego konta
+- **Kluczowe informacje**: Formularz rejestracji
+- **Kluczowe komponenty**: Formularz (e-mail, password, confirm password), przyciski (Register, Already Registered(Log in))
+- **UX, dostępność, bezpieczeństwo**: Walidacja danych wejściowych, wskaźniki siły hasła, komunikaty błędów
 
-### 2.3. Strona Resetowania Hasła (auth/reset-password)
+#### ForgotPassword
+- **Ścieżka**: `/auth/forgot-password`
+- **Główny cel**: Umożliwienie odzyskania hasła
+- **Kluczowe informacje**: Formularz odzyskiwania hasła
+- **Kluczowe komponenty**: Formularz (e-mail), przycisk (Send link to reset password), informacja o wysłaniu linku
+- **UX, dostępność, bezpieczeństwo**: Komunikaty o wysłaniu linku bez ujawniania istnienia konta
+
+#### ResetPassword
 - **Ścieżka**: `/auth/reset-password`
-- **Główny cel**: Umożliwienie użytkownikom zresetowania zapomnianego hasła
-- **Kluczowe informacje**: 
-  - Formularz do podania emaila
-  - Potwierdzenie wysłania linku resetującego
-- **Kluczowe komponenty**: 
-  - `ResetPasswordForm`
-  - Przycisk "Wyślij link resetujący"
-  - Link "Powrót do logowania"
-- **UX, dostępność i bezpieczeństwo**:
-  - Komunikat potwierdzający wysłanie emaila
-  - Ochrona przed nadużyciami (rate limiting)
+- **Główny cel**: Zmiana hasła po otrzymaniu linku resetującego
+- **Kluczowe informacje**: Formularz zmiany hasła
+- **Kluczowe komponenty**: Formularz (new password, confirm password), przycisk (Change Password)
+- **UX, dostępność, bezpieczeństwo**: Walidacja hasła, wskaźniki siły hasła, ochrona przed nieautoryzowanym dostępem
 
-### 2.4. Dashboard / Strona główna
-- **Ścieżka**: `/`
-- **Główny cel**: Zaprezentowanie ogólnego przeglądu aktywności użytkownika
-- **Kluczowe informacje**: 
-  - Statystyki użytkownika (liczba kolekcji, fiszek, procent wygenerowanych przez AI)
-  - Skróty do ostatnio używanych kolekcji (max 3)
-  - Sekcja "Continue Learning" z ostatnio używanymi kolekcjami
-- **Kluczowe komponenty**: 
-  - `StatsCard` - karty ze statystykami
-  - `CollectionCard` - karty kolekcji
-  - `QuickCreateButton` - przycisk szybkiego tworzenia fiszek
-  - `ContinueLearningSection` - sekcja kontynuacji nauki
-- **UX, dostępność i bezpieczeństwo**:
-  - Skeleton UI podczas ładowania danych
-  - Komunikaty dla pustego stanu (brak kolekcji)
-  - Responsywny układ dostosowany do różnych urządzeń
+#### VerifyEmail
+- **Ścieżka**: `/auth/verify-email`
+- **Główny cel**: Potwierdzenie adresu email użytkownika
+- **Kluczowe informacje**: Status weryfikacji
+- **Kluczowe komponenty**: Informacja o statusie, przycisk (Log in)
+- **UX, dostępność, bezpieczeństwo**: Jasny komunikat o wyniku weryfikacji
 
-### 2.5. Lista kolekcji
+### Sekcja App:
+
+#### Dashboard
+- **Ścieżka**: `/dashboard`
+- **Główny cel**: Przegląd aktywności i szybki dostęp do głównych funkcji
+- **Kluczowe informacje**: Statystyki, ostatnia aktywność, szybki dostęp
+- **Kluczowe komponenty**: Statystyki (liczba kolekcji, fiszek), przyciski szybkiego dostępu, lista ostatnio używanych kolekcji
+- **UX, dostępność, bezpieczeństwo**: Intuicyjny układ, szybki dostęp do najczęściej używanych funkcji
+
+#### Collections
 - **Ścieżka**: `/collections`
-- **Główny cel**: Prezentacja wszystkich kolekcji użytkownika
-- **Kluczowe informacje**: 
-  - Lista kolekcji w formie kart
-  - Informacje o każdej kolekcji (nazwa, liczba fiszek, data modyfikacji)
-  - Przyciski akcji dla każdej kolekcji
-- **Kluczowe komponenty**: 
-  - `CollectionsList` - lista kolekcji
-  - `CollectionCard` - karta pojedynczej kolekcji
-  - `CreateCollectionButton` - przycisk tworzenia nowej kolekcji
-  - `Pagination` - paginacja dla większej liczby kolekcji
-  - `SearchInput` - proste pole wyszukiwania
-- **UX, dostępność i bezpieczeństwo**:
-  - Filtry i sortowanie kolekcji
-  - Potwierdzenia dla krytycznych akcji (usuwanie)
-  - Wskaźniki ładowania przy akcjach asynchronicznych
+- **Główny cel**: Przeglądanie i zarządzanie kolekcjami fiszek
+- **Kluczowe informacje**: Lista kolekcji
+- **Kluczowe komponenty**: Lista kolekcji (karty z nazwą, liczbą fiszek, przyciskami akcji)
+- **UX, dostępność, bezpieczeństwo**: Potwierdzenia dla operacji usuwania, intuicyjne karty kolekcji
 
-### 2.6. Szczegóły kolekcji
-- **Ścieżka**: `/collections/[collection_name]`
-- **Główny cel**: Zarządzanie fiszkami w ramach kolekcji
-- **Kluczowe informacje**: 
-  - Edytowalny nagłówek z nazwą kolekcji
-  - Tabela fiszek z przodu/tyłu i akcjami
-  - Przyciski do dodawania nowych fiszek
-- **Kluczowe komponenty**: 
-  - `EditableCollectionHeader` - edytowalny nagłówek
-  - `FlashcardsTable` - tabela fiszek
-  - `AddFlashcardButton` - przycisk dodawania fiszek
-  - `EditFlashcardModal` - modal edycji fiszki
-  - `Pagination` - paginacja dla większej liczby fiszek
-- **UX, dostępność i bezpieczeństwo**:
-  - Obsługa inline-edycji nazwy kolekcji
-  - Potwierdzenia usunięcia fiszek
-  - Wyszukiwanie i filtrowanie fiszek
+#### CollectionDetail
+- **Ścieżka**: `/collections/[name]`
+- **Główny cel**: Przeglądanie i zarządzanie fiszkami w konkretnej kolekcji
+- **Kluczowe informacje**: Nazwa kolekcji, lista fiszek
+- **Kluczowe komponenty**: Nagłówek z nazwą kolekcji, przyciski akcji (Rozpocznij naukę, Edytuj nazwę, Usuń), lista fiszek (karty z przód/tył, przyciskami edycji/usunięcia), przyciski (Add Flashcard, Generate Flashcards with AI)
+- **UX, dostępność, bezpieczeństwo**: Potwierdzenia dla operacji usuwania, paginacja dla dużych kolekcji
 
-### 2.7. Ręczne tworzenie fiszek
+#### CreateFlashcard
 - **Ścieżka**: `/create`
-- **Główny cel**: Umożliwienie ręcznego tworzenia fiszek
-- **Kluczowe informacje**: 
-  - Formularz z polami na przód/tył fiszki
-  - Liczniki znaków (max 200 dla przodu, 500 dla tyłu)
-  - Wybór kolekcji
-- **Kluczowe komponenty**: 
-  - `FlashcardForm` - formularz tworzenia fiszki
-  - `CharacterCounter` - licznik znaków
-  - `CollectionSelector` - dropdown wyboru kolekcji
-  - `ActionButtons` - przyciski akcji (Zapisz, Anuluj)
-- **UX, dostępność i bezpieczeństwo**:
-  - Walidacja w czasie rzeczywistym
-  - Możliwość dodania wielu fiszek po kolei
-  - Autosave dla zapobiegania utracie danych
+- **Główny cel**: Ręczne tworzenie nowych fiszek
+- **Kluczowe informacje**: Formularz tworzenia fiszki
+- **Kluczowe komponenty**: Formularz (przód z limitem 200 znaków, tył z limitem 500 znaków, liczniki znaków), wybór kolekcji, przyciski (Save, Cancel)
+- **UX, dostępność, bezpieczeństwo**: Walidacja w czasie rzeczywistym, liczniki znaków, komunikaty błędów
 
-### 2.8. Generowanie fiszek przez AI
+#### GenerateFlashcards
 - **Ścieżka**: `/generate`
-- **Główny cel**: Generowanie fiszek przy pomocy AI na podstawie wprowadzonego tekstu
-- **Kluczowe informacje**: 
-  - Trzyetapowy proces:
-    1. Wprowadzanie tekstu źródłowego (od 100 do 10000 znaków)
-    2. Proces generowania (wskaźnik postępu)
-    3. Przeglądanie wygenerowanych kandydatów (Accept/Edit/Discard)
-  - Bulk zapis zaakceptowanych fiszek
-- **Kluczowe komponenty**: 
-  - `SourceTextInput` - pole na tekst źródłowy z licznikiem
-  - `GenerationProgress` - wskaźnik postępu generowania
-  - `CandidatesList` - lista kandydatów na fiszki
-  - `CandidateCard` - karta pojedynczego kandydata
-  - `EditCandidateModal` - modal edycji kandydata
-  - `BulkSaveButton` - przycisk masowego zapisu
-  - `CollectionSelector` - wybór kolekcji dla zapisywanych fiszek
-- **UX, dostępność i bezpieczeństwo**:
-  - Wskaźnik postępu dla długiego generowania
-  - Możliwość anulowania generowania
-  - Bulk zaznaczanie/odznaczanie kandydatów
-  - Podział interfejsu na logiczne etapy procesu
+- **Główny cel**: Generowanie fiszek przy pomocy AI
+- **Kluczowe informacje**: Trzyetapowy proces (wprowadzanie tekstu, recenzja kandydatów, zapis)
+- **Kluczowe komponenty**:
+  - Stepper (wskaźnik postępu)
+  - Krok 1: Textarea (100-10000 znaków), licznik znaków, przycisk (Generate)
+  - Krok 2: Lista kandydatów na fiszki (karty z front/back, przyciskami Accept/Edit/Discard), formularz edycji, przycisk (Accept All)
+  - Krok 3: Lista zaakceptowanych fiszek, wybór kolekcji jeśli istnieje lub opcja podania nazwy nowej kolekcji, przycisk (Save)
+- **UX, dostępność, bezpieczeństwo**: Walidacja tekstu wejściowego, mechanizm Retry dla operacji AI, informacje o postępie
 
-### 2.9. Sesja nauki
+#### StudySession
 - **Ścieżka**: `/study/[collection_name]`
-- **Główny cel**: Nauka fiszek z wykorzystaniem algorytmu powtórek
-- **Kluczowe informacje**: 
-  - Aktualna fiszka (przód/tył)
-  - Przyciski oceny znajomości materiału
-  - Postęp sesji
-  - Statystyki po zakończeniu
-- **Kluczowe komponenty**: 
-  - `FlashcardView` - karta fiszki z animacją odwracania
-  - `RatingButtons` - przyciski oceny znajomości materiału
-  - `SessionProgress` - pasek postępu sesji
-  - `EndSessionButton` - przycisk zakończenia sesji
-  - `SessionSummary` - podsumowanie sesji (po zakończeniu)
-- **UX, dostępność i bezpieczeństwo**:
-  - Możliwość korzystania z skrótów klawiaturowych
-  - Animacje płynnego odwracania fiszek
-  - Zachowanie stanu sesji w przypadku przerwania
-  - Funkcja wstrzymania/wznowienia sesji
+- **Główny cel**: Nauka z wykorzystaniem algorytmu powtórek
+- **Kluczowe informacje**: Aktualna fiszka, postęp sesji
+- **Kluczowe komponenty**: Karta fiszki (z animacją odwracania), przyciski oceny znajomości, licznik fiszek, przycisk (End Session), ekran podsumowania
+- **UX, dostępność, bezpieczeństwo**: Minimalistyczny interfejs koncentrujący się na nauce, automatyczny zapis postępu
 
-### 2.10. Ustawienia
+#### Settings
 - **Ścieżka**: `/settings`
-- **Główny cel**: Zarządzanie kontem użytkownika
-- **Kluczowe informacje**: 
-  - Formularz zmiany hasła
-  - Sekcja "Danger Zone" z opcją usunięcia konta
-- **Kluczowe komponenty**: 
-  - `ChangePasswordForm` - formularz zmiany hasła
-  - `DangerZone` - sekcja krytycznych akcji
-  - `DeleteAccountButton` - przycisk usuwania konta
-  - `ConfirmationModal` - modal potwierdzenia akcji
-- **UX, dostępność i bezpieczeństwo**:
-  - Podwójne potwierdzenie dla krytycznych akcji
-  - Informacje o konsekwencjach usunięcia konta
-  - Walidacja siły nowego hasła
+- **Główny cel**: Zarządzanie ustawieniami konta
+- **Kluczowe informacje**: Ustawienia profilu, hasło, usuwanie konta
+- **Kluczowe komponenty**: Zakładki (Profile, Change Password, Delete Account), odpowiednie formularze, potwierdzenia dla krytycznych operacji
+- **UX, dostępność, bezpieczeństwo**: Potwierdzenia dla krytycznych operacji, walidacja formularzy
 
 ## 3. Mapa podróży użytkownika
 
-### 3.1. Rejestracja i pierwsze kroki
-1. Użytkownik wchodzi na stronę i jest przekierowywany do `/auth/login`
-2. Klika link "Zarejestruj się", przechodzi do `/auth/register`
-3. Wypełnia formularz rejestracji i zatwierdza
-4. Po pomyślnej rejestracji jest przekierowany na `/` (Dashboard)
-5. Z dashboardu może:
-   - Utworzyć nową kolekcję (przycisk "New Collection")
-   - Przejść do ręcznego tworzenia fiszek (przycisk "Create Manually")
-   - Przejść do generowania fiszek przez AI (przycisk "Generate with AI")
+### Rejestracja i logowanie
+1. Użytkownik wchodzi na stronę główną
+2. Wybiera opcję "Regiser"
+3. Wypełnia formularz rejestracyjny
+4. Otrzymuje email z linkiem do weryfikacji
+5. Po weryfikacji loguje się i jest przekierowany do Dashboard
 
-### 3.2. Generowanie fiszek przez AI
-1. Użytkownik klika "Create" w nawigacji głównej i wybiera "AI Generation"
-2. Na stronie `/generate`:
-   - Wkleja tekst źródłowy (od 100 do 10000 znaków)
-   - Wybiera kolekcję docelową
-   - Klika przycisk "Generate Flashcards"
-3. Podczas generowania widzi wskaźnik postępu
-4. Po wygenerowaniu przegląda kandydatów na fiszki:
-   - Akceptuje przydatne fiszki (przycisk "Accept")
-   - Edytuje fiszki wymagające poprawek (przycisk "Edit")
-   - Odrzuca nieprzydatne fiszki (przycisk "Discard")
-5. Po ocenie wszystkich kandydatów klika "Save Accepted Flashcards"
-6. Fiszki są zapisywane do wybranej kolekcji
-7. Użytkownik jest przekierowywany do widoku kolekcji (`/collections/[collection_name]`)
+### Ręczne tworzenie fiszek
+1. Z Dashboard lub widoku kolekcji użytkownik wybiera "Create Flashcard"
+2. Wypełnia formularz (front/back) i wybiera istniejącą kolekcję lub podaje nazwę nowej kolekcji
+3. Po zapisaniu wraca do szczegółów kolekcji z dodaną fiszką
 
-### 3.3. Sesja nauki
-1. Użytkownik przechodzi do widoku kolekcji (`/collections`)
-2. Wybiera kolekcję i klika przycisk "Study"
-3. Na stronie `/study/[collection_name]`:
-   - Widzi przód fiszki
-   - Klika, aby zobaczyć tył fiszki
-   - Ocenia swoją znajomość materiału (przyciski oceny)
-4. System prezentuje kolejne fiszki według algorytmu powtórek
-5. Po zakończeniu sesji lub kliknięciu "End Session":
-   - Widzi podsumowanie z statystykami
-   - Ma opcję powrotu do kolekcji lub rozpoczęcia nowej sesji
+### Generowanie fiszek przez AI
+1. Z Dashboard lub widoku kolekcji użytkownik wybiera "Generate Flashcards with AI"
+2. W kroku 1 wprowadza tekst źródłowy (100-10000 znaków)
+3. W kroku 2 przegląda kandydatów na fiszki i podejmuje decyzje (Accept/Edit/Discard)
+4. W kroku 3 wybiera istniejącą kolekcję lub podaje nazwę nowej kolekcji i zapisuje je
+5. Po zapisaniu wraca do szczegółów kolekcji z dodanymi fiszkami
+
+### Zarządzanie kolekcjami
+1. Z Dashboard użytkownik przechodzi do sekcji "My Collections"
+2. Wybiera istniejącą
+3. W widoku szczegółów kolekcji może edytować nazwę lub usunąć kolekcję(usunięcie kolekcji powoduje usunięcie wszystkich fiszek tej kolekcji)
+4. Może przeglądać, edytować lub usuwać fiszki w kolekcji
+
+### Nauka z wykorzystaniem fiszek
+1. Z Dashboard lub widoku kolekcji użytkownik wybiera "Study"
+2. W sesji nauki przegląda fiszki, ocenia swoją znajomość materiału
+3. Po zakończeniu sesji widzi podsumowanie i wraca do widoku kolekcji
+
+### Zarządzanie kontem
+1. Użytkownik przechodzi do sekcji "Settings"
+2. Może przeglądać swój profil, zmienić hasło lub usunąć konto
+3. Krytyczne operacje wymagają potwierdzenia
 
 ## 4. Układ i struktura nawigacji
 
-### 4.1. Główna nawigacja (Topbar)
-- **Home** - przekierowanie do Dashboard (`/`)
-- **Collections** - przekierowanie do listy kolekcji (`/collections`)
-- **Create** - menu rozwijane:
-  - **Manual** - przekierowanie do ręcznego tworzenia (`/create`)
-  - **AI Generation** - przekierowanie do generowania przez AI (`/generate`)
-- **Study** - przekierowanie do wyboru kolekcji do nauki (`/collections`) z aktywnym filtrem "study mode"
-- **Settings** - przekierowanie do ustawień konta (`/settings`)
+### Główna nawigacja
+- **Topbar** (desktop) / **Menu hamburgerowe** (mobile) zawierające:
+  - Logo/Nazwa aplikacji (link do Dashboard)
+  - Dashboard
+  - My Collections
+  - Generate Flashcards with AI
+  - Create Flashcard
+  - Settings
+  - Log out
 
-### 4.2. Nawigacja kontekstowa
-- **Na karcie kolekcji**:
-  - Przycisk "Study" - rozpoczęcie sesji nauki
-  - Przycisk "Edit" - przejście do szczegółów kolekcji
-  - Przycisk "Delete" - usunięcie kolekcji (z potwierdzeniem)
-- **Na stronie szczegółów kolekcji**:
-  - Przycisk "Add Flashcard" - dodanie nowej fiszki
-  - Przyciski "Edit"/"Delete" dla pojedynczych fiszek
-  - Przycisk "Study Collection" - rozpoczęcie sesji nauki
-- **Na stronie generowania przez AI**:
-  - Przyciski nawigacji między krokami procesu
-  - Przycisk "Back to Collections" - powrót do listy kolekcji
+### Routing i struktura hierarchiczna
+- **/** - Landing page lub przekierowanie do Dashboard dla zalogowanych
+- **/auth/*** - Ekrany uwierzytelniania (niezabezpieczone trasami)
+- **/dashboard** - Strona główna po zalogowaniu
+- **/collections** - Lista kolekcji
+- **/collections/[name]** - Szczegóły kolekcji
+- **/create** - Tworzenie ręczne fiszek
+- **/generate** - Generowanie fiszek przez AI
+- **/study/[collection_name]** - Sesja nauki
+- **/settings** - Ustawienia konta
 
-### 4.3. Nawigacja mobilna
-- Na urządzeniach mobilnych topbar zamienia się w menu hamburger
-- Po rozwinięciu wyświetla te same opcje co w wersji desktopowej
-- Responsywne przyciski akcji dopasowane do ekranów dotykowych
+Wszystkie trasy poza /auth/* są zabezpieczone middleware autoryzacyjnym, które przekierowuje niezalogowanych użytkowników do ekranu logowania.
+
+### Nawigacja kontekstowa
+- W widoku szczegółów kolekcji: przyciski do rozpoczęcia nauki, dodawania fiszek
+- W widoku generowania fiszek: stepper pokazujący aktualny krok procesu
+- W sesji nauki: minimalistyczny interfejs z opcją powrotu do kolekcji
 
 ## 5. Kluczowe komponenty
 
-### 5.1. Komponenty UI (shadcn/ui)
-- **Navigiation Menu** - główna nawigacja aplikacji
-- **Card** - prezentacja kolekcji i fiszek
-- **Form** - formularze z walidacją
-- **Table** - prezentacja list fiszek
-- **Toast** - powiadomienia
-- **Skeleton** - stany ładowania
-- **Pagination** - paginacja list
-- **Dialog/Modal** - okna modalne (potwierdzenia, edycja)
-- **Button** - przyciski akcji
+### Komponenty współdzielone
 
-### 5.2. Komponenty funkcjonalne
-- **FlashcardCard** - wizualizacja pojedynczej fiszki z animacją odwracania
-- **CollectionCard** - wizualizacja pojedynczej kolekcji
-- **GenerationProgress** - wskaźnik postępu generowania AI
-- **CharacterCounter** - licznik znaków dla pól tekstowych
-- **SessionProgressBar** - pasek postępu sesji nauki
-- **StatsDisplay** - wyświetlanie statystyk użytkownika
-- **ErrorBoundary** - obsługa błędów w aplikacji
-- **ConfirmationDialog** - dialogi potwierdzenia dla krytycznych akcji
-- **ToastNotification** - powiadomienia o sukcesie/błędzie
-- **LoadingIndicator** - wskaźniki ładowania
+#### Navbar
+- **Opis**: Główny pasek nawigacyjny, pokazujący się jako topbar na desktopach i menu hamburgerowe na urządzeniach mobilnych
+- **Zawartość**: Logo, linki nawigacyjne, przycisk wylogowania
+- **Użycie**: We wszystkich widokach App (poza sesją nauki)
 
-### 5.3. Layouty
-- **MainLayout** - podstawowy layout z topbarem
-- **AuthLayout** - layout dla stron autoryzacji
-- **DashboardLayout** - layout z dodatkowymi informacjami na dashboardzie
-- **StudyLayout** - minimalistyczny layout dla sesji nauki 
+#### FlashcardItem
+- **Opis**: Komponent reprezentujący pojedynczą fiszkę
+- **Zawartość**: Przód, tył, przyciski akcji (edytuj, usuń)
+- **Użycie**: W widokach CollectionDetail, GenerateFlashcards
+
+#### CollectionItem
+- **Opis**: Komponent reprezentujący kolekcję na liście
+- **Zawartość**: Nazwa, liczba fiszek, przyciski akcji (przeglądaj, rozpocznij naukę, edytuj, usuń)
+- **Użycie**: W widokach Dashboard, Collections
+
+#### FormField
+- **Opis**: Opakowanie dla pól formularza z walidacją
+- **Zawartość**: Etykieta, pole wejściowe, komunikaty błędów, licznik znaków (opcjonalnie)
+- **Użycie**: We wszystkich formularzach
+
+#### ErrorDisplay
+- **Opis**: Komponent do wyświetlania błędów API
+- **Zawartość**: Komunikat błędu, przycisk ponowienia próby (opcjonalnie)
+- **Użycie**: W miejscach interakcji z API
+
+#### LoadingState
+- **Opis**: Prezentacja stanu ładowania
+- **Zawartość**: Skeleton lub spinner, tekst informacyjny
+- **Użycie**: W miejscach ładowania danych
+
+#### ConfirmationModal
+- **Opis**: Modal do potwierdzania krytycznych operacji
+- **Zawartość**: Pytanie potwierdzające, przyciski (Potwierdź, Anuluj)
+- **Użycie**: Przed usunięciem kolekcji, fiszek, konta
+
+#### FlashcardForm
+- **Opis**: Formularz do tworzenia/edycji fiszki
+- **Zawartość**: Pola na przód i tył fiszki z licznikami znaków, przyciski akcji
+- **Użycie**: W widokach CreateFlashcard, GenerateFlashcards (krok 2)
+
+#### FlashcardCard
+- **Opis**: Karta do wyświetlania i interakcji z fiszką w sesji nauki
+- **Zawartość**: Przód/tył fiszki, animacja odwracania
+- **Użycie**: W widoku StudySession
+
+#### CollectionSelector
+- **Opis**: Komponent do wyboru kolekcji
+- **Zawartość**: Select z listą istniejących kolekcji, opcja "New Collection"
+- **Użycie**: W widokach CreateFlashcard, GenerateFlashcards (krok 3)
+
+#### Stepper
+- **Opis**: Wskaźnik postępu procesu wieloetapowego
+- **Zawartość**: Wizualizacja kroków, aktualny krok
+- **Użycie**: W widoku GenerateFlashcards 

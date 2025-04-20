@@ -49,7 +49,7 @@ Manualne tworzenie wysokiej jakości fiszek edukacyjnych jest czasochłonne i sk
 ### US-003: Generowanie fiszek przez AI
 - Opis: Jako użytkownik chcę, aby system generował kandydatów na fiszki na podstawie wprowadzonego tekstu, aby przyspieszyć proces tworzenia fiszek.
 - Kryteria akceptacji:
-  - Użytkownik może wkleić tekst do pola tekstowego z limitem 10000 znaków.
+  - Użytkownik może wkleić tekst do pola tekstowego z limitem od 100 do 10000 znaków.
   - Po kliknięciu przycisku generowania aplikacja komunikuje się z API modelu LLM i generuje kandydatów na fiszki synchronicznie w postaci listy.
   - Kandydaci są prezentowani z opcjami: Accept, Edit, i Discard.
   - W przypadku problemów z API system wyświetla odpowiedni komunikat błędu i umożliwia ponowną próbę generowania.
