@@ -16,7 +16,7 @@ OpenRouter to usługa, która umożliwia dostęp do wielu modeli LLM (OpenAI, An
 class OpenRouterService {
   constructor({
     apiKey,
-    defaultModel = "openai/gpt-3.5-turbo",
+    defaultModel = "openai/gpt-4o-mini",
     defaultSystemMessage = "",
     defaultParameters = {
       temperature: 0.7,
@@ -269,7 +269,7 @@ class TimeoutError extends OpenRouterError {
 
 ### 7.2. Implementacja klasy OpenRouterService
 
-1. Utworzenie pliku z usługą w katalogu `src/lib/services/openrouter.ts`:
+1. Utworzenie pliku z usługą w katalogu `src/lib/services/openrouter.service.ts`:
 
 ```typescript
 import fetch from 'cross-fetch';
@@ -286,7 +286,7 @@ export class OpenRouterService {
 
   constructor({
     apiKey,
-    defaultModel = "openai/gpt-3.5-turbo",
+    defaultModel = "openai/gpt-4o-mini",
     defaultSystemMessage = "",
     defaultParameters = {
       temperature: 0.7,
@@ -539,7 +539,7 @@ export function getOpenRouterClient() {
   
   return new OpenRouterService({
     apiKey,
-    defaultModel: 'openai/gpt-3.5-turbo'
+    defaultModel: 'openai/gpt-4o-mini'
   });
 }
 ```

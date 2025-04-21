@@ -1,9 +1,8 @@
 import type { APIRoute } from "astro";
-import { z } from "zod";
 import { flashcardGenerationService } from "../../../lib/services/flashcard-generation.service";
-import type { AIGenerateFlashcardsCommand } from "../../../types";
+import { z } from "zod";
 
-// Schema for validating input
+// Validation schema for the request body
 const generateFlashcardsSchema = z.object({
   text: z
     .string()
@@ -11,52 +10,55 @@ const generateFlashcardsSchema = z.object({
     .max(10000, { message: "Text cannot exceed 10,000 characters" }),
 });
 
-export const prerender = false;
-
 export const POST: APIRoute = async ({ request }) => {
   try {
-    // Extract request body
-    const body = (await request.json()) as AIGenerateFlashcardsCommand;
+    // Parse and validate request body
+    const body = await request.json();
+    const validationResult = generateFlashcardsSchema.safeParse(body);
 
-    // Validate input
-    const validation = generateFlashcardsSchema.safeParse(body);
-
-    if (!validation.success) {
+    if (!validationResult.success) {
       return new Response(
         JSON.stringify({
-          error: "Bad Request",
-          message: validation.error.format(),
-          status: 400,
+          error: "Invalid request",
+          details: validationResult.error.format(),
         }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        {
+          status: 400,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
       );
     }
 
-    // Generate flashcards using service
-    const result = await flashcardGenerationService.generateFlashcards(validation.data.text);
+    // Generate flashcards
+    const result = await flashcardGenerationService.generateFlashcards(validationResult.data.text);
 
-    // Prepare and return response
-    const responseData = {
-      candidates: result.candidates,
-      generation_id: result.generation_id,
-      generated_count: result.generated_count,
-    };
-
-    return new Response(JSON.stringify(responseData), {
-      status: 201,
-      headers: { "Content-Type": "application/json" },
+    // Return successful response
+    return new Response(JSON.stringify(result), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
   } catch (error) {
     console.error("Error generating flashcards:", error);
 
-    // Handle unexpected errors
+    // Return error response
     return new Response(
       JSON.stringify({
-        error: "Internal Server Error",
-        message: "An error occurred while generating flashcards",
-        status: 500,
+        error: "Failed to generate flashcards",
+        message: error instanceof Error ? error.message : "Unknown error",
       }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      {
+        status: 500,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
     );
   }
 };
+
+// Disable pre-rendering for this API route
+export const prerender = false;
