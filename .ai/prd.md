@@ -35,7 +35,9 @@ Manualne tworzenie wysokiej jakości fiszek edukacyjnych jest czasochłonne i sk
   - Użytkownik może zarejestrować konto poprzez formularz.
   - Walidacja danych (email, hasło) działa poprawnie.
   - Użytkownik może zalogować się do systemu po rejestracji.
-  - Tylko uwierzytelnieni użytkownicy mają dostęp do funkcji zarządzania fiszkami i kolekcjami.
+  - Tylko uwierzytelnieni użytkownicy mają dostęp do wszystkich widoków aplikacji.
+  - Użytkownik po wejściu na stronę główną powinien zostać przekierowany do dedykowanego widoku logowania/rejestracji.
+  - Użytkownik może wylogować się z systemu po zalogowaniu.
 
 ### US-002: Ręczne tworzenie fiszek
 - Opis: Jako użytkownik chcę móc samodzielnie tworzyć fiszki, aby móc dokładnie dopasować zawartość do moich potrzeb.
@@ -108,7 +110,7 @@ Manualne tworzenie wysokiej jakości fiszek edukacyjnych jest czasochłonne i sk
 - Kryteria akceptacji:
   - Użytkownik musi potwierdzić swój adres email podczas rejestracji.
   - System umożliwia bezpieczne odzyskiwanie hasła poprzez email.
-  - Tylko zalogowany użytkownik może wyświetlać, edytować i usuwać swoje fiszki.
+  - Tylko zalogowany użytkownik może wyświetlać, tworzyć, edytować i usuwać swoje fiszki.
   - Nie ma dostępu do fiszek innych użytkowników ani możliwości współdzielenia.
 
 ## 6. Metryki sukcesu
