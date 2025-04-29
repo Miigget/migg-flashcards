@@ -1,0 +1,30 @@
+---
+// src/layouts/AuthLayout.astro
+import "@/styles/global.css"; // Corrected import path
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props; // Uncommented
+// const title = "Auth Page"; // Comment out temporary title
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content="Migg Flashcards Authentication" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title} - Migg Flashcards</title>
+    {/* Use title from props */}
+  </head>
+  <body class="min-h-screen bg-background font-sans antialiased">
+    <main class="flex min-h-screen flex-col items-center justify-center">
+      {/* <!-- TODO: Add Logo Here --> */}
+      <slot />
+    </main>
+  </body>
+</html>

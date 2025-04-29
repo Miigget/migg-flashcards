@@ -1,0 +1,27 @@
+---
+// src/pages/auth/verify-email.astro
+import AuthLayout from "@/layouts/AuthLayout.astro";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+---
+
+<AuthLayout title="Email Verified">
+  <Card class="w-full max-w-sm">
+    <CardHeader>
+      <CardTitle class="text-2xl">Email Verified!</CardTitle>
+      <CardDescription> Your email address has been successfully verified. </CardDescription>
+    </CardHeader>
+    <CardContent class="flex flex-col items-center gap-4">
+      <p>You can now log in to your account.</p>
+      <a href="/auth/login" class="w-full">
+        <Button class="w-full">Go to Login</Button>
+      </a>
+      <!-- Optionally, add a link to dashboard if user might already be logged in -->
+      <!-- 
+            <a href="/dashboard" class="w-full mt-2">
+                <Button variant="outline" class="w-full">Go to Dashboard</Button>
+            </a> 
+            -->
+    </CardContent>
+  </Card>
+</AuthLayout>

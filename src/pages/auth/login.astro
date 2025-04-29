@@ -1,0 +1,9 @@
+---
+// src/pages/auth/login.astro
+import AuthLayout from "@/layouts/AuthLayout.astro";
+import { LoginForm } from "@/components/auth/LoginForm";
+---
+
+<AuthLayout title="Login">
+  <LoginForm client:load />
+</AuthLayout>
