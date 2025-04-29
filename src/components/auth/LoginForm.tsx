@@ -49,7 +49,7 @@ export function LoginForm() {
             <Input
               id="email"
               type="email"
-              placeholder="m@example.com"
+              placeholder="Enter your email"
               {...register("email")} // Register with react-hook-form
               aria-invalid={errors.email ? "true" : "false"} // Accessibility
             />
@@ -62,6 +62,7 @@ export function LoginForm() {
             <Input
               id="password"
               type="password"
+              placeholder="Enter your password"
               {...register("password")} // Register with react-hook-form
               aria-invalid={errors.password ? "true" : "false"} // Accessibility
             />

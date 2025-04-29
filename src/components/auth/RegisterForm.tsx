@@ -52,7 +52,7 @@ export function RegisterForm() {
             <Input
               id="email"
               type="email"
-              placeholder="m@example.com"
+              placeholder="Enter your email"
               {...register("email")}
               aria-invalid={errors.email ? "true" : "false"}
             />
@@ -63,6 +63,7 @@ export function RegisterForm() {
             <Input
               id="password"
               type="password"
+              placeholder="Enter your password"
               {...register("password")}
               aria-invalid={errors.password ? "true" : "false"}
             />
@@ -73,6 +74,7 @@ export function RegisterForm() {
             <Input
               id="confirm-password"
               type="password"
+              placeholder="Confirm your password"
               {...register("confirmPassword")}
               aria-invalid={errors.confirmPassword ? "true" : "false"}
             />

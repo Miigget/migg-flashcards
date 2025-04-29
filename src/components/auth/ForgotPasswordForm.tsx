@@ -45,7 +45,7 @@ export function ForgotPasswordForm() {
             <Input
               id="email"
               type="email"
-              placeholder="m@example.com"
+              placeholder="Enter your email"
               {...register("email")}
               aria-invalid={errors.email ? "true" : "false"}
             />

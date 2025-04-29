@@ -51,6 +51,7 @@ export function ResetPasswordForm() {
             <Input
               id="new-password"
               type="password"
+              placeholder="Enter your new password"
               {...register("newPassword")}
               aria-invalid={errors.newPassword ? "true" : "false"}
             />
@@ -61,6 +62,7 @@ export function ResetPasswordForm() {
             <Input
               id="confirm-new-password"
               type="password"
+              placeholder="Confirm your new password"
               {...register("confirmNewPassword")}
               aria-invalid={errors.confirmNewPassword ? "true" : "false"}
             />
