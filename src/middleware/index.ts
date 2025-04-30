@@ -42,8 +42,8 @@ export const onRequest = defineMiddleware(async ({ locals, cookies, url, request
     headers: request.headers,
   });
 
-  // Expose Supabase client instance to locals if needed elsewhere (optional)
-  // locals.supabase = supabase;
+  // Expose Supabase client instance to locals
+  locals.supabase = supabase;
 
   // IMPORTANT: Use getUser() for server-side validation
   const {

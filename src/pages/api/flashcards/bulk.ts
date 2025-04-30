@@ -2,11 +2,10 @@ import type { APIRoute } from "astro";
 import { z } from "zod";
 import { FlashcardServiceError } from "../../../lib/services/flashcard.service";
 import { FlashcardsBulkService } from "../../../lib/services/flashcards-bulk.service";
-import { DEFAULT_USER_ID } from "../../../db/supabase.client";
-import type { BulkCreateFlashcardsCommand } from "../../../types";
+import type { BulkCreateFlashcardsCommand, FlashcardCandidateDto } from "../../../types";
 
-// Validation schema for a single flashcard candidate
-const flashcardCandidateSchema = z.object({
+// Validation schema for a single flashcard candidate (input from request)
+const flashcardInputSchema = z.object({
   front: z
     .string()
     .min(1, { message: "Front text cannot be empty" })
@@ -19,12 +18,13 @@ const flashcardCandidateSchema = z.object({
   source: z.enum(["ai-full", "ai-edited"], {
     message: "Source must be 'ai-full' or 'ai-edited' for bulk creation",
   }),
-  generation_id: z.string().min(1, { message: "Generation ID is required for AI-generated flashcards" }),
+  // Keep generation_id as string for input validation (matching client)
+  generation_id: z.string().min(1, { message: "Generation ID is required" }),
 });
 
-// Validation schema for the bulk creation command
+// Validation schema for the bulk creation command (array of inputs)
 const bulkCreateFlashcardsSchema = z
-  .array(flashcardCandidateSchema)
+  .array(flashcardInputSchema)
   .min(1, {
     message: "At least one flashcard must be provided",
   })
@@ -49,6 +49,14 @@ export const POST: APIRoute = async ({ request, locals }) => {
       );
     }
 
+    // Get authenticated user
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+    }
+
     // Extract request body
     const body = (await request.json()) as BulkCreateFlashcardsCommand;
 
@@ -68,10 +76,26 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     // Create flashcards using the bulk service
     const flashcardsBulkService = new FlashcardsBulkService(supabase);
-    const validatedData = validation.data;
+    const validatedInputs = validation.data; // Rename for clarity
 
-    // Use DEFAULT_USER_ID for development instead of requiring authentication
-    const result = await flashcardsBulkService.bulkCreateFlashcards(validatedData, DEFAULT_USER_ID);
+    // Map validated inputs to FlashcardCandidateDto[], adding missing fields and converting types
+    const now = new Date().toISOString();
+    const candidatesToCreate: FlashcardCandidateDto[] = validatedInputs.map((input) => ({
+      front: input.front,
+      back: input.back,
+      collection: input.collection,
+      source: input.source,
+      // Convert generation_id from string to number here
+      generation_id: parseInt(input.generation_id, 10),
+      user_id: user.id,
+      created_at: now,
+      updated_at: now,
+      flashcard_id: 0,
+      status: "candidate",
+    }));
+
+    // Use the authenticated user's ID and the mapped DTOs
+    const result = await flashcardsBulkService.bulkCreateFlashcards(candidatesToCreate, user.id);
 
     // Return response
     return new Response(JSON.stringify(result), {

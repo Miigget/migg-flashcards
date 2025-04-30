@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
-import { flashcardGenerationService } from "../../../lib/services/flashcard-generation.service";
+import { FlashcardGenerationService } from "../../../lib/services/flashcard-generation.service";
 import { z } from "zod";
+import { createSupabaseServerInstance } from "../../../db/supabase.client";
 
 // Validation schema for the request body
 const generateFlashcardsSchema = z.object({
@@ -10,8 +11,19 @@ const generateFlashcardsSchema = z.object({
     .max(10000, { message: "Text cannot exceed 10,000 characters" }),
 });
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, cookies }) => {
   try {
+    // Create Supabase server client instance for this request
+    const supabase = createSupabaseServerInstance({ headers: request.headers, cookies });
+
+    // Optional: Check user authentication if needed before proceeding
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+    }
+
     // Parse and validate request body
     const body = await request.json();
     const validationResult = generateFlashcardsSchema.safeParse(body);
@@ -31,8 +43,11 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    // Generate flashcards
-    const result = await flashcardGenerationService.generateFlashcards(validationResult.data.text);
+    // Create an instance of the service, passing the Supabase client and user ID
+    const serviceInstance = new FlashcardGenerationService(supabase, user.id);
+
+    // Generate flashcards using the service instance
+    const result = await serviceInstance.generateFlashcards(validationResult.data.text);
 
     // Return successful response
     return new Response(JSON.stringify(result), {

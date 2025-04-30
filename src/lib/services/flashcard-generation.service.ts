@@ -1,10 +1,14 @@
 import * as crypto from "crypto";
 // @ts-expect-error: Path resolution issue - this will be fixed in project setup
 import type { FlashcardCandidateDto } from "../../../types";
-import { createClient, DEFAULT_USER_ID } from "../../db/supabase.client";
+import type { SupabaseClient } from "@supabase/supabase-js"; // Import SupabaseClient type
 import type { Database } from "../../db/database.types";
 import { getOpenRouterClient } from "./openrouter";
 import { z } from "zod";
+
+// Assuming DEFAULT_USER_ID might be needed elsewhere or passed differently
+// Remove the direct import if it's not available or needed globally
+// import { DEFAULT_USER_ID } from "../../db/supabase.client";
 
 type GenerationRecord = Database["public"]["Tables"]["generations"]["Row"];
 
@@ -28,18 +32,37 @@ const flashcardSchema = z.object({
 });
 
 class FlashcardGenerationService {
+  private supabase: SupabaseClient<Database>; // Add Supabase client property
+  private userId: string | undefined; // Add property to store user ID
+
+  /**
+   * Constructor accepting Supabase client instance
+   * @param supabase - Initialized Supabase client instance
+   * @param userId - Optional user ID
+   */
+  constructor(supabase: SupabaseClient<Database>, userId?: string) {
+    this.supabase = supabase;
+    this.userId = userId; // Store the user ID if provided
+  }
+
   /**
    * Generates flashcard candidates using AI based on provided text
    * @param text - Source text for flashcard generation
    * @returns Generated flashcard candidates, generation ID, and count
    */
   async generateFlashcards(text: string): Promise<GenerateFlashcardsResult> {
+    // Get user ID, potentially fallback to a default or handle error if not available
+    const userId = await this.getCurrentUserId();
+    if (!userId) {
+      throw new Error("User ID not found. Cannot generate flashcards.");
+    }
+
     try {
       // 1. Create a hash of input text for tracking duplicates
       const textHash = this.generateHash(text);
 
-      // 2. Create entry in generations table
-      const generation = await this.createGenerationRecord(textHash, text.length);
+      // 2. Create entry in generations table, passing the user ID
+      const generation = await this.createGenerationRecord(textHash, text.length, userId);
 
       // 3. Call AI service using OpenRouter
       const startTime = Date.now();
@@ -70,7 +93,8 @@ class FlashcardGenerationService {
     } catch (error) {
       // Log error
       console.error("Error during flashcard generation:", error);
-      await this.logGenerationError(error, this.generateHash(text), text.length);
+      // Pass userId to error logging
+      await this.logGenerationError(error, this.generateHash(text), text.length, userId);
       throw error;
     }
   }
@@ -85,13 +109,18 @@ class FlashcardGenerationService {
   /**
    * Creates a record in the generations table
    */
-  private async createGenerationRecord(textHash: string, textLength: number): Promise<GenerationRecord> {
-    const supabase = createClient();
+  private async createGenerationRecord(
+    textHash: string,
+    textLength: number,
+    userId: string // Add userId parameter
+  ): Promise<GenerationRecord> {
+    // Use the injected Supabase client
+    // const supabase = createClient(); <-- Remove this line
 
-    const { data, error } = await supabase
+    const { data, error } = await this.supabase // Use this.supabase
       .from("generations")
       .insert({
-        user_id: DEFAULT_USER_ID,
+        user_id: userId, // Use the provided user ID
         source_text_hash: textHash,
         source_text_length: textLength,
         model: "openrouter.ai", // Default model
@@ -117,9 +146,10 @@ class FlashcardGenerationService {
     generatedCount: number,
     generationTimeMs: number
   ): Promise<void> {
-    const supabase = createClient();
+    // Use the injected Supabase client
+    // const supabase = createClient(); <-- Remove this line
 
-    const { error } = await supabase
+    const { error } = await this.supabase // Use this.supabase
       .from("generations")
       .update({
         generated_count: generatedCount,
@@ -136,15 +166,22 @@ class FlashcardGenerationService {
   /**
    * Logs an error that occurred during generation
    */
-  private async logGenerationError(error: unknown, sourceTextHash: string, sourceTextLength: number): Promise<void> {
-    const supabase = createClient();
+  private async logGenerationError(
+    error: unknown,
+    sourceTextHash: string,
+    sourceTextLength: number,
+    userId: string // Add userId parameter
+  ): Promise<void> {
+    // Use the injected Supabase client
+    // const supabase = createClient(); <-- Remove this line
 
     const errorMessage = error instanceof Error ? error.message : String(error);
     const errorCode =
       error instanceof Error && "code" in error ? String((error as Record<string, unknown>).code) : "UNKNOWN_ERROR";
 
-    await supabase.from("generation_error_logs").insert({
-      user_id: DEFAULT_USER_ID,
+    // Use this.supabase
+    await this.supabase.from("generation_error_logs").insert({
+      user_id: userId, // Use the provided user ID
       error_code: errorCode,
       error_message: errorMessage,
       model: "openrouter.ai",
@@ -152,6 +189,25 @@ class FlashcardGenerationService {
       source_text_length: sourceTextLength,
       created_at: new Date().toISOString(),
     });
+  }
+
+  /**
+   * Fetches the current user ID from the session.
+   * Throws an error if the user is not authenticated.
+   */
+  private async getCurrentUserId(): Promise<string> {
+    // If userId was provided in constructor, use it
+    if (this.userId) {
+      return this.userId;
+    }
+    // Otherwise, try to get it from the session
+    const {
+      data: { user },
+    } = await this.supabase.auth.getUser();
+    if (!user) {
+      throw new Error("User not authenticated.");
+    }
+    return user.id;
   }
 
   /**
@@ -250,8 +306,8 @@ class FlashcardGenerationService {
       }
 
       // Transform the validated response into FlashcardCandidateDto[]
-      return validationResult.data.flashcards.map((card) => ({
-        user_id: DEFAULT_USER_ID,
+      const candidates: FlashcardCandidateDto[] = validationResult.data.flashcards.map((card) => ({
+        user_id: "", // This will be updated later in generateFlashcards if needed, or removed if FK handles it
         front: card.front,
         back: card.back,
         source: "ai-full" as const,
@@ -259,8 +315,11 @@ class FlashcardGenerationService {
         created_at: now,
         updated_at: now,
         flashcard_id: 0, // Will be assigned by the database
-        generation_id: null, // Will be assigned later
+        generation_id: 0, // This will be updated later in generateFlashcards
+        status: "candidate", // Default status
       }));
+
+      return candidates;
     } catch (error) {
       console.error("Error calling OpenRouter service:", error);
 
@@ -313,41 +372,34 @@ class FlashcardGenerationService {
   private getSampleFlashcards(timestamp: string): FlashcardCandidateDto[] {
     return [
       {
-        user_id: DEFAULT_USER_ID,
-        front: "What is the capital of France?",
-        back: "Paris",
+        user_id: "", // Placeholder or remove if not needed directly on DTO
+        front: "Przykładowa fiszka - Przód 1",
+        back: "Przykładowa fiszka - Tył 1",
         source: "ai-full" as const,
         collection: "default",
         created_at: timestamp,
         updated_at: timestamp,
         flashcard_id: 0,
-        generation_id: null,
+        generation_id: -1, // Use a placeholder ID like -1 for samples
+        status: "candidate",
       },
       {
-        user_id: DEFAULT_USER_ID,
-        front: "Who wrote 'Hamlet'?",
-        back: "William Shakespeare",
+        user_id: "",
+        front: "Przykładowa fiszka - Przód 2",
+        back: "Przykładowa fiszka - Tył 2",
         source: "ai-full" as const,
         collection: "default",
         created_at: timestamp,
         updated_at: timestamp,
         flashcard_id: 0,
-        generation_id: null,
-      },
-      {
-        user_id: DEFAULT_USER_ID,
-        front: "What is the chemical symbol for gold?",
-        back: "Au",
-        source: "ai-full" as const,
-        collection: "default",
-        created_at: timestamp,
-        updated_at: timestamp,
-        flashcard_id: 0,
-        generation_id: null,
+        generation_id: -1,
+        status: "candidate",
       },
     ];
   }
 }
 
-// Export singleton instance
-export const flashcardGenerationService = new FlashcardGenerationService();
+// Remove singleton instance export, instance should be created where needed with dependencies
+// export const flashcardGenerationService = new FlashcardGenerationService();
+
+export { FlashcardGenerationService }; // Ensure the class is exported

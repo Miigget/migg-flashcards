@@ -1,6 +1,5 @@
 import type { APIRoute } from "astro";
 import { getUniqueCollections } from "../../lib/services/collections";
-import { DEFAULT_USER_ID } from "../../db/supabase.client";
 
 export const prerender = false;
 
@@ -9,11 +8,23 @@ export const GET: APIRoute = async ({ locals }) => {
     // Get supabase instance from context.locals
     const supabase = locals.supabase;
 
-    // Use the default user ID instead of authentication
-    const userId = DEFAULT_USER_ID;
+    // Check if supabase client exists (middleware should provide it)
+    if (!supabase) {
+      console.error("Supabase client not found in locals. Check middleware.");
+      return new Response(JSON.stringify({ error: "Server configuration error" }), { status: 500 });
+    }
 
-    // Get unique collections for the user
-    const collections = await getUniqueCollections(supabase, userId);
+    // Get the authenticated user
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+    }
+
+    // Get unique collections for the logged-in user
+    const collections = await getUniqueCollections(supabase, user.id);
 
     // Return the collections as a JSON array
     return new Response(JSON.stringify(collections), {
