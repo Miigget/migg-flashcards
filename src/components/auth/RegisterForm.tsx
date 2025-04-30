@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 // Define Zod schema for registration validation
 const registerSchema = z
@@ -23,6 +25,7 @@ const registerSchema = z
 type RegisterFormInputs = z.infer<typeof registerSchema>;
 
 export function RegisterForm() {
+  const [isLoading, setIsLoading] = useState(false);
   const {
     register,
     handleSubmit,
@@ -32,11 +35,36 @@ export function RegisterForm() {
     mode: "onSubmit",
   });
 
-  // TODO: Replace console.log with actual API call
-  const onSubmit = (data: RegisterFormInputs) => {
-    console.log("Register Form data:", data);
-    // TODO: Implement fetch call to /api/auth/register
-    // TODO: Display success message about email verification
+  const onSubmit = async (data: RegisterFormInputs) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: data.email, password: data.password }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Registration failed. Please try again.");
+      }
+
+      toast.success("Registration Initiated", {
+        description: result.message || "Please check your email to verify your account.",
+      });
+
+      window.location.href = "/auth/login";
+    } catch (error) {
+      console.error("Registration error:", error);
+      toast.error("Registration Failed", {
+        description: error instanceof Error ? error.message : "An unexpected error occurred.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -55,6 +83,7 @@ export function RegisterForm() {
               placeholder="Enter your email"
               {...register("email")}
               aria-invalid={errors.email ? "true" : "false"}
+              disabled={isLoading}
             />
             {errors.email && <p className="text-sm text-red-600 mt-1">{errors.email.message}</p>}
           </div>
@@ -66,6 +95,7 @@ export function RegisterForm() {
               placeholder="Enter your password"
               {...register("password")}
               aria-invalid={errors.password ? "true" : "false"}
+              disabled={isLoading}
             />
             {errors.password && <p className="text-sm text-red-600 mt-1">{errors.password.message}</p>}
           </div>
@@ -77,14 +107,14 @@ export function RegisterForm() {
               placeholder="Confirm your password"
               {...register("confirmPassword")}
               aria-invalid={errors.confirmPassword ? "true" : "false"}
+              disabled={isLoading}
             />
             {errors.confirmPassword && <p className="text-sm text-red-600 mt-1">{errors.confirmPassword.message}</p>}
           </div>
         </CardContent>
         <CardFooter className="flex flex-col items-start">
-          <Button type="submit" className="w-full mt-4">
-            {" "}
-            {/* Added margin like login form */}
+          <Button type="submit" className="w-full mt-4" disabled={isLoading}>
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Register
           </Button>
           <div className="mt-4 text-center text-sm w-full">
