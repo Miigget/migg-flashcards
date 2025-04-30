@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner"; // Import toast for displaying errors
 
 // Define Zod schema for validation
 const loginSchema = z.object({
@@ -17,6 +18,9 @@ const loginSchema = z.object({
 type LoginFormInputs = z.infer<typeof loginSchema>;
 
 export function LoginForm() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null); // State for general form error
+
   const {
     register,
     handleSubmit,
@@ -26,10 +30,35 @@ export function LoginForm() {
     mode: "onSubmit", // Validate on submit
   });
 
-  // TODO: Replace console.log with actual API call
-  const onSubmit = (data: LoginFormInputs) => {
-    console.log("Form data:", data);
-    // TODO: Implement fetch call to /api/auth/login
+  // Handle form submission
+  const onSubmit = async (data: LoginFormInputs) => {
+    setIsLoading(true);
+    setError(null); // Clear previous errors
+
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Login failed. Please try again.");
+      }
+
+      // On success, redirect to the home page (which redirects to /generate)
+      window.location.href = "/";
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred.";
+      setError(errorMessage); // Set general error state
+      toast.error(errorMessage); // Display error using toast
+      console.error("Login error:", err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Original handle submit is replaced by react-hook-form's handleSubmit(onSubmit)
@@ -71,9 +100,11 @@ export function LoginForm() {
           </div>
         </CardContent>
         <CardFooter className="flex flex-col items-start">
+          {/* Display general form error */}
+          {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
           {/* Button type is submit, handled by react-hook-form */}
-          <Button type="submit" className="w-full mt-6">
-            Log in
+          <Button type="submit" className="w-full mt-6" disabled={isLoading}>
+            {isLoading ? "Logging in..." : "Log in"}
           </Button>
           <div className="mt-4 text-center text-sm w-full">
             <a href="/auth/forgot-password" className="underline">
