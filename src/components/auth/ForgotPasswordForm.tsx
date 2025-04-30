@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,20 +17,49 @@ const forgotPasswordSchema = z.object({
 type ForgotPasswordFormInputs = z.infer<typeof forgotPasswordSchema>;
 
 export function ForgotPasswordForm() {
+  const [isLoading, setIsLoading] = useState(false);
+
   const {
     register,
     handleSubmit,
     formState: { errors },
+    reset,
   } = useForm<ForgotPasswordFormInputs>({
     resolver: zodResolver(forgotPasswordSchema),
     mode: "onSubmit",
   });
 
-  // TODO: Replace console.log with actual API call
-  const onSubmit = (data: ForgotPasswordFormInputs) => {
-    console.log("Forgot Password Form data:", data);
-    // TODO: Implement fetch call to /api/auth/forgot-password
-    // TODO: Display confirmation message
+  const onSubmit = async (data: ForgotPasswordFormInputs) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "An unexpected error occurred.");
+      }
+
+      reset();
+      console.log("API call successful, attempting to show success toast:", result);
+      toast.success("Check your email", {
+        description: result.message,
+      });
+    } catch (error) {
+      console.error("Forgot Password Error:", error);
+      console.log("Attempting to show error toast.");
+      toast.error("Error", {
+        description: error instanceof Error ? error.message : "Failed to send reset link.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -53,8 +83,8 @@ export function ForgotPasswordForm() {
           </div>
         </CardContent>
         <CardFooter className="flex flex-col items-start">
-          <Button type="submit" className="w-full mt-4">
-            Send reset link
+          <Button type="submit" className="w-full mt-4" disabled={isLoading}>
+            {isLoading ? "Sending..." : "Send reset link"}
           </Button>
           <div className="mt-4 text-center text-sm w-full">
             Remember your password?{" "}

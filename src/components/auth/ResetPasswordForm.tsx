@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -22,6 +23,8 @@ const resetPasswordSchema = z
 type ResetPasswordFormInputs = z.infer<typeof resetPasswordSchema>;
 
 export function ResetPasswordForm() {
+  const [isLoading, setIsLoading] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -31,11 +34,38 @@ export function ResetPasswordForm() {
     mode: "onSubmit",
   });
 
-  // TODO: Replace console.log with actual API call
-  const onSubmit = (data: ResetPasswordFormInputs) => {
-    console.log("Reset Password Form data:", data);
-    // TODO: Implement fetch call to /api/auth/reset-password, passing the token
-    // TODO: Redirect to /auth/login on success
+  const onSubmit = async (data: ResetPasswordFormInputs) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ password: data.newPassword }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "An unexpected error occurred.");
+      }
+
+      toast.success("Success", {
+        description: result.message || "Password updated successfully.",
+      });
+
+      setTimeout(() => {
+        window.location.href = "/auth/login";
+      }, 1000);
+    } catch (error) {
+      console.error("Reset Password Error:", error);
+      toast.error("Error", {
+        description: error instanceof Error ? error.message : "Failed to update password.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -72,8 +102,8 @@ export function ResetPasswordForm() {
           </div>
         </CardContent>
         <CardFooter>
-          <Button type="submit" className="w-full mt-4">
-            Change Password
+          <Button type="submit" className="w-full mt-4" disabled={isLoading}>
+            {isLoading ? "Changing..." : "Change Password"}
           </Button>
         </CardFooter>
       </form>

@@ -1,6 +1,8 @@
 ---
 // src/layouts/AuthLayout.astro
 import "@/styles/global.css"; // Corrected import path
+// import { Toaster } from "@/components/ui/toaster"; // Remove old toaster import
+import { Toaster } from "@/components/ui/sonner"; // Import Sonner Toaster
 
 interface Props {
   title: string;
@@ -26,5 +28,7 @@ const { title } = Astro.props; // Uncommented
       {/* <!-- TODO: Add Logo Here --> */}
       <slot />
     </main>
+    <Toaster richColors closeButton />
+    {/* Use Sonner Toaster, added options */}
   </body>
 </html>

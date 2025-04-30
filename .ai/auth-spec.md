@@ -84,7 +84,7 @@ Zostaną utworzone dedykowane komponenty React dla formularzy, wykorzystujące k
 ### 2.4. Walidacja i Komunikaty Błędów
 
 -   **Client-side**: Realizowana w komponentach React (`react-hook-form` + `zod`) dla natychmiastowego feedbacku (np. wymagane pola, format email, długość/siła hasła, zgodność haseł).
--   **Server-side**: Błędy zwracane przez API endpoints (pochodzące z Supabase Auth, np. "Invalid login credentials", "User already registered", "Invalid token") będą przechwytywane w komponentach React i wyświetlane użytkownikowi za pomocą `Toast` (shadcn/ui) lub dedykowanych komunikatów przy formularzu.
+-   **Server-side**: Błędy zwracane przez API endpoints (pochodzące z Supabase Auth, np. "Invalid login credentials", "User already registered", "Invalid token") będą przechwytywane w komponentach React i wyświetlane użytkownikowi za pomocą `Sonner` (zintegrowanego przez shadcn/ui) lub dedykowanych komunikatów przy formularzu.
 -   Komunikaty błędów będą zgodne z językiem polskim.
 
 ### 2.5. Scenariusze Użytkownika
