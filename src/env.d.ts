@@ -1,12 +1,19 @@
 /// <reference types="astro/client" />
 
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "./db/database.types.ts";
+// Remove unused imports
+// import type { SupabaseClient } from "@supabase/supabase-js";
+// import type { Database } from "./db/database.types.ts";
 
 declare global {
   namespace App {
     interface Locals {
-      supabase: SupabaseClient<Database>;
+      // Remove or comment out old supabase client if not needed
+      // supabase: SupabaseClient<Database>;
+      // Define the user object structure
+      user: {
+        id: string;
+        email: string;
+      } | null; // Allow null for logged-out state
     }
   }
 }
