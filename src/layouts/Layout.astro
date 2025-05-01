@@ -5,7 +5,7 @@ interface Props {
   title?: string;
 }
 
-const { title = "10x Astro Starter" } = Astro.props;
+const { title = "MiggFlashcards" } = Astro.props;
 ---
 
 <!doctype html>
@@ -22,11 +22,13 @@ const { title = "10x Astro Starter" } = Astro.props;
   </body>
 </html>
 
-<style>
+<style is:global>
+  /* Add any base global styles here if needed, beyond global.css */
   html,
   body {
     margin: 0;
-    width: 100%;
+    padding: 0;
     height: 100%;
+    font-family: system-ui, sans-serif;
   }
 </style>

@@ -1,7 +1,6 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
 import type { UpdateCollectionCommand } from "../../../types";
-import { DEFAULT_USER_ID } from "../../../db/supabase.client";
 import { renameCollection, deleteCollection } from "../../../lib/services/collections";
 
 export const prerender = false;
@@ -53,14 +52,25 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
       });
     }
 
-    // 3. Get supabase instance from context.locals
+    // 3. Get supabase instance and user from locals
     const supabase = locals.supabase;
+    const user = locals.user;
 
-    // Use the default user ID instead of authentication
-    const userId = DEFAULT_USER_ID;
+    // --- Authentication Check ---
+    if (!user || !user.id) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized", message: "User must be logged in to rename collections." }),
+        {
+          status: 401,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+    const userId = user.id;
+    // ---------------------------
 
     try {
-      // Use the service function to rename the collection
+      // Use the authenticated user ID
       const { count, collectionExists } = await renameCollection(
         supabase,
         userId,
@@ -149,11 +159,22 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
       );
     }
 
-    // 3. Get supabase instance from context.locals
+    // 3. Get supabase instance and user from locals
     const supabase = locals.supabase;
+    const user = locals.user;
 
-    // Get user ID from authentication
-    const userId = DEFAULT_USER_ID; // TODO: Replace with actual authenticated user ID
+    // --- Authentication Check ---
+    if (!user || !user.id) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized", message: "User must be logged in to delete collections." }),
+        {
+          status: 401,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+    const userId = user.id;
+    // ---------------------------
 
     // 4. Delete the collection using the service function
     const { count, collectionExists } = await deleteCollection(supabase, userId, collection_name);

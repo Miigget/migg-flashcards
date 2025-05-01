@@ -1,0 +1,11 @@
+---
+import MainLayout from "@/layouts/MainLayout.astro";
+import CollectionsListView from "@/components/CollectionsListView";
+---
+
+<MainLayout title="Moje Kolekcje">
+  <main class="container mx-auto px-4 py-8">
+    <h1 class="mb-6 text-3xl font-bold tracking-tight">Moje Kolekcje</h1>
+    <CollectionsListView client:load />
+  </main>
+</MainLayout>

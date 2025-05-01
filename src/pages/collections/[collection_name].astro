@@ -1,0 +1,19 @@
+---
+import MainLayout from "@/layouts/MainLayout.astro";
+import CollectionDetailView from "@/components/CollectionDetailView";
+
+export const prerender = false; // This page is dynamic
+
+const { collection_name } = Astro.params;
+
+if (!collection_name) {
+  // Or redirect to /collections
+  return Astro.redirect("/404");
+}
+---
+
+<MainLayout title={`Kolekcja: ${collection_name}`}>
+  <main class="container mx-auto px-4 py-8">
+    <CollectionDetailView initialCollectionName={collection_name} client:load />
+  </main>
+</MainLayout>

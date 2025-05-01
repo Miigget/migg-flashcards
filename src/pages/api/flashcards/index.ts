@@ -1,7 +1,6 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
 import { FlashcardService, FlashcardServiceError } from "../../../lib/services/flashcard.service";
-import { DEFAULT_USER_ID } from "../../../db/supabase.client";
 import type { CreateFlashcardCommand } from "../../../types";
 
 // Validation schema for flashcard creation
@@ -34,13 +33,24 @@ export const prerender = false;
 
 export const POST: APIRoute = async ({ request, locals }) => {
   try {
-    // Get supabase client from locals
+    // Get supabase client and user from locals
     const supabase = locals.supabase;
+    const user = locals.user;
 
-    // Extract request body
+    // --- Authentication Check ---
+    if (!user || !user.id) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized", message: "User must be logged in to create flashcards." }),
+        {
+          status: 401,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+    const userId = user.id;
+    // ---------------------------
+
     const body = (await request.json()) as CreateFlashcardCommand;
-
-    // Validate input data
     const validation = createFlashcardSchema.safeParse(body);
 
     if (!validation.success) {
@@ -54,19 +64,11 @@ export const POST: APIRoute = async ({ request, locals }) => {
       );
     }
 
-    // Create flashcard using service
     const flashcardService = new FlashcardService(supabase);
-    const validatedData: CreateFlashcardCommand = {
-      front: validation.data.front,
-      back: validation.data.back,
-      collection: validation.data.collection,
-      source: "manual",
-    };
+    const validatedData: CreateFlashcardCommand = validation.data;
 
-    // Use DEFAULT_USER_ID for development instead of requiring authentication
-    const flashcard = await flashcardService.createFlashcard(validatedData, DEFAULT_USER_ID);
+    const flashcard = await flashcardService.createFlashcard(validatedData, userId);
 
-    // Return response
     return new Response(JSON.stringify(flashcard), {
       status: 201,
       headers: { "Content-Type": "application/json" },
@@ -74,7 +76,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
   } catch (error) {
     console.error("Error creating flashcard:", error);
 
-    // Handle unexpected errors
     return new Response(
       JSON.stringify({
         error: "Internal Server Error",
@@ -88,11 +89,25 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
 export const GET: APIRoute = async ({ request, locals }) => {
   try {
-    // Get URL to extract query parameters
+    // Get supabase client and user from locals
+    const supabase = locals.supabase;
+    const user = locals.user;
+
+    // --- Authentication Check ---
+    if (!user || !user.id) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized", message: "User must be logged in to view flashcards." }),
+        {
+          status: 401,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+    const userId = user.id;
+    // ---------------------------
+
     const url = new URL(request.url);
     const queryParams = Object.fromEntries(url.searchParams);
-
-    // Validate query parameters
     const validation = getFlashcardsQuerySchema.safeParse(queryParams);
 
     if (!validation.success) {
@@ -106,10 +121,8 @@ export const GET: APIRoute = async ({ request, locals }) => {
       );
     }
 
-    // Extract validated parameters
     const { page, limit, collection, sort, order } = validation.data;
 
-    // Validate sort field
     if (sort && !validSortFields.includes(sort)) {
       return new Response(
         JSON.stringify({
@@ -121,38 +134,15 @@ export const GET: APIRoute = async ({ request, locals }) => {
       );
     }
 
-    // Get supabase client from locals
-    const supabase = locals.supabase;
-    if (!supabase) {
-      return new Response(
-        JSON.stringify({
-          error: "Internal Server Error",
-          message: "Database client is not available",
-          status: 500,
-        }),
-        { status: 500, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    // Create service and fetch flashcards
     const flashcardService = new FlashcardService(supabase);
 
     try {
-      const result = await flashcardService.getFlashcards(
-        DEFAULT_USER_ID, // Using default user ID for development
-        page,
-        limit,
-        collection,
-        sort,
-        order
-      );
+      const result = await flashcardService.getFlashcards(userId, page, limit, collection, sort, order);
 
-      // Check if the result has the expected structure
       if (!result || !Array.isArray(result.data)) {
         throw new FlashcardServiceError("Invalid response format from flashcard service", "UNKNOWN_ERROR", 500);
       }
 
-      // Return paginated response
       return new Response(JSON.stringify(result), {
         status: 200,
         headers: { "Content-Type": "application/json" },
@@ -160,7 +150,6 @@ export const GET: APIRoute = async ({ request, locals }) => {
     } catch (serviceError) {
       console.error("Error in flashcard service:", serviceError);
 
-      // Handle service-specific errors
       if (serviceError instanceof FlashcardServiceError) {
         return new Response(
           JSON.stringify({
@@ -172,7 +161,6 @@ export const GET: APIRoute = async ({ request, locals }) => {
         );
       }
 
-      // Handle other errors
       return new Response(
         JSON.stringify({
           error: "Service Error",
@@ -185,7 +173,6 @@ export const GET: APIRoute = async ({ request, locals }) => {
   } catch (error) {
     console.error("Error fetching flashcards:", error);
 
-    // Handle unexpected errors
     return new Response(
       JSON.stringify({
         error: "Internal Server Error",

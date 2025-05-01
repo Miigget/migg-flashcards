@@ -65,3 +65,25 @@ export interface PaginatedResponse<T> {
   limit: number;
   total: number;
 }
+
+// --------------------------------------------------------------------------
+// Generic utility type for API Errors
+// --------------------------------------------------------------------------
+
+export interface ApiError {
+  status: number;
+  message: string;
+  details?: unknown; // e.g., from Zod validation
+}
+
+// --------------------------------------------------------------------------
+// View Models for Frontend Components
+// --------------------------------------------------------------------------
+
+// CollectionViewModel: Represents a collection in the list view.
+export interface CollectionViewModel {
+  name: string;
+  flashcardCount: number | null; // null during loading or on error
+  isLoadingCount: boolean;
+  errorCount: ApiError | null;
+}
