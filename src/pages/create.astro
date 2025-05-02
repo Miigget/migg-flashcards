@@ -1,0 +1,86 @@
+---
+import MainLayout from "@/layouts/MainLayout.astro";
+import CreateFlashcardForm from "@/components/CreateFlashcardForm";
+import type { ApiError } from "@/types";
+
+// 1. Route Protection
+if (!Astro.locals.user) {
+  return Astro.redirect("/login"); // Redirect to login if not authenticated
+}
+
+// 2. Fetch Collections
+let collections: string[] = [];
+let fetchError: ApiError | null = null;
+let initialCollection: string | null = null;
+
+try {
+  // Assuming supabase client is available via Astro.locals and collections table exists
+  // This query fetches distinct collection names associated with the current user.
+  // Adjust table/column names if they differ in your Supabase schema.
+  const { data, error } = await Astro.locals.supabase
+    .from("flashcards")
+    .select("collection", { count: "exact", head: false })
+    .eq("user_id", Astro.locals.user.id)
+    .not("collection", "is", null); // Ensure collection is not null
+
+  if (error) {
+    throw error;
+  }
+
+  // Extract unique collection names
+  if (data) {
+    const uniqueCollections = [...new Set(data.map((item) => item.collection).filter(Boolean) as string[])];
+    collections = uniqueCollections.sort(); // Sort alphabetically
+
+    // Check for initial collection from query param AFTER fetching collections
+    const queryParamCollection = Astro.url.searchParams.get("collection");
+    if (queryParamCollection && collections.includes(queryParamCollection)) {
+      initialCollection = queryParamCollection;
+    } else if (queryParamCollection) {
+      console.warn(
+        `Initial collection '${queryParamCollection}' from query param not found in user's collections. Ignoring.`
+      );
+    }
+  }
+} catch (error: unknown) {
+  console.error("Error fetching collections:", error);
+  // Perform type check if specific error properties are needed
+  let message = "An unknown error occurred";
+  if (error instanceof Error) {
+    message = error.message;
+  } else if (typeof error === "string") {
+    message = error;
+  }
+
+  fetchError = {
+    status: 500,
+    message: "Failed to load collections. Please try again later.",
+    details: message,
+  };
+  // Decide if we want to show an error page or let the component handle it
+  // Here, we pass the error state to the component.
+}
+---
+
+<MainLayout title="Create New Flashcard">
+  <div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">Create New Flashcard</h1>
+
+    {
+      fetchError && (
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+          <strong class="font-bold">Error:</strong>
+          <span class="block sm:inline"> {fetchError.message}</span>
+        </div>
+      )
+    }
+
+    {/* 3. Render React Component */}
+    <CreateFlashcardForm
+      client:load
+      collections={collections}
+      fetchError={fetchError}
+      initialCollection={initialCollection}
+    />
+  </div>
+</MainLayout>

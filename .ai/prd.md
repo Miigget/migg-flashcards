@@ -44,7 +44,6 @@ Manualne tworzenie wysokiej jakości fiszek edukacyjnych jest czasochłonne i sk
 - Kryteria akceptacji:
   - Interfejs pozwala na tworzenie nowej fiszki.
   - Pole "przód" akceptuje maksymalnie 200 znaków, a "tył" do 500 znaków.
-  - Istnieje możliwość dodania opcjonalnych odpowiedzi do pola "przód".
   - System wyświetla komunikaty błędów przy przekroczeniu limitów znakowych.
 
 ### US-003: Generowanie fiszek przez AI
