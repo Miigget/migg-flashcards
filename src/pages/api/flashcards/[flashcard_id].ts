@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
 import { FlashcardService, FlashcardServiceError } from "../../../lib/services/flashcard.service";
-import { DEFAULT_USER_ID } from "../../../db/supabase.client";
+import type { UpdateFlashcardCommand } from "../../../types";
 
 // Disable prerendering for this API route
 export const prerender = false;
@@ -57,13 +57,26 @@ export const GET: APIRoute = async ({ params, locals }) => {
       );
     }
 
+    // Get user ID from context
+    const userId = locals.user?.id;
+    if (!userId) {
+      return new Response(
+        JSON.stringify({
+          error: "Unauthorized",
+          message: "User not authenticated",
+          status: 401,
+        }),
+        { status: 401, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     // Create flashcard service and fetch the requested flashcard
     const flashcardService = new FlashcardService(supabase);
 
     try {
       const flashcard = await flashcardService.getFlashcardById(
         validatedFlashcardId,
-        DEFAULT_USER_ID // Using default user ID for development
+        userId // Now guaranteed to be a string
       );
 
       // Return the flashcard data
@@ -146,6 +159,19 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
       );
     }
 
+    // Get user ID from context
+    const userId = locals.user?.id;
+    if (!userId) {
+      return new Response(
+        JSON.stringify({
+          error: "Unauthorized",
+          message: "User not authenticated",
+          status: 401,
+        }),
+        { status: 401, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     // Parse request body
     let requestBody;
     try {
@@ -178,14 +204,38 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
     // Get validated update data
     const validatedUpdateData = validationBodyResult.data;
 
-    // Create flashcard service and update the flashcard
+    // Create flashcard service
     const flashcardService = new FlashcardService(supabase);
 
+    // --- BEGIN SOURCE UPDATE LOGIC ---
+    let finalUpdateData: UpdateFlashcardCommand = { ...validatedUpdateData };
+
     try {
+      // Fetch the current flashcard to check its source
+      const currentFlashcard = await flashcardService.getFlashcardById(validatedFlashcardId, userId);
+
+      // If the source is 'ai-full', update it to 'ai-edited'
+      if (currentFlashcard.source === "ai-full") {
+        finalUpdateData = { ...finalUpdateData, source: "ai-edited" };
+      }
+      // If source is 'ai-edited' or 'manual', it remains unchanged (not explicitly added here)
+    } catch (fetchError) {
+      // Log the error but proceed with the original update if fetching fails?
+      // Or should we return an error here? For now, log and proceed.
+      console.error(
+        `Error fetching flashcard ${validatedFlashcardId} before update, source modification skipped:`,
+        fetchError
+      );
+      // If fetching fails, we proceed with the user's original update request without modifying the source.
+    }
+    // --- END SOURCE UPDATE LOGIC ---
+
+    try {
+      // Use finalUpdateData which might include the updated source
       const updatedFlashcard = await flashcardService.updateFlashcard(
         validatedFlashcardId,
-        validatedUpdateData,
-        DEFAULT_USER_ID // Using default user ID for development
+        finalUpdateData, // Pass the potentially modified data
+        userId // Use the actual user ID
       );
 
       // Return the updated flashcard data
@@ -268,13 +318,26 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
       );
     }
 
+    // Get user ID from context
+    const userId = locals.user?.id;
+    if (!userId) {
+      return new Response(
+        JSON.stringify({
+          error: "Unauthorized",
+          message: "User not authenticated",
+          status: 401,
+        }),
+        { status: 401, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     // Create flashcard service and delete the flashcard
     const flashcardService = new FlashcardService(supabase);
 
     try {
       await flashcardService.deleteFlashcard(
         validatedFlashcardId,
-        DEFAULT_USER_ID // Using default user ID for development
+        userId // Use the actual user ID
       );
 
       // Return success response

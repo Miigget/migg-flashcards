@@ -1,5 +1,5 @@
 import type { CreateFlashcardCommand, FlashcardDTO, UpdateFlashcardCommand } from "../../types";
-import type { SupabaseClientType } from "../../db/supabase.client";
+import type { createSupabaseServerInstance } from "../../db/supabase.client";
 
 /**
  * Custom error class for FlashcardService errors
@@ -16,6 +16,9 @@ export class FlashcardServiceError extends Error {
     this.name = "FlashcardServiceError";
   }
 }
+
+// Define the type based on the return type of the factory function
+type SupabaseClientType = ReturnType<typeof createSupabaseServerInstance>;
 
 export class FlashcardService {
   constructor(private readonly supabase: SupabaseClientType) {}
@@ -267,6 +270,7 @@ export class FlashcardService {
           ...(command.front !== undefined && { front: command.front }),
           ...(command.back !== undefined && { back: command.back }),
           ...(command.collection !== undefined && { collection: command.collection }),
+          ...(command.source !== undefined && { source: command.source }),
         })
         .eq("flashcard_id", flashcardId)
         .eq("user_id", userId)
