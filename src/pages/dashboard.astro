@@ -1,0 +1,111 @@
+---
+import MainLayout from "@/layouts/MainLayout.astro";
+import { Button } from "@/components/ui/button";
+import type { ApiError, PaginatedResponse, FlashcardDTO } from "@/types";
+
+// Route Protection
+if (!Astro.locals.user) {
+  return Astro.redirect("/login");
+}
+
+let totalFlashcards: number | null = null;
+let totalCollections: number | null = null;
+let statsError: string | null = null;
+
+try {
+  // Fetch total flashcards count
+  const flashcardsResponse = await fetch(`${Astro.url.origin}/api/flashcards?limit=1&page=1`, {
+    headers: {
+      "Content-Type": "application/json",
+      Cookie: Astro.request.headers.get("cookie") || "", // Forward cookies for auth
+    },
+  });
+
+  if (!flashcardsResponse.ok) {
+    const errorData: ApiError = await flashcardsResponse
+      .json()
+      .catch(() => ({ status: flashcardsResponse.status, message: "Failed to parse flashcard count error" }));
+    throw new Error(`Failed to fetch flashcard count: ${errorData.message} (Status: ${errorData.status})`);
+  }
+  const flashcardsData: PaginatedResponse<FlashcardDTO> = await flashcardsResponse.json();
+  totalFlashcards = flashcardsData.total;
+
+  // Fetch total collections count
+  const collectionsResponse = await fetch(`${Astro.url.origin}/api/collections`, {
+    headers: {
+      "Content-Type": "application/json",
+      Cookie: Astro.request.headers.get("cookie") || "", // Forward cookies for auth
+    },
+  });
+  if (!collectionsResponse.ok) {
+    const errorData: ApiError = await collectionsResponse
+      .json()
+      .catch(() => ({ status: collectionsResponse.status, message: "Failed to parse collection count error" }));
+    throw new Error(`Failed to fetch collection count: ${errorData.message} (Status: ${errorData.status})`);
+  }
+  const collectionsData: string[] = await collectionsResponse.json();
+  totalCollections = collectionsData.length;
+} catch (error: unknown) {
+  console.error("Error fetching dashboard stats:", error);
+  statsError = error instanceof Error ? error.message : "An unknown error occurred while fetching statistics.";
+}
+
+// Placeholder for user name - replace with actual user data if available
+const userEmail = Astro.locals.user?.email;
+const userName = userEmail ? userEmail.split("@")[0] : "User";
+---
+
+<MainLayout title="Dashboard">
+  <main class="container mx-auto px-4 py-8 flex flex-col items-center">
+    <h1 class="mb-6 text-3xl font-bold tracking-tight text-center">Witaj, {userName}!</h1>
+    <p class="mb-6 text-lg text-center">
+      Tutaj znajdziesz podstawowe informacje o Twoim koncie i możliwości szybkiej nawigacji.
+    </p>
+
+    <section class="mb-8 w-full max-w-2xl">
+      <div class="bg-card text-card-foreground p-6 rounded-lg border shadow-sm mb-6">
+        <!-- <h2 class="text-lg font-semibold mb-4 text-center">Szybkie Akcje</h2> -->
+        <div class="flex justify-center">
+          <div class="grid grid-cols-2 gap-y-8 gap-x-12">
+            <a href="/generate" class="contents">
+              <Button size="lg" variant="default" className="w-full"> Generuj Fiszki AI </Button>
+            </a>
+            <a href="/create" class="contents">
+              <Button size="lg" variant="default" className="w-full"> Stwórz Fiszki Ręcznie </Button>
+            </a>
+            <a href="/collections" class="contents">
+              <Button size="lg" variant="default" className="w-full"> Moje Kolekcje </Button>
+            </a>
+            <a href="#" class="contents">
+              <Button size="lg" variant="default" className="w-full"> Rozpocznij Naukę </Button>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-card text-card-foreground p-6 rounded-lg border shadow-sm w-full">
+        <!-- <h2 class="text-lg font-semibold mb-4 text-center">Statystyki</h2> -->
+        {
+          statsError && (
+            <div class="text-destructive text-sm mb-4">
+              <p>Błąd ładowania statystyk:</p>
+              <p>{statsError}</p>
+            </div>
+          )
+        }
+        <div class="flex flex-row justify-center items-center">
+          <div class="text-center">
+            <span class="block text-muted-foreground text-sm">Wszystkie fiszki:</span>
+            <span class="block text-2xl font-bold">{totalFlashcards ?? "-"}</span>
+          </div>
+          <div class="text-center ml-32">
+            <span class="block text-muted-foreground text-sm">Liczba kolekcji:</span>
+            <span class="block text-2xl font-bold">{totalCollections ?? "-"}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {/* Można tu dodać więcej sekcji w przyszłości, np. ostatnio studiowane, etc. */}
+  </main>
+</MainLayout>

@@ -68,10 +68,10 @@ export const onRequest = defineMiddleware(async ({ locals, cookies, url, request
     return redirect("/auth/login");
   }
 
-  // If trying to access auth pages while already logged in, redirect to /generate
+  // If trying to access auth pages while already logged in, redirect to /dashboard
   if (locals.user && (url.pathname === "/auth/login" || url.pathname === "/auth/register")) {
-    console.log(`Redirecting logged in user from ${url.pathname} -> /generate`);
-    return redirect("/generate");
+    console.log(`Redirecting logged in user from ${url.pathname} -> /dashboard`);
+    return redirect("/dashboard");
   }
 
   // Continue to the next middleware or page
