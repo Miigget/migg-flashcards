@@ -27,6 +27,10 @@ Migg Flashcards is a web application that allows users to create and manage sets
 - GitHub Actions
 - DigitalOcean
 
+**Testing:**
+- Vitest (Unit & Integration Tests)
+- Playwright (E2E Tests)
+
 ## Getting Started Locally
 1. **Clone the repository**
    ```bash
