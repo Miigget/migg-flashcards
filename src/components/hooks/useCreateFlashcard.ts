@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { ApiError, CreateFlashcardCommand, FlashcardDTO } from "@/types";
+import { toast } from "sonner";
 
 interface UseCreateFlashcardReturn {
   createFlashcard: (command: CreateFlashcardCommand) => Promise<FlashcardDTO>; // Return created flashcard on success
@@ -43,12 +44,14 @@ export function useCreateFlashcard(): UseCreateFlashcardReturn {
           };
         }
         setError(errorPayload);
+        toast.error("Error", { description: errorPayload.message });
         console.error("API Error:", errorPayload);
         throw new Error(errorPayload.message); // Throw error to be caught by the calling component
       }
 
       // Assuming API returns the created flashcard object on 201 status
       const createdFlashcard: FlashcardDTO = await response.json();
+      toast.success("Success", { description: "Flashcard created successfully." });
       return createdFlashcard;
     } catch (err) {
       // Catch fetch errors or errors thrown from response handling
@@ -61,6 +64,8 @@ export function useCreateFlashcard(): UseCreateFlashcardReturn {
           message: errorMessage,
         });
       }
+      // Show error toast for network/other errors caught
+      toast.error("Error", { description: errorMessage });
       // Re-throw the error so the calling component knows the operation failed
       throw new Error(errorMessage);
     } finally {

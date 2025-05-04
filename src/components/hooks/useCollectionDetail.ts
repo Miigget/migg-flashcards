@@ -85,8 +85,6 @@ export function useCollectionDetail(initialCollectionName: string) {
 
   const handleRetryFetch = useCallback(() => {
     fetchFlashcards(1, state.collectionName); // Reset to page 1 on retry?
-    // Or retry current page:
-    // fetchFlashcards(state.pagination.currentPage, state.collectionName);
   }, [state.collectionName, fetchFlashcards]);
 
   const handlePageChange = useCallback((newPage: number) => {
@@ -249,7 +247,7 @@ export function useCollectionDetail(initialCollectionName: string) {
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "Delete failed";
       setDeleteFlashcardError(message);
-      toast.error(message);
+      toast.error("Error", { description: message });
       throw error;
     } finally {
       setIsSubmittingFlashcardDelete(false);

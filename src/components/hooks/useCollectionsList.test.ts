@@ -1,0 +1,240 @@
+import { renderHook, waitFor, act } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { useCollectionsList } from "./useCollectionsList";
+import type { CollectionViewModel, PaginatedResponse, FlashcardDTO, ApiError } from "@/types"; // Use CollectionViewModel
+
+// Mock fetch globally
+global.fetch = vi.fn();
+const mockedFetch = fetch as ReturnType<typeof vi.fn>;
+
+describe("useCollectionsList", () => {
+  // Mock Data
+  const mockNames = ["Collection A", "Collection B"];
+  const mockFlashcardsPage1: PaginatedResponse<FlashcardDTO> = { data: [], page: 1, limit: 1, total: 10 };
+  const mockFlashcardsPage2: PaginatedResponse<FlashcardDTO> = { data: [], page: 1, limit: 1, total: 5 };
+  const initialViewModel: CollectionViewModel[] = [
+    { name: "Collection A", flashcardCount: null, isLoadingCount: true, errorCount: null },
+    { name: "Collection B", flashcardCount: null, isLoadingCount: true, errorCount: null },
+  ];
+  const finalViewModel: CollectionViewModel[] = [
+    { name: "Collection A", flashcardCount: 10, isLoadingCount: false, errorCount: null },
+    { name: "Collection B", flashcardCount: 5, isLoadingCount: false, errorCount: null },
+  ];
+
+  beforeEach(() => {
+    mockedFetch.mockClear();
+    // Default mock implementation for fetch
+    mockedFetch.mockImplementation(async (url) => {
+      if (url === "/api/collections") {
+        return new Response(JSON.stringify(mockNames), { status: 200 });
+      }
+      if (url.toString().includes("/api/flashcards")) {
+        if (url.toString().includes("Collection%20A")) {
+          return new Response(JSON.stringify(mockFlashcardsPage1), { status: 200 });
+        }
+        if (url.toString().includes("Collection%20B")) {
+          return new Response(JSON.stringify(mockFlashcardsPage2), { status: 200 });
+        }
+      }
+      return new Response("Not Found", { status: 404 });
+    });
+  });
+
+  it("should initialize, fetch names, then fetch counts", async () => {
+    // Act: Render the hook
+    const { result } = renderHook(() => useCollectionsList());
+
+    // Assert: Initial state (loading names)
+    expect(result.current.collections).toEqual([]);
+    expect(result.current.isLoading).toBe(true);
+    expect(result.current.error).toBeNull();
+
+    // Assert: Wait for names to load and check intermediate state
+    await waitFor(() => {
+      // Wait for the collections array to be populated after names fetch
+      expect(result.current.collections.length).toBeGreaterThan(0);
+    });
+    // Check that the structure matches the initial view model (counts loading)
+    expect(mockedFetch).toHaveBeenCalledWith("/api/collections");
+
+    // Assert: Wait for counts to finish loading
+    await waitFor(
+      () => {
+        // Check if any collection is still loading its count
+        const stillLoadingCounts = result.current.collections.some((c) => c.isLoadingCount);
+        expect(stillLoadingCounts).toBe(false);
+      },
+      { timeout: 2000 }
+    ); // Optional longer timeout
+
+    // Assert: Final state with counts loaded
+    expect(result.current.collections).toEqual(finalViewModel);
+    expect(result.current.error).toBeNull();
+    expect(result.current.isLoading).toBe(false); // Overall loading should be false
+    expect(mockedFetch).toHaveBeenCalledWith(expect.stringContaining("/api/flashcards?collection=Collection%20A"));
+    expect(mockedFetch).toHaveBeenCalledWith(expect.stringContaining("/api/flashcards?collection=Collection%20B"));
+    expect(mockedFetch).toHaveBeenCalledTimes(1 + 2); // 1 for names, 2 for counts
+  });
+
+  it("should handle error when fetching names", async () => {
+    // Arrange: Mock fetch to fail for names
+    const errorResponse: ApiError = { status: 500, message: "Server error fetching names" };
+    mockedFetch.mockImplementation(async (url) => {
+      if (url === "/api/collections") {
+        return new Response(JSON.stringify({ message: errorResponse.message }), {
+          status: errorResponse.status,
+          statusText: errorResponse.message,
+        });
+      }
+      return new Response("OK", { status: 200 }); // Other calls succeed (though won't happen)
+    });
+
+    // Act: Render the hook
+    const { result } = renderHook(() => useCollectionsList());
+
+    // Assert: Initial loading state
+    expect(result.current.isLoading).toBe(true);
+
+    // Assert: Wait for error state after names fetch fails
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    // Assert: Final state with error
+    expect(result.current.collections).toEqual([]);
+    expect(result.current.error).toEqual(errorResponse);
+    expect(mockedFetch).toHaveBeenCalledTimes(1);
+    expect(mockedFetch).toHaveBeenCalledWith("/api/collections");
+  });
+
+  it("should handle error when fetching counts for one collection", async () => {
+    // Arrange: Mock fetch to fail for Collection B count
+    const collectionBName = "Collection B";
+    // Expected error structure generated by the hook's inner catch
+    const expectedError: ApiError = { status: 404, message: `Count fetch API error 404 for ${collectionBName}` };
+    mockedFetch.mockImplementation(async (url) => {
+      if (url === "/api/collections") {
+        return new Response(JSON.stringify(mockNames), { status: 200 });
+      }
+      if (url.toString().includes("Collection%20A")) {
+        return new Response(JSON.stringify(mockFlashcardsPage1), { status: 200 });
+      }
+      if (url.toString().includes(encodeURIComponent(collectionBName))) {
+        // Simulate error for Collection B count fetch by returning non-JSON response
+        return new Response(`Error finding count for ${collectionBName}`, { status: 404 });
+      }
+      return new Response("Not Found", { status: 404 });
+    });
+
+    // Act: Render the hook
+    const { result } = renderHook(() => useCollectionsList());
+
+    // Assert: Wait for all loading to finish
+    await waitFor(
+      () => {
+        const loadingCount = result.current.collections.some((c) => c.isLoadingCount);
+        expect(loadingCount).toBe(false);
+      },
+      { timeout: 2000 }
+    );
+
+    // Assert: Wait specifically for the expected final state
+    const expectedFinalState = [
+      { name: "Collection A", flashcardCount: 10, isLoadingCount: false, errorCount: null },
+      { name: collectionBName, flashcardCount: null, isLoadingCount: false, errorCount: expectedError },
+    ];
+    await waitFor(
+      () => {
+        expect(result.current.collections).toEqual(expectedFinalState);
+      },
+      { timeout: 2000 }
+    );
+
+    // Assert: Check other conditions after state stabilizes
+    expect(result.current.error).toBeNull(); // No global error for names
+    expect(mockedFetch).toHaveBeenCalledTimes(3);
+  });
+
+  it("should retry fetching names when retryFetchNames is called", async () => {
+    // Arrange: Mock initial failed fetch for names
+    const errorResponse: ApiError = { status: 500, message: "Initial fetch failed" };
+    let fetchCallCount = 0;
+    mockedFetch.mockImplementation(async (url) => {
+      fetchCallCount++;
+      if (url === "/api/collections" && fetchCallCount === 1) {
+        // Fail only the first time
+        return new Response(JSON.stringify({ message: errorResponse.message }), {
+          status: errorResponse.status,
+          statusText: errorResponse.message,
+        });
+      }
+      // Subsequent calls succeed
+      if (url === "/api/collections") {
+        return new Response(JSON.stringify(mockNames), { status: 200 });
+      }
+      if (url.toString().includes("Collection%20A")) {
+        return new Response(JSON.stringify(mockFlashcardsPage1), { status: 200 });
+      }
+      if (url.toString().includes("Collection%20B")) {
+        return new Response(JSON.stringify(mockFlashcardsPage2), { status: 200 });
+      }
+      return new Response("Not Found", { status: 404 });
+    });
+
+    // Act: Render hook, wait for initial error
+    const { result } = renderHook(() => useCollectionsList());
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.error).not.toBeNull();
+    });
+
+    // Assert: Initial error state
+    expect(result.current.error?.message).toEqual(errorResponse.message);
+    expect(fetchCallCount).toBe(1);
+
+    // Act: Call retry function
+    act(() => {
+      result.current.retryFetchNames();
+    });
+
+    // Assert: Loading state should be true immediately after retry, error cleared
+    expect(result.current.isLoading).toBe(true);
+    expect(result.current.error).toBeNull();
+
+    // Assert: Wait for names to load successfully after retry and check intermediate state
+    await waitFor(() => {
+      // Wait for the second call to /api/collections to complete
+      expect(fetchCallCount).toBeGreaterThanOrEqual(2); // Names fetched again
+      expect(mockedFetch).toHaveBeenCalledWith("/api/collections"); // Verify it was called again
+    });
+
+    // Wait for the state to reflect that names loading is done (isLoading becomes false temporarily)
+    // Note: isLoading reflects both name and count loading, so we need to wait for counts too.
+    // Let's check the intermediate state where counts are now loading.
+    await waitFor(() => {
+      expect(result.current.collections).toEqual(initialViewModel);
+    });
+
+    // Assert: Wait for counts to finish loading after the successful name retry
+    await waitFor(
+      () => {
+        const stillLoadingCounts = result.current.collections.some((c) => c.isLoadingCount);
+        expect(stillLoadingCounts).toBe(false);
+      },
+      { timeout: 2000 }
+    );
+
+    // Assert: Final state after successful retry
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.collections).toEqual(finalViewModel);
+    expect(result.current.error).toBeNull();
+    // Total calls: 1 initial failed names + 1 successful names retry + 2 counts
+    expect(fetchCallCount).toBe(1 + 1 + 2);
+    expect(mockedFetch).toHaveBeenCalledTimes(1 + 1 + 2);
+  });
+
+  // Tests for Rename/Delete functionality would go here, mocking the respective fetch calls
+  // Example:
+  // it('should handle renaming a collection', async () => { ... });
+  // it('should handle deleting a collection', async () => { ... });
+});

@@ -59,69 +59,104 @@ export function useCollectionsList() {
     }
 
     const fetchCounts = async () => {
-      const countPromises = collections
-        .filter((c) => c.isLoadingCount) // Only fetch for those still loading
-        .map(async (collection) => {
-          try {
-            const response = await fetch(
-              `/api/flashcards?collection=${encodeURIComponent(collection.name)}&limit=1&page=1`
-            );
-            if (!response.ok) {
-              const errorData: ApiError = {
-                status: response.status,
-                message: `Count fetch failed for ${collection.name}`,
-              };
-              throw errorData;
-            }
-            const data: PaginatedResponse<FlashcardDTO> = await response.json();
-            return { name: collection.name, count: data.total, error: null };
-          } catch (error: unknown) {
-            console.error(`Error fetching count for ${collection.name}:`, error);
-            return { name: collection.name, count: null, error: error as ApiError };
-          }
-        });
+      // Identify collections that need counts fetched
+      const collectionsToFetch = collections.filter((c) => c.isLoadingCount);
+      if (collectionsToFetch.length === 0) return;
 
-      if (countPromises.length === 0) return;
+      const countPromises = collectionsToFetch.map(async (collection) => {
+        try {
+          const response = await fetch(
+            // Fetch only 1 item to get the total count efficiently
+            `/api/flashcards?collection=${encodeURIComponent(collection.name)}&limit=1&page=1`
+          );
+          if (!response.ok) {
+            // Try to parse error response, fallback if needed
+            let errorPayload: ApiError;
+            try {
+              errorPayload = await response.json();
+              if (typeof errorPayload.message !== "string") throw new Error(); // Validate structure
+            } catch {
+              errorPayload = {
+                status: response.status,
+                message: `Count fetch API error ${response.status} for ${collection.name}`,
+              };
+            }
+            throw errorPayload;
+          }
+          const data: PaginatedResponse<FlashcardDTO> = await response.json();
+          // Return structure matching the catch block for consistency
+          return { name: collection.name, count: data.total, error: null };
+        } catch (error: unknown) {
+          console.error(`Error fetching count for ${collection.name}:`, error);
+          // Ensure the error conforms to ApiError structure
+          const apiError: ApiError =
+            error && typeof error === "object" && "status" in error && "message" in error
+              ? (error as ApiError)
+              : {
+                  status: 500,
+                  message:
+                    error instanceof Error ? error.message : `Unknown error fetching count for ${collection.name}`,
+                };
+          // Return error structure
+          return { name: collection.name, count: null, error: apiError };
+        }
+      });
 
       const results = await Promise.allSettled(countPromises);
 
-      setCollections((prevCollections) =>
-        prevCollections.map((collection) => {
-          const result = results.find((r) => r.status === "fulfilled" && r.value.name === collection.name);
-          if (result?.status === "fulfilled") {
-            return { ...collection, flashcardCount: result.value.count, isLoadingCount: false, errorCount: null };
+      setCollections((prevCollections) => {
+        // Calculate the next state based on previous state and results
+        const newCollections = prevCollections.map((collection) => {
+          // Find the index of this collection within the original list that was fetched
+          const indexInFetched = collectionsToFetch.findIndex((c) => c.name === collection.name);
+
+          // If this collection wasn't fetched in this batch, return it unchanged
+          if (indexInFetched === -1) {
+            return collection;
           }
 
-          const errorResult = results.find(
-            (r) =>
-              r.status === "rejected" ||
-              (r.status === "fulfilled" && r.value.name === collection.name && r.value.error !== null)
-          );
-          let apiError: ApiError | null = null;
-          if (errorResult?.status === "rejected") {
-            const reason = errorResult.reason as ApiError;
-            apiError = { status: reason?.status || 500, message: reason?.message || "Fetch count failed" };
-          } else if (errorResult?.status === "fulfilled") {
-            apiError = errorResult.value.error;
-          }
+          const result = results[indexInFetched];
 
-          if (apiError && collection.name === apiError.message?.split(" ").pop()) {
-            // Check if error matches collection name
+          if (result.status === "fulfilled") {
+            const { count, error } = result.value;
+            if (error) {
+              // Error occurred during fetch and was caught, returned in value
+              return { ...collection, flashcardCount: null, isLoadingCount: false, errorCount: error };
+            } else {
+              // Success
+              return { ...collection, flashcardCount: count, isLoadingCount: false, errorCount: null };
+            }
+          } else {
+            // result.status === "rejected"
+            // Promise was rejected (e.g., network error before catch)
+            const reason = result.reason;
+            let message = `Network error fetching count for ${collection.name}`;
+            let status = 500;
+
+            if (reason instanceof Error) {
+              message = reason.message;
+              // Attempt to get status if it's a custom error with status
+              if ("status" in reason && typeof reason.status === "number") {
+                status = reason.status;
+              }
+            } else if (typeof reason === "string") {
+              message = reason;
+            }
+            // Add more specific checks if other structured error types are expected
+
+            const apiError: ApiError = { status, message };
+            console.error(`Count fetch failed for ${collection.name} (rejected):`, reason);
             return { ...collection, flashcardCount: null, isLoadingCount: false, errorCount: apiError };
           }
-
-          // If no result/error found for this collection (shouldn't happen if filtered correctly), keep loading state?
-          // Or assume it finished successfully if not in error results?
-          // Keeping existing state seems safer if filtered correctly.
-          return collection;
-        })
-      );
+        });
+        // Return the fully calculated new state array
+        return newCollections;
+      });
     };
 
     fetchCounts();
-    // Dependency: collections array itself, specifically isLoadingCount flags.
-    // Stringifying a part of it or using a counter might be needed if direct dependency causes loops.
-  }, [collections, isLoadingNames]); // Re-run when collections state changes (e.g., isLoadingCount) or names finish loading
+    // Dependency: only run when names finish loading OR if collectionNames array ref changes
+  }, [collectionNames, isLoadingNames]); // Removed collections dependency to avoid loops
 
   // Dialog Handlers
   const handleRenameClick = useCallback((name: string) => {
@@ -200,28 +235,35 @@ export function useCollectionsList() {
   }, [deleteTarget]);
 
   const retryFetchNames = useCallback(() => {
+    // Reset state before fetching again? - No, let the fetch handle it.
     fetchCollectionNames();
   }, [fetchCollectionNames]);
 
   return {
+    // State derived for the view
     collections,
-    isLoading: isLoadingNames, // Use isLoadingNames as the primary loading state
-    error: errorNames,
+    isLoading: isLoadingNames || collections.some((c) => c.isLoadingCount), // Overall loading state
+    error: errorNames, // Global error should only reflect name fetching errors
+
+    // Actions
     retryFetchNames,
-    // Rename Dialog Props
+
+    // Collection Rename Dialog
     renameTarget,
     isSubmittingRename,
     renameError,
     handleRenameClick,
     handleRenameCancel,
     handleRenameSubmit,
-    // Delete Dialog Props
+
+    // Collection Delete Dialog
     deleteTarget,
     isSubmittingDelete,
     deleteError,
     handleDeleteClick,
     handleDeleteCancel,
     handleDeleteConfirm,
+
     // Pass collection names for validation
     collectionNamesForValidation: collectionNames,
   };
