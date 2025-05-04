@@ -46,17 +46,15 @@ const EditFlashcardDialog: React.FC<EditFlashcardDialogProps> = ({
   const [validationErrors, setValidationErrors] = useState<{ front?: string; back?: string }>({});
 
   useEffect(() => {
+    // Only reset state when the dialog opens or the flashcard prop changes while open
     if (isOpen && flashcard) {
       setFront(flashcard.front);
       setBack(flashcard.back);
       // setCollection(flashcard.collection);
       setValidationErrors({}); // Clear previous errors
-    } else if (!isOpen) {
-      // Clear form when dialog closes
-      setFront("");
-      setBack("");
-      setValidationErrors({});
     }
+    // Remove the else block that cleared state when closing.
+    // The component state will be fresh if it remounts, or this effect will set it correctly when isOpen becomes true.
   }, [isOpen, flashcard]);
 
   const validateFields = (): boolean => {
@@ -165,7 +163,7 @@ const EditFlashcardDialog: React.FC<EditFlashcardDialogProps> = ({
           </div>
           <DialogFooter>
             <DialogClose asChild>
-              <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
+              <Button type="button" variant="outline" disabled={isSubmitting}>
                 Anuluj
               </Button>
             </DialogClose>
