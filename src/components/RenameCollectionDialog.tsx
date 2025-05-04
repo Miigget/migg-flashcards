@@ -134,7 +134,7 @@ const RenameCollectionDialog: React.FC<RenameCollectionDialogProps> = ({
           </div>
           <DialogFooter>
             <DialogClose asChild>
-              <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
+              <Button type="button" variant="outline" disabled={isSubmitting}>
                 Anuluj
               </Button>
             </DialogClose>

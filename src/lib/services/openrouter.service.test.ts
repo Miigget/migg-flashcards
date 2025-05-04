@@ -52,6 +52,13 @@ const createMockResponse = (status: number, body: object | string | null, ok: bo
   bodyUsed: false,
 });
 
+// Test constructor validation separately, as it doesn't need the beforeEach hook
+it("OpenRouterService Constructor should throw AuthenticationError if API key is missing", () => {
+  expect(() => new OpenRouterService({ apiKey: "" })).toThrow(AuthenticationError);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  expect(() => new OpenRouterService({ apiKey: undefined as any })).toThrow(AuthenticationError);
+});
+
 describe("OpenRouterService", () => {
   const apiKey = "test-api-key";
   let service: OpenRouterService;
@@ -87,12 +94,6 @@ describe("OpenRouterService", () => {
 
   afterEach(() => {
     // Ensure mocks are restored if needed, though resetAllMocks in beforeEach is often sufficient
-  });
-
-  it("should throw AuthenticationError if API key is missing", () => {
-    expect(() => new OpenRouterService({ apiKey: "" })).toThrow(AuthenticationError);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect(() => new OpenRouterService({ apiKey: undefined as any })).toThrow(AuthenticationError);
   });
 
   describe("chat", () => {

@@ -67,7 +67,7 @@ const DeleteConfirmationDialog: React.FC<DeleteConfirmationDialogProps> = ({
         )}
         <DialogFooter>
           <DialogClose asChild>
-            <Button type="button" variant="outline" onClick={onCancel} disabled={isDeleting}>
+            <Button type="button" variant="outline" disabled={isDeleting}>
               Anuluj
             </Button>
           </DialogClose>
