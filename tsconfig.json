@@ -8,6 +8,11 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    "types": ["node", "@testing-library/jest-dom", "vitest/globals"],
+    "strictNullChecks": true,
+    "allowJs": true,
+    "verbatimModuleSyntax": false,
+    "allowSyntheticDefaultImports": true
   }
 }
