@@ -1,4 +1,8 @@
-import type { SupabaseClientType } from "../../db/supabase.client";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/db/database.types";
+
+// Use the specific SupabaseClient type generated for your database
+type SupabaseClientType = SupabaseClient<Database>;
 
 /**
  * Retrieves unique collection names for the specified user
@@ -6,26 +10,25 @@ import type { SupabaseClientType } from "../../db/supabase.client";
  * @param userId The user ID to get collections for
  * @returns Array of unique collection names
  */
-export async function getUniqueCollections(supabase: SupabaseClientType, userId: string): Promise<string[]> {
-  try {
-    const { data, error } = await supabase
-      .from("flashcards")
-      .select("collection")
-      .eq("user_id", userId)
-      .order("collection");
+async function _getUniqueCollections(supabase: SupabaseClientType, userId: string): Promise<string[]> {
+  const { data, error } = await supabase
+    .from("flashcards")
+    .select("collection")
+    .eq("user_id", userId)
+    .order("collection");
 
-    if (error) {
-      throw error;
-    }
-
-    // Extract unique collection names using Set to get only unique values
-    const collections = data.map((item) => item.collection as string);
-    const uniqueCollections = [...new Set(collections)];
-    return uniqueCollections;
-  } catch (error) {
+  if (error) {
     console.error("Error retrieving collections:", error);
-    throw error;
+    throw error; // Re-throw the original Supabase error
   }
+
+  // Extract unique collection names using Set to get only unique values
+  // Filter out potential null/undefined if the column allows it (though likely doesn't)
+  const collections = data
+    .map((item) => item.collection)
+    .filter((collection): collection is string => typeof collection === "string");
+  const uniqueCollections = [...new Set(collections)];
+  return uniqueCollections;
 }
 
 /**
@@ -35,28 +38,25 @@ export async function getUniqueCollections(supabase: SupabaseClientType, userId:
  * @param collectionName The name of the collection to check
  * @returns Boolean indicating if the collection exists
  */
-export async function checkCollectionExists(
+async function _checkCollectionExists(
   supabase: SupabaseClientType,
   userId: string,
   collectionName: string
 ): Promise<boolean> {
-  try {
-    const { data, error } = await supabase
-      .from("flashcards")
-      .select("flashcard_id")
-      .eq("user_id", userId)
-      .eq("collection", collectionName)
-      .limit(1);
+  const { data, error } = await supabase
+    .from("flashcards")
+    .select("flashcard_id", { head: true }) // More efficient check, only need existence
+    .eq("user_id", userId)
+    .eq("collection", collectionName)
+    .limit(1); // Only need one record to confirm existence
 
-    if (error) {
-      throw error;
-    }
-
-    return data.length > 0;
-  } catch (error) {
+  if (error) {
     console.error("Error checking collection existence:", error);
     throw error;
   }
+
+  // If data is not null and has length > 0, the collection exists
+  return !!data && data.length > 0;
 }
 
 /**
@@ -66,153 +66,129 @@ export async function checkCollectionExists(
  * @param collectionName The name of the collection
  * @returns The number of flashcards in the collection
  */
-export async function getFlashcardsInCollectionCount(
+async function _getFlashcardsInCollectionCount(
   supabase: SupabaseClientType,
   userId: string,
   collectionName: string
 ): Promise<number> {
-  try {
-    const { error, count } = await supabase
-      .from("flashcards")
-      .select("flashcard_id", { count: "exact" })
-      .eq("user_id", userId)
-      .eq("collection", collectionName);
+  const { error, count } = await supabase
+    .from("flashcards")
+    .select("*", { count: "exact", head: true }) // Count all matching rows efficiently
+    .eq("user_id", userId)
+    .eq("collection", collectionName);
 
-    if (error) {
-      throw error;
-    }
-
-    return count || 0;
-  } catch (error) {
+  if (error) {
     console.error("Error counting flashcards in collection:", error);
     throw error;
   }
+
+  return count ?? 0; // Return count, default to 0 if null
 }
 
 /**
- * Renames a collection by updating all flashcards with the specified collection name
+ * Renames a collection by updating all flashcards with the specified collection name for a user.
+ * Checks if the target name already exists.
  * @param supabase The Supabase client instance
  * @param userId The user ID to update collections for
  * @param currentName The current name of the collection to rename
  * @param newName The new name for the collection
- * @returns Object containing the count of updated flashcards and collectionExists flag
+ * @returns Object containing the count of updated flashcards and a flag indicating if the original collection existed.
+ * @throws Error if the new collection name already exists for the user.
  */
-export async function renameCollection(
+async function _renameCollection(
   supabase: SupabaseClientType,
   userId: string,
   currentName: string,
   newName: string
 ): Promise<{ count: number; collectionExists: boolean }> {
-  try {
-    // First, check if the collection exists
-    const collectionExists = await checkCollectionExists(supabase, userId, currentName);
-
-    if (!collectionExists) {
-      console.log(`Collection "${currentName}" does not exist for user ${userId}`);
+  if (currentName === newName) {
+    // Use internal service call via the exported 'service' object
+    const exists = await service.checkCollectionExists(supabase, userId, currentName);
+    if (!exists) {
       return { count: 0, collectionExists: false };
     }
+    // Use internal service call via the exported 'service' object
+    const count = await service.getFlashcardsInCollectionCount(supabase, userId, currentName);
+    return { count: count, collectionExists: true };
+  }
 
-    // Count flashcards before update to determine actual changes
-    const flashcardsBeforeCount = await getFlashcardsInCollectionCount(supabase, userId, currentName);
-    console.log(`Found ${flashcardsBeforeCount} flashcards in collection "${currentName}" before update`);
+  // Use internal service call via the exported 'service' object
+  const collectionExists = await service.checkCollectionExists(supabase, userId, currentName);
+  if (!collectionExists) {
+    console.log(`Collection "${currentName}" does not exist for user ${userId} to rename.`);
+    return { count: 0, collectionExists: false };
+  }
 
-    // Check if the new collection name already exists for this user (only if different from current)
-    if (currentName !== newName) {
-      const { data: existingCollections, error: collectionQueryError } = await supabase
-        .from("flashcards")
-        .select("collection")
-        .eq("user_id", userId)
-        .eq("collection", newName);
+  // Use internal service call via the exported 'service' object
+  const newNameExists = await service.checkCollectionExists(supabase, userId, newName);
+  if (newNameExists) {
+    throw new Error(`Cannot rename: A collection named "${newName}" already exists for this user.`);
+  }
 
-      if (collectionQueryError) {
-        console.error("Error checking for existing collection:", collectionQueryError);
-        throw collectionQueryError;
-      }
+  // 3. Perform the update
+  const { error, count } = await supabase
+    .from("flashcards")
+    .update({ collection: newName })
+    .eq("user_id", userId)
+    .eq("collection", currentName)
+    .select("*", { count: "exact", head: true }); // Count updated rows
 
-      // If collection with new name already exists
-      if (existingCollections.length > 0) {
-        throw new Error(`A collection with the name '${newName}' already exists`);
-      }
-    }
-
-    // Execute the database update operation
-    const {
-      data,
-      error,
-      count: updateCount,
-    } = await supabase
-      .from("flashcards")
-      .update({ collection: newName })
-      .eq("user_id", userId)
-      .eq("collection", currentName)
-      .select();
-
-    if (error) {
-      console.error("Database error:", error);
-      throw error;
-    }
-
-    // Log the raw update operation results
-    console.log(`Update operation returned: data length=${data?.length || 0}, updateCount=${updateCount}, data=`, data);
-
-    // Use the length of returned data or original count if more reliable
-    const actualCount = data?.length || flashcardsBeforeCount;
-
-    // Log successful operation
-    if (actualCount > 0) {
-      console.log(
-        `Collection renamed: "${currentName}" → "${newName}" for user ${userId}. ${actualCount} flashcards updated.`
-      );
-    } else {
-      console.log(`Collection "${currentName}" exists but no flashcards were updated for user ${userId}.`);
-    }
-
-    return { count: actualCount, collectionExists: true };
-  } catch (error) {
-    console.error("Error renaming collection:", error);
+  if (error) {
+    console.error("Error renaming collection (update operation):", error);
     throw error;
   }
+
+  console.log(
+    `Renamed collection "${currentName}" to "${newName}" for user ${userId}. Updated ${count ?? 0} flashcards.`
+  );
+  return { count: count ?? 0, collectionExists: true };
 }
 
 /**
- * Deletes a collection by removing all flashcards with the specified collection name
+ * Deletes a collection by removing all flashcards with the specified collection name for a user.
  * @param supabase The Supabase client instance
  * @param userId The user ID to delete collections for
  * @param collectionName The name of the collection to delete
- * @returns Object containing the count of deleted flashcards and collectionExists flag
+ * @returns Object containing the count of deleted flashcards and a flag indicating if the collection existed before deletion.
  */
-export async function deleteCollection(
+async function _deleteCollection(
   supabase: SupabaseClientType,
   userId: string,
   collectionName: string
 ): Promise<{ count: number; collectionExists: boolean }> {
-  try {
-    // First, check if the collection exists
-    const collectionExists = await checkCollectionExists(supabase, userId, collectionName);
+  // Use internal service call via the exported 'service' object
+  const collectionExists = await service.checkCollectionExists(supabase, userId, collectionName);
+  if (!collectionExists) {
+    console.log(`Collection "${collectionName}" does not exist for user ${userId} to delete.`);
+    return { count: 0, collectionExists: false };
+  }
 
-    if (!collectionExists) {
-      console.log(`Collection "${collectionName}" does not exist for user ${userId}`);
-      return { count: 0, collectionExists: false };
-    }
+  // Use internal service call via the exported 'service' object
+  const countBeforeDelete = await service.getFlashcardsInCollectionCount(supabase, userId, collectionName);
 
-    // Count flashcards before deletion to determine actual count
-    const flashcardsCount = await getFlashcardsInCollectionCount(supabase, userId, collectionName);
-    console.log(`Found ${flashcardsCount} flashcards in collection "${collectionName}" before deletion`);
+  // 2. Perform the deletion - only get error, ignore count from delete result
+  const { error } = await supabase
+    .from("flashcards")
+    .delete()
+    .eq("user_id", userId)
+    .eq("collection", collectionName)
+    .select("*", { count: "exact", head: true }); // Count deleted rows
 
-    // Delete all flashcards in the collection
-    const { error } = await supabase.from("flashcards").delete().eq("user_id", userId).eq("collection", collectionName);
-
-    if (error) {
-      console.error("Database error:", error);
-      throw error;
-    }
-
-    // Log successful operation
-    console.log(`Collection "${collectionName}" deleted for user ${userId}. ${flashcardsCount} flashcards deleted.`);
-
-    return { count: flashcardsCount, collectionExists: true };
-  } catch (error) {
+  if (error) {
     console.error("Error deleting collection:", error);
     throw error;
   }
+
+  // Although 'count' from delete might be useful, returning the count *before* deletion seems more informative.
+  console.log(`Deleted collection "${collectionName}" for user ${userId}. Removed ${countBeforeDelete} flashcards.`);
+  return { count: countBeforeDelete, collectionExists: true };
 }
+
+// Export the service object containing all functions
+export const service = {
+  getUniqueCollections: _getUniqueCollections,
+  checkCollectionExists: _checkCollectionExists,
+  getFlashcardsInCollectionCount: _getFlashcardsInCollectionCount,
+  renameCollection: _renameCollection,
+  deleteCollection: _deleteCollection,
+};

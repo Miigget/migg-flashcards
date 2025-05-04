@@ -1,9 +1,19 @@
 import { defineConfig } from "vitest/config";
+import { getViteConfig } from "astro/config";
 
-export default defineConfig({
-  test: {
-    environment: "jsdom", // Use jsdom for DOM simulation
-    globals: true, // Optional: Use if you want global APIs like describe, it, expect
-    setupFiles: [], // Optional: Add setup files if needed later
-  },
-});
+// Load the Vite configuration from Astro
+// This ensures Vitest uses the same plugins, aliases, etc. as the Astro dev server/build
+export default defineConfig(
+  getViteConfig({
+    test: {
+      // Vitest specific configurations
+      environment: "jsdom",
+      globals: true,
+      setupFiles: [],
+      // Exclude playwright tests from vitest runs if they exist
+      exclude: ["**/node_modules/**", "**/dist/**", "**/tests-e2e/**"],
+    },
+    // Note: Aliases defined in astro.config.mjs (via tsconfig.json) should be inherited
+    // No need to redefine resolve.alias here if using getViteConfig
+  })
+);
