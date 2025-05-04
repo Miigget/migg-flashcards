@@ -1,5 +1,5 @@
 /// <reference types="vitest/globals" />
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 import type { PostgrestError } from "@supabase/supabase-js";
 import { FlashcardService, FlashcardServiceError } from "./flashcard.service";
 import type { CreateFlashcardCommand, FlashcardDTO, UpdateFlashcardCommand } from "@/types"; // Assuming types are in src/types
@@ -12,56 +12,58 @@ vi.mock("@/db/supabase.client");
 type SupabaseClientType = ReturnType<typeof createSupabaseServerInstance>;
 
 // Type for the mocked Supabase client instance, derived from the actual type
-// Use vi.MockedObjectDeep for deep mocking capabilities if needed, but basic mock might suffice
 interface MockSupabaseClient extends SupabaseClientType {
   from: vi.Mock<[string], MockSupabaseChain>;
 }
 
 // Type for the chainable query builder methods (simplified, adjust as needed)
 interface MockSupabaseChain {
-  select: vi.Mock<any[], MockSupabaseChain>;
+  select: vi.Mock<[string, { count?: "exact" | "planned" | "estimated" }?], MockSupabaseChain>;
   insert: vi.Mock<[object | object[]], MockSupabaseChain>;
   update: vi.Mock<[object], MockSupabaseChain>;
   delete: vi.Mock<[], MockSupabaseChain>;
-  eq: vi.Mock<[string, any], MockSupabaseChain>;
-  neq: vi.Mock<[string, any], MockSupabaseChain>;
-  gt: vi.Mock<[string, any], MockSupabaseChain>;
-  lt: vi.Mock<[string, any], MockSupabaseChain>;
-  gte: vi.Mock<[string, any], MockSupabaseChain>;
-  lte: vi.Mock<[string, any], MockSupabaseChain>;
+  eq: vi.Mock<[string, string | number | boolean | null], MockSupabaseChain>;
+  neq: vi.Mock<[string, string | number | boolean | null], MockSupabaseChain>;
+  gt: vi.Mock<[string, string | number], MockSupabaseChain>;
+  lt: vi.Mock<[string, string | number], MockSupabaseChain>;
+  gte: vi.Mock<[string, string | number], MockSupabaseChain>;
+  lte: vi.Mock<[string, string | number], MockSupabaseChain>;
   like: vi.Mock<[string, string], MockSupabaseChain>;
   ilike: vi.Mock<[string, string], MockSupabaseChain>;
-  in: vi.Mock<[string, any[]], MockSupabaseChain>;
+  in: vi.Mock<[string, (string | number | boolean)[]], MockSupabaseChain>;
   is: vi.Mock<[string, null | boolean], MockSupabaseChain>;
   or: vi.Mock<[string], MockSupabaseChain>;
-  filter: vi.Mock<[string, string, any], MockSupabaseChain>;
+  filter: vi.Mock<[string, string, unknown], MockSupabaseChain>;
   match: vi.Mock<[Record<string, unknown>], MockSupabaseChain>;
   order: vi.Mock<[string, { ascending?: boolean; nullsFirst?: boolean }?], MockSupabaseChain>;
   limit: vi.Mock<[number], MockSupabaseChain>;
   range: vi.Mock<[number, number], MockSupabaseChain>;
   single: vi.Mock<[], MockSupabaseChain>;
   maybeSingle: vi.Mock<[], MockSupabaseChain>;
-  // The 'then' method to resolve the promise
-  // Explicitly type the resolved value structure
-  then: <TResult1 = { data: any; error: PostgrestError | null; count: number | null }, TResult2 = never>(
+  then: <TResult1 = { data: unknown; error: PostgrestError | null; count: number | null }, TResult2 = never>(
     onfulfilled?:
-      | ((value: { data: any; error: PostgrestError | null; count: number | null }) => TResult1 | PromiseLike<TResult1>)
+      | ((value: {
+          data: unknown;
+          error: PostgrestError | null;
+          count: number | null;
+        }) => TResult1 | PromiseLike<TResult1>)
       | undefined
       | null,
-    onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null
+    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | undefined | null
   ) => Promise<TResult1 | TResult2>;
-  // Helper for setting the next result
-  mockQueryResult: (result: { data?: any; error?: PostgrestError | null; count?: number | null }) => void;
-  // Helper to clear the queue (optional, could be useful in beforeEach)
+  mockQueryResult: (result: {
+    data?: unknown;
+    error?: PostgrestError | null;
+    count?: number | null;
+  }) => MockSupabaseChain;
   clearMockQueue: () => void;
 }
 
 // Helper function to create a mock Supabase client with chainable methods and result queuing
 const createMockSupabase = (): MockSupabaseClient => {
-  // Queue for storing results for sequential calls
-  let resultsQueue: { data?: any; error?: PostgrestError | null; count?: number | null }[] = [];
+  let resultsQueue: { data?: unknown; error?: PostgrestError | null; count?: number | null }[] = [];
 
-  const chain = {
+  const chain: MockSupabaseChain = {
     select: vi.fn(() => chain),
     insert: vi.fn(() => chain),
     update: vi.fn(() => chain),
@@ -84,39 +86,49 @@ const createMockSupabase = (): MockSupabaseClient => {
     range: vi.fn(() => chain),
     single: vi.fn(() => chain),
     maybeSingle: vi.fn(() => chain),
-
-    then: vi.fn((onfulfilled, onrejected) => {
-      // Dequeue the next result. If queue is empty, return a default empty result.
-      const resultToUse = resultsQueue.shift() || { data: null, error: null, count: 0 };
-
-      // Always resolve the promise with the standard Supabase structure.
-      const promise = Promise.resolve({
-        data: resultToUse.error ? null : resultToUse.data,
-        error: resultToUse.error,
-        count: resultToUse.count ?? null,
-      });
-
-      return promise.then(onfulfilled, onrejected);
-    }),
-
-    // Renamed from mockResult to mockQueryResult and queues the result
-    mockQueryResult: (result: { data?: any; error?: PostgrestError | null; count?: number | null }) => {
+    then: vi.fn(
+      <TResult1 = { data: unknown; error: PostgrestError | null; count: number | null }, TResult2 = never>(
+        onfulfilled?:
+          | ((value: {
+              data: unknown;
+              error: PostgrestError | null;
+              count: number | null;
+            }) => TResult1 | PromiseLike<TResult1>)
+          | undefined
+          | null,
+        onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | undefined | null
+      ): Promise<TResult1 | TResult2> => {
+        const resultToUse = resultsQueue.shift() || { data: null, error: null, count: 0 };
+        const promise = Promise.resolve({
+          data: resultToUse.error ? null : resultToUse.data,
+          error: resultToUse.error,
+          count: resultToUse.count ?? null,
+        });
+        return promise.then(onfulfilled, onrejected);
+      }
+    ),
+    mockQueryResult: (result: {
+      data?: unknown;
+      error?: PostgrestError | null;
+      count?: number | null;
+    }): MockSupabaseChain => {
       resultsQueue.push(result);
-      return chain; // Return chain for potential chaining of mock setups
+      return chain;
     },
-    // Helper to clear the queue (optional, could be useful in beforeEach)
     clearMockQueue: () => {
       resultsQueue = [];
     },
-  } as MockSupabaseChain;
+  };
 
   const client = {
     from: vi.fn(() => chain),
   } as unknown as MockSupabaseClient;
 
-  // Add the queue control methods directly to the client mock instance
-  (client as any).mockQueryResult = chain.mockQueryResult;
-  (client as any).clearMockQueue = chain.clearMockQueue;
+  // Add methods using Mock type from vitest if needed for type safety
+  (client as MockSupabaseClient & { mockQueryResult: typeof chain.mockQueryResult }).mockQueryResult =
+    chain.mockQueryResult;
+  (client as MockSupabaseClient & { clearMockQueue: typeof chain.clearMockQueue }).clearMockQueue =
+    chain.clearMockQueue;
 
   return client;
 };
@@ -127,14 +139,9 @@ let flashcardService: FlashcardService;
 
 describe("Flashcard Service", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-
+    vi.resetAllMocks();
     mockSupabaseInstance = createMockSupabase();
-
-    // Mock the factory function itself to return our specific mock instance
     vi.mocked(createSupabaseServerInstance).mockReturnValue(mockSupabaseInstance);
-
-    // Instantiate the service with the *mock instance*
     flashcardService = new FlashcardService(mockSupabaseInstance);
   });
 
@@ -324,7 +331,7 @@ describe("Flashcard Service", () => {
       { p: 1, l: 101, error: "Limit must be between 1 and 100", code: "VALIDATION_ERROR" },
     ])("should throw Validation Error for page $p and limit $l", async ({ p, l, error, code }) => {
       await expect(flashcardService.getFlashcards(userId, p, l)).rejects.toThrowError(
-        new FlashcardServiceError(error, code as any, 400)
+        new FlashcardServiceError(error, code as "VALIDATION_ERROR", 400)
       );
     });
 
@@ -411,7 +418,7 @@ describe("Flashcard Service", () => {
     it("should return the flashcard when found", async () => {
       // Arrange
       const mockChain = mockSupabaseInstance.from("flashcards") as unknown as MockSupabaseChain;
-      (mockChain as any).mockQueryResult({ data: mockFlashcard });
+      mockChain.mockQueryResult({ data: mockFlashcard });
 
       // Act
       const result = await flashcardService.getFlashcardById(flashcardId, userId);
@@ -452,7 +459,7 @@ describe("Flashcard Service", () => {
         name: "PostgrestError",
       };
       const mockChain = mockSupabaseInstance.from("flashcards") as unknown as MockSupabaseChain;
-      (mockChain as any).mockQueryResult({ error: mockError });
+      mockChain.mockQueryResult({ error: mockError });
 
       // Act & Assert
       await expect(flashcardService.getFlashcardById(flashcardId, userId)).rejects.toThrowError(
@@ -469,7 +476,7 @@ describe("Flashcard Service", () => {
     it("should throw Not Found Error if Supabase returns null data without error", async () => {
       // Arrange
       const mockChain = mockSupabaseInstance.from("flashcards") as unknown as MockSupabaseChain;
-      (mockChain as any).mockQueryResult({ data: null }); // Simulate no data returned
+      mockChain.mockQueryResult({ data: null }); // Simulate no data returned
 
       // Act & Assert
       await expect(flashcardService.getFlashcardById(flashcardId, userId)).rejects.toThrowError(
@@ -488,7 +495,7 @@ describe("Flashcard Service", () => {
         name: "PostgrestError",
       };
       const mockChain = mockSupabaseInstance.from("flashcards") as unknown as MockSupabaseChain;
-      (mockChain as any).mockQueryResult({ error: mockError });
+      mockChain.mockQueryResult({ error: mockError });
 
       // Act & Assert
       await expect(flashcardService.getFlashcardById(flashcardId, userId)).rejects.toThrowError(
@@ -545,9 +552,9 @@ describe("Flashcard Service", () => {
       // Arrange
       const mockChain = mockSupabaseInstance.from("flashcards") as unknown as MockSupabaseChain;
       // Mock the initial check for existence
-      (mockChain as any).mockQueryResult({ data: { flashcard_id: flashcardId } });
+      mockChain.mockQueryResult({ data: { flashcard_id: flashcardId } });
       // Mock the update operation
-      (mockChain as any).mockQueryResult({ data: updatedFlashcard });
+      mockChain.mockQueryResult({ data: updatedFlashcard });
 
       // Act
       const result = await flashcardService.updateFlashcard(flashcardId, updateCommand, userId);
@@ -598,12 +605,12 @@ describe("Flashcard Service", () => {
         name: "PostgrestError",
       };
       const mockChain = mockSupabaseInstance.from("flashcards") as unknown as MockSupabaseChain;
-      (mockChain as any).mockQueryResult({ error: mockError }); // Error on the initial select().single()
+      mockChain.mockQueryResult({ error: mockError }); // Error on the initial select().single()
 
       // Act & Assert
       await expect(flashcardService.updateFlashcard(flashcardId, updateCommand, userId)).rejects.toThrowError(
         new FlashcardServiceError(
-          "The flashcard was not found or you don\'t have permission to update it",
+          "The flashcard was not found or you don't have permission to update it",
           "NOT_FOUND",
           404,
           mockError
@@ -626,9 +633,9 @@ describe("Flashcard Service", () => {
       };
       const mockChain = mockSupabaseInstance.from("flashcards") as unknown as MockSupabaseChain;
       // Mock the initial check for existence - success
-      (mockChain as any).mockQueryResult({ data: { flashcard_id: flashcardId } });
+      mockChain.mockQueryResult({ data: { flashcard_id: flashcardId } });
       // Mock the update operation - failure
-      (mockChain as any).mockQueryResult({ error: mockError });
+      mockChain.mockQueryResult({ error: mockError });
 
       // Act & Assert
       await expect(flashcardService.updateFlashcard(flashcardId, updateCommand, userId)).rejects.toThrowError(
@@ -668,9 +675,9 @@ describe("Flashcard Service", () => {
       // Arrange
       // Use the refactored mock helper to queue results
       // Queue result for the initial existence check (select)
-      (mockSupabaseInstance as any).mockQueryResult({ data: { flashcard_id: flashcardId } });
+      mockSupabaseInstance.mockQueryResult({ data: { flashcard_id: flashcardId } });
       // Queue result for the delete operation
-      (mockSupabaseInstance as any).mockQueryResult({ data: null, error: null });
+      mockSupabaseInstance.mockQueryResult({ data: null, error: null });
 
       // Act
       await flashcardService.deleteFlashcard(flashcardId, userId);
@@ -718,7 +725,7 @@ describe("Flashcard Service", () => {
         name: "PostgrestError",
       };
       const mockChain = mockSupabaseInstance.from("flashcards") as unknown as MockSupabaseChain;
-      (mockChain as any).mockQueryResult({ error: mockError }); // Error on the initial select().single()
+      mockChain.mockQueryResult({ error: mockError }); // Error on the initial select().single()
 
       // Act & Assert
       await expect(flashcardService.deleteFlashcard(flashcardId, userId)).rejects.toThrowError(
@@ -746,9 +753,9 @@ describe("Flashcard Service", () => {
       };
       const mockChain = mockSupabaseInstance.from("flashcards") as unknown as MockSupabaseChain;
       // Mock the initial check - success
-      (mockChain as any).mockQueryResult({ data: { flashcard_id: flashcardId } });
+      mockChain.mockQueryResult({ data: { flashcard_id: flashcardId } });
       // Mock the delete operation - failure
-      (mockChain as any).mockQueryResult({ error: mockError });
+      mockChain.mockQueryResult({ error: mockError });
 
       // Act & Assert
       await expect(flashcardService.deleteFlashcard(flashcardId, userId)).rejects.toThrowError(

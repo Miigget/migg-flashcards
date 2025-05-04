@@ -1,6 +1,6 @@
 /// <reference types="vitest/globals" />
 import { renderHook, act } from "@testing-library/react";
-import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
+import { vi, describe, it, expect, beforeEach, afterEach, type Mock } from "vitest";
 import { useGenerateFlashcards } from "./useGenerateFlashcards";
 import type { CandidateViewModel } from "./useGenerateFlashcards";
 import type { AIGenerateFlashcardsCommand } from "@/types";
@@ -22,11 +22,11 @@ describe("useGenerateFlashcards Hook", () => {
     // Reset mocks and counter before each test
     vi.resetAllMocks();
     uuidCounter = 0;
-    (uuidv4 as vi.Mock).mockImplementation(() => `mock-uuid-${++uuidCounter}`);
-    // Reset fetch mock
-    mockFetch.mockClear();
+    (uuidv4 as Mock).mockImplementation(() => `mock-uuid-${++uuidCounter}`);
 
-    // Default fetch mock to avoid unhandled promise rejections if not overridden
+    // Explicitly reset fetch mock implementation (safer than relying only on resetAllMocks)
+    mockFetch.mockReset();
+    // Default fetch mock after reset
     mockFetch.mockResolvedValue({
       ok: true,
       json: async () => ({ candidates: [], generation_id: "default-gen-id", generated_count: 0 }),
@@ -34,8 +34,9 @@ describe("useGenerateFlashcards Hook", () => {
   });
 
   afterEach(() => {
-    // Ensure fetch mock is always reset after each test
-    mockFetch.mockClear();
+    // Ensure fetch mock is always reset after each test - Using reset in beforeEach is likely sufficient
+    // mockFetch.mockClear();
+    // mockFetch.mockReset();
   });
 
   it("should initialize with correct default state", () => {
