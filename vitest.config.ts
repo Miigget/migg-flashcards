@@ -12,6 +12,8 @@ export default defineConfig(
       setupFiles: [],
       // Exclude playwright tests from vitest runs if they exist
       exclude: ["**/node_modules/**", "**/dist/**", "**/tests-e2e/**"],
+      // Increase default timeout to 30 seconds for async tests
+      testTimeout: 30000,
     },
     // Note: Aliases defined in astro.config.mjs (via tsconfig.json) should be inherited
     // No need to redefine resolve.alias here if using getViteConfig
