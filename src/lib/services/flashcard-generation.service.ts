@@ -66,7 +66,7 @@ class FlashcardGenerationService {
 
       // 3. Call AI service using OpenRouter
       const startTime = Date.now();
-      const candidates = await this.callAIService(text);
+      const candidates = await this.callAIService(text, userId);
       const generationTimeMs = Date.now() - startTime;
 
       // Assign the generated generation_id to each candidate
@@ -213,7 +213,7 @@ class FlashcardGenerationService {
   /**
    * Calls the OpenRouter AI service to generate flashcards
    */
-  private async callAIService(inputText: string): Promise<FlashcardCandidateDto[]> {
+  private async callAIService(inputText: string, userId: string): Promise<FlashcardCandidateDto[]> {
     try {
       // Get the OpenRouter client
       const openRouter = getOpenRouterClient();
@@ -273,7 +273,7 @@ class FlashcardGenerationService {
       // Check if response has the expected structure
       if (!response || !response.choices || !response.choices.length || !response.choices[0].message) {
         console.error("Invalid response structure, falling back to sample flashcards");
-        return this.getSampleFlashcards(now);
+        return this.getSampleFlashcards(now, userId);
       }
 
       // Extract and validate the response
@@ -281,7 +281,7 @@ class FlashcardGenerationService {
 
       if (!content) {
         console.error("Empty content returned, falling back to sample flashcards");
-        return this.getSampleFlashcards(now);
+        return this.getSampleFlashcards(now, userId);
       }
 
       // Try to parse the JSON content
@@ -291,7 +291,7 @@ class FlashcardGenerationService {
       } catch (parseError) {
         console.error("Failed to parse JSON response:", content);
         console.error("Parse error details:", parseError);
-        return this.getSampleFlashcards(now);
+        return this.getSampleFlashcards(now, userId);
       }
 
       // Log the parsed response
@@ -302,12 +302,12 @@ class FlashcardGenerationService {
 
       if (!validationResult.success) {
         console.error("Validation error:", validationResult.error);
-        return this.getSampleFlashcards(now);
+        return this.getSampleFlashcards(now, userId);
       }
 
       // Transform the validated response into FlashcardCandidateDto[]
       const candidates: FlashcardCandidateDto[] = validationResult.data.flashcards.map((card) => ({
-        user_id: "", // This will be updated later in generateFlashcards if needed, or removed if FK handles it
+        user_id: userId, // Use the passed userId
         front: card.front,
         back: card.back,
         source: "ai-full" as const,
@@ -360,19 +360,20 @@ class FlashcardGenerationService {
       const now = new Date().toISOString();
 
       // Return sample cards in case of errors
-      return this.getSampleFlashcards(now);
+      return this.getSampleFlashcards(now, userId);
     }
   }
 
   /**
    * Provides sample flashcards for fallback when OpenRouter fails
    * @param timestamp - Timestamp to use for created_at and updated_at fields
+   * @param userId - User ID for the sample flashcards
    * @returns Sample flashcards
    */
-  private getSampleFlashcards(timestamp: string): FlashcardCandidateDto[] {
+  private getSampleFlashcards(timestamp: string, userId: string): FlashcardCandidateDto[] {
     return [
       {
-        user_id: "", // Placeholder or remove if not needed directly on DTO
+        user_id: userId, // Use userId for samples too
         front: "Przykładowa fiszka - Przód 1",
         back: "Przykładowa fiszka - Tył 1",
         source: "ai-full" as const,
@@ -384,7 +385,7 @@ class FlashcardGenerationService {
         status: "candidate",
       },
       {
-        user_id: "",
+        user_id: userId, // Use userId for samples too
         front: "Przykładowa fiszka - Przód 2",
         back: "Przykładowa fiszka - Tył 2",
         source: "ai-full" as const,
