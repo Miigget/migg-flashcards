@@ -18,8 +18,9 @@ export type CreateFlashcardCommand = Omit<Pick<FlashcardDTO, "front" | "back" | 
 // UpdateFlashcardCommand: Payload for updating a flashcard. Includes 'front', 'back', 'collection', and 'source'.
 export type UpdateFlashcardCommand = Partial<Pick<FlashcardDTO, "front" | "back" | "collection" | "source">>;
 
-// FlashcardCandidateDto: Represents an AI generated flashcard candidate with source "ai-full" or "ai-edited".
-export type FlashcardCandidateDto = Omit<FlashcardDTO, "source"> & {
+// FlashcardCandidateDto: Represents an AI generated flashcard candidate.
+// Contains only the necessary fields for creation via bulk insert.
+export type FlashcardCandidateDto = Pick<FlashcardDTO, "front" | "back" | "collection" | "generation_id"> & {
   source: "ai-full" | "ai-edited";
 };
 
