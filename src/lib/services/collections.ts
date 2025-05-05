@@ -43,20 +43,21 @@ async function _checkCollectionExists(
   userId: string,
   collectionName: string
 ): Promise<boolean> {
-  const { data, error } = await supabase
+  // Use count: 'exact' and head: true to efficiently check existence
+  const { error, count } = await supabase
     .from("flashcards")
-    .select("flashcard_id", { head: true }) // More efficient check, only need existence
+    .select("*", { count: "exact", head: true })
     .eq("user_id", userId)
-    .eq("collection", collectionName)
-    .limit(1); // Only need one record to confirm existence
+    .eq("collection", collectionName);
+  // No .limit(1) needed when using count
 
   if (error) {
     console.error("Error checking collection existence:", error);
-    throw error;
+    throw error; // Re-throw the original Supabase error
   }
 
-  // If data is not null and has length > 0, the collection exists
-  return !!data && data.length > 0;
+  // Return true if count is greater than 0, otherwise false
+  return count !== null && count > 0;
 }
 
 /**
@@ -125,13 +126,13 @@ async function _renameCollection(
     throw new Error(`Cannot rename: A collection named "${newName}" already exists for this user.`);
   }
 
-  // 3. Perform the update
+  // 3. Perform the update and get the count
   const { error, count } = await supabase
     .from("flashcards")
-    .update({ collection: newName })
+    .update({ collection: newName }, { count: "exact" }) // Add count option directly to update
     .eq("user_id", userId)
-    .eq("collection", currentName)
-    .select("*", { count: "exact", head: true }); // Count updated rows
+    .eq("collection", currentName);
+  // No .select() needed after update when using count option directly
 
   if (error) {
     console.error("Error renaming collection (update operation):", error);
@@ -167,12 +168,8 @@ async function _deleteCollection(
   const countBeforeDelete = await service.getFlashcardsInCollectionCount(supabase, userId, collectionName);
 
   // 2. Perform the deletion - only get error, ignore count from delete result
-  const { error } = await supabase
-    .from("flashcards")
-    .delete()
-    .eq("user_id", userId)
-    .eq("collection", collectionName)
-    .select("*", { count: "exact", head: true }); // Count deleted rows
+  const { error } = await supabase.from("flashcards").delete().eq("user_id", userId).eq("collection", collectionName);
+  // No select needed here if we don't need the deleted data or count
 
   if (error) {
     console.error("Error deleting collection:", error);

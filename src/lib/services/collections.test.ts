@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, SpyInstance } from "vitest";
 import type {
   SupabaseClient,
   // PostgrestResponse, // No longer explicitly used in tests
@@ -8,22 +8,30 @@ import type {
 import { service as collectionsService } from "./collections";
 import type { Database } from "@/db/database.types";
 
+// More specific types for mocks
+interface MockSupabaseResponse<T> {
+  data: T | null;
+  error: PostgrestError | null;
+  count?: number | null;
+}
+
 // Re-type the mock based on the actual usage and SupabaseClient
 type MockSupabaseClient = SupabaseClient<Database> & {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  mockResolveNext: (value: { data: any; error: PostgrestError | null; count?: number | null }) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  mockRejectNext: (error: any) => void;
+  mockResolveNext: (value: MockSupabaseResponse<unknown>) => void;
+  mockRejectNext: (error: Error | PostgrestError) => void; // Accept Error or PostgrestError
   // Chainable methods return the mock itself or a promise-like object
   from: vi.Mock<[string], MockSupabaseClient>;
-  select: vi.Mock<any[], MockSupabaseClient>; // Adjust based on usage
-  eq: vi.Mock<[string, any], MockSupabaseClient>;
+  select: vi.Mock<[string?, { head?: boolean; count?: "exact" | "planned" | "estimated" }?], MockSupabaseClient>; // Updated select mock type
+  eq: vi.Mock<[string, string | number | boolean], MockSupabaseClient>; // Updated eq mock type
   order: vi.Mock<[string, { ascending?: boolean }?], MockSupabaseClient>;
   limit: vi.Mock<[number], MockSupabaseClient>;
-  update: vi.Mock<[object], MockSupabaseClient>;
-  delete: vi.Mock<[], MockSupabaseClient>;
-  // The implicit then method
-  then?: (onfulfilled: (value: any) => any, onrejected?: (reason: any) => any) => Promise<any>;
+  update: vi.Mock<[object, { count?: "exact" | "planned" | "estimated" }?], MockSupabaseClient>; // Updated update mock type
+  delete: Mock<[{ count?: "exact" | "planned" | "estimated" }?], MockSupabaseClient>; // Updated delete mock type
+  // The implicit then method for await
+  then: <TResult1 = MockSupabaseResponse<unknown>, TResult2 = never>(
+    onfulfilled: (value: MockSupabaseResponse<unknown>) => TResult1 | PromiseLike<TResult1>,
+    onrejected?: (reason: Error | PostgrestError) => TResult2 | PromiseLike<TResult2>
+  ) => Promise<TResult1 | TResult2>;
 };
 
 // Define expected data shapes
@@ -31,54 +39,52 @@ interface FlashcardCollectionData {
   collection: string;
 }
 
-// Helper function to create a mock Supabase client with configurable promises
+// Helper function to create a mock Supabase client
 const createMockSupabase = (): MockSupabaseClient => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let nextPromiseConfig: { resolve: boolean; value: any } = {
+  let nextPromiseConfig: { resolve: boolean; value: MockSupabaseResponse<unknown> | Error | PostgrestError } = {
     resolve: true,
-    value: { data: [], error: null, count: 0, status: 200, statusText: "OK" },
+    value: { data: [], error: null, count: 0 },
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mock: any = {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    mockResolveNext: (value: { data: any; error: PostgrestError | null; count?: number | null }) => {
-      const count = value.count === undefined ? null : value.count;
+    mockResolveNext: (value: MockSupabaseResponse<unknown>) => {
       nextPromiseConfig = {
         resolve: true,
         value: {
           data: value.data,
           error: value.error,
-          count,
-          status: value.error ? 500 : 200,
-          statusText: value.error ? "Error" : "OK",
+          count: value.count === undefined ? null : value.count,
         },
       };
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    mockRejectNext: (error: any) => {
+    mockRejectNext: (error: Error | PostgrestError) => {
       nextPromiseConfig = { resolve: false, value: error };
     },
   };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const createPromise = (): Promise<any> => {
+
+  const createPromise = (): Promise<MockSupabaseResponse<unknown>> => {
     const config = { ...nextPromiseConfig };
-    nextPromiseConfig = { resolve: true, value: { data: [], error: null, count: 0, status: 200, statusText: "OK" } };
+    // Reset default for next chain
+    nextPromiseConfig = { resolve: true, value: { data: [], error: null, count: 0 } };
     if (config.resolve) {
-      return Promise.resolve(config.value);
+      return Promise.resolve(config.value as MockSupabaseResponse<unknown>);
     } else {
       return Promise.reject(config.value);
     }
   };
+
+  // Setup mock methods to be chainable and thenable
+  mock.from = vi.fn(() => mock);
   mock.select = vi.fn(() => mock);
   mock.update = vi.fn(() => mock);
   mock.delete = vi.fn(() => mock);
   mock.order = vi.fn(() => mock);
   mock.limit = vi.fn(() => mock);
   mock.eq = vi.fn(() => mock);
-  mock.from = vi.fn(() => mock);
   mock.then = vi.fn((onfulfilled, onrejected) => {
     return createPromise().then(onfulfilled, onrejected);
   });
+
   return mock as MockSupabaseClient;
 };
 
@@ -145,22 +151,24 @@ describe("Collections Service", () => {
       const mockSupabase = createMockSupabase();
       const userId = "user-exists-1";
       const collectionName = "Existing Collection";
-      mockSupabase.mockResolveNext({ data: [{ flashcard_id: 123 }], error: null });
+      // Set the expected final result for the await call
+      mockSupabase.mockResolveNext({ data: null, error: null, count: 1 });
+
       const exists = await collectionsService.checkCollectionExists(mockSupabase, userId, collectionName);
 
       expect(exists).toBe(true);
       expect(mockSupabase.from).toHaveBeenCalledWith("flashcards");
-      expect(mockSupabase.select).toHaveBeenCalledWith("flashcard_id", { head: true });
+      expect(mockSupabase.select).toHaveBeenCalledWith("*", { count: "exact", head: true });
       expect(mockSupabase.eq).toHaveBeenCalledWith("user_id", userId);
       expect(mockSupabase.eq).toHaveBeenCalledWith("collection", collectionName);
-      expect(mockSupabase.limit).toHaveBeenCalledWith(1);
     });
 
     it("should return false if no flashcards exist for the collection and user", async () => {
       const mockSupabase = createMockSupabase();
       const userId = "user-exists-2";
       const collectionName = "NonExistent Collection";
-      mockSupabase.mockResolveNext({ data: [], error: null });
+      // Set the expected final result for the await call (count is 0)
+      mockSupabase.mockResolveNext({ data: null, error: null, count: 0 });
       const exists = await collectionsService.checkCollectionExists(mockSupabase, userId, collectionName);
 
       expect(exists).toBe(false);
@@ -180,14 +188,10 @@ describe("Collections Service", () => {
         hint: "h",
         code: "ABCDE",
       };
-      mockSupabase.mockResolveNext({ data: null, error: mockError });
-
-      try {
-        await collectionsService.checkCollectionExists(mockSupabase, userId, collectionName);
-        expect.fail("Expected function to throw");
-      } catch (error) {
-        expect(error).toEqual(mockError);
-      }
+      mockSupabase.mockRejectNext(mockError);
+      await expect(collectionsService.checkCollectionExists(mockSupabase, userId, collectionName)).rejects.toEqual(
+        mockError
+      );
     });
   });
 
@@ -248,39 +252,38 @@ describe("Collections Service", () => {
   });
 
   describe("renameCollection", () => {
-    // Spies need to be declared here
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let checkExistsSpy: vi.SpyInstance<any[], any>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let getCountSpy: vi.SpyInstance<any[], any>;
+    // Use imported SpyInstance type
+    let checkExistsSpy: SpyInstance<[MockSupabaseClient, string, string], Promise<boolean>>;
+    let getCountSpy: SpyInstance<[MockSupabaseClient, string, string], Promise<number>>;
     const userId = "user-rename-123";
     const currentName = "Old Name";
     const newName = "New Name";
 
     beforeEach(() => {
-      // Spy on the methods of the imported service object
       checkExistsSpy = vi.spyOn(collectionsService, "checkCollectionExists");
       getCountSpy = vi.spyOn(collectionsService, "getFlashcardsInCollectionCount");
     });
 
     it("should rename collection successfully if current exists and new name is unique", async () => {
       const mockSupabase = createMockSupabase();
-      const updateCount = 5;
+      const updateCount = 3;
       checkExistsSpy
-        .mockResolvedValueOnce(true) // First call for currentName
-        .mockResolvedValueOnce(false); // Second call for newName
+        .mockResolvedValueOnce(true) // checkCollectionExists for currentName
+        .mockResolvedValueOnce(false); // checkCollectionExists for newName
+
+      // Set the expected final result for the await call to renameCollection (the update operation)
       mockSupabase.mockResolveNext({ data: null, error: null, count: updateCount });
+
       const result = await collectionsService.renameCollection(mockSupabase, userId, currentName, newName);
 
+      expect(result).toEqual({ count: updateCount, collectionExists: true });
       expect(checkExistsSpy).toHaveBeenNthCalledWith(1, mockSupabase, userId, currentName);
       expect(checkExistsSpy).toHaveBeenNthCalledWith(2, mockSupabase, userId, newName);
       expect(getCountSpy).not.toHaveBeenCalled();
       expect(mockSupabase.from).toHaveBeenCalledWith("flashcards");
-      expect(mockSupabase.update).toHaveBeenCalledWith({ collection: newName });
+      expect(mockSupabase.update).toHaveBeenCalledWith({ collection: newName }, { count: "exact" });
       expect(mockSupabase.eq).toHaveBeenCalledWith("user_id", userId);
       expect(mockSupabase.eq).toHaveBeenCalledWith("collection", currentName);
-      expect(mockSupabase.select).toHaveBeenCalledWith("*", { count: "exact", head: true });
-      expect(result).toEqual({ count: updateCount, collectionExists: true });
     });
 
     it("should return count 0 and collectionExists false if current collection does not exist", async () => {
@@ -368,49 +371,53 @@ describe("Collections Service", () => {
         hint: "h",
         code: "KLMNO",
       };
-      checkExistsSpy.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
-      mockSupabase.mockResolveNext({ data: null, error: mockUpdateError, count: null });
+      checkExistsSpy
+        .mockResolvedValueOnce(true) // checkCollectionExists for currentName
+        .mockResolvedValueOnce(false); // checkCollectionExists for newName
 
-      try {
-        await collectionsService.renameCollection(mockSupabase, userId, currentName, newName);
-        expect.fail("Expected function to throw");
-      } catch (error) {
-        expect(error).toEqual(mockUpdateError);
-      }
+      // Set the expected final result (rejection) for the await call to renameCollection
+      mockSupabase.mockRejectNext(mockUpdateError);
+
+      await expect(collectionsService.renameCollection(mockSupabase, userId, currentName, newName)).rejects.toEqual(
+        mockUpdateError
+      );
+
       expect(checkExistsSpy).toHaveBeenCalledTimes(2);
-      expect(mockSupabase.update).toHaveBeenCalled();
+      expect(mockSupabase.update).toHaveBeenCalled(); // Ensure update was called
     });
   });
 
   describe("deleteCollection", () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let checkExistsSpy: vi.SpyInstance<any[], any>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let getCountSpy: vi.SpyInstance<any[], any>;
+    // Use imported SpyInstance type
+    let checkExistsSpy: SpyInstance<[MockSupabaseClient, string, string], Promise<boolean>>;
+    let getCountSpy: SpyInstance<[MockSupabaseClient, string, string], Promise<number>>;
     const userId = "user-delete-123";
     const collectionName = "ToDelete";
 
     beforeEach(() => {
-      // Spy on service object methods
       checkExistsSpy = vi.spyOn(collectionsService, "checkCollectionExists");
       getCountSpy = vi.spyOn(collectionsService, "getFlashcardsInCollectionCount");
     });
 
     it("should delete collection successfully if it exists", async () => {
       const mockSupabase = createMockSupabase();
-      const countBeforeDelete = 10;
+      const countBeforeDelete = 5;
       checkExistsSpy.mockResolvedValue(true);
       getCountSpy.mockResolvedValue(countBeforeDelete);
-      mockSupabase.mockResolveNext({ data: [], error: null, count: countBeforeDelete });
+
+      // Set the expected final result for the await call to deleteCollection (the delete operation)
+      mockSupabase.mockResolveNext({ data: null, error: null, count: null });
+
       const result = await collectionsService.deleteCollection(mockSupabase, userId, collectionName);
 
       expect(checkExistsSpy).toHaveBeenCalledWith(mockSupabase, userId, collectionName);
       expect(getCountSpy).toHaveBeenCalledWith(mockSupabase, userId, collectionName);
       expect(mockSupabase.from).toHaveBeenCalledWith("flashcards");
-      expect(mockSupabase.delete).toHaveBeenCalled();
+      expect(mockSupabase.delete).toHaveBeenCalledTimes(1); // Called once
       expect(mockSupabase.eq).toHaveBeenCalledWith("user_id", userId);
       expect(mockSupabase.eq).toHaveBeenCalledWith("collection", collectionName);
-      expect(mockSupabase.select).toHaveBeenCalledWith("*", { count: "exact", head: true });
+      // Ensure select wasn't called directly by deleteCollection's main flow
+      expect(mockSupabase.select).not.toHaveBeenCalled();
       expect(result).toEqual({ count: countBeforeDelete, collectionExists: true });
     });
 
@@ -465,17 +472,17 @@ describe("Collections Service", () => {
       };
       checkExistsSpy.mockResolvedValue(true);
       getCountSpy.mockResolvedValue(countBeforeDelete);
-      mockSupabase.mockResolveNext({ data: null, error: mockDeleteError, count: null });
 
-      try {
-        await collectionsService.deleteCollection(mockSupabase, userId, collectionName);
-        expect.fail("Expected function to throw");
-      } catch (error) {
-        expect(error).toEqual(mockDeleteError);
-      }
+      // Set the expected final result (rejection) for the await call to deleteCollection
+      mockSupabase.mockRejectNext(mockDeleteError);
 
-      expect(getCountSpy).toHaveBeenCalled(); // Ensure count was called
-      expect(mockSupabase.delete).toHaveBeenCalled(); // Ensure delete was attempted
+      await expect(collectionsService.deleteCollection(mockSupabase, userId, collectionName)).rejects.toEqual(
+        mockDeleteError
+      );
+
+      expect(checkExistsSpy).toHaveBeenCalled();
+      expect(getCountSpy).toHaveBeenCalled();
+      expect(mockSupabase.delete).toHaveBeenCalled(); // Ensure delete was called
     });
   });
 });

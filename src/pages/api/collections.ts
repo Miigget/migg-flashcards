@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { getUniqueCollections } from "../../lib/services/collections";
+import { service as collectionService } from "../../lib/services/collections";
 
 export const prerender = false;
 
@@ -24,7 +24,7 @@ export const GET: APIRoute = async ({ locals }) => {
     }
 
     // Get unique collections for the logged-in user
-    const collections = await getUniqueCollections(supabase, user.id);
+    const collections = await collectionService.getUniqueCollections(supabase, user.id);
 
     // Return the collections as a JSON array
     return new Response(JSON.stringify(collections), {

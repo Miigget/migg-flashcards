@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
 import type { UpdateCollectionCommand } from "../../../types";
-import { renameCollection, deleteCollection } from "../../../lib/services/collections";
+import { service as collectionService } from "../../../lib/services/collections";
 
 export const prerender = false;
 
@@ -71,7 +71,7 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
 
     try {
       // Use the authenticated user ID
-      const { count, collectionExists } = await renameCollection(
+      const { count, collectionExists } = await collectionService.renameCollection(
         supabase,
         userId,
         collection_name,
@@ -177,7 +177,7 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
     // ---------------------------
 
     // 4. Delete the collection using the service function
-    const { count, collectionExists } = await deleteCollection(supabase, userId, collection_name);
+    const { count, collectionExists } = await collectionService.deleteCollection(supabase, userId, collection_name);
 
     if (!collectionExists) {
       return new Response(
