@@ -1,5 +1,6 @@
 import type { PaginatedResponse, GenerationDTO } from "../../types";
-import type { SupabaseClientType } from "../../db/supabase.client";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "../../db/database.types";
 
 /**
  * Fetches paginated generation sessions for a specific user
@@ -10,7 +11,7 @@ import type { SupabaseClientType } from "../../db/supabase.client";
  * @returns A paginated response containing generation sessions
  */
 export async function getGenerationsForUser(
-  supabase: SupabaseClientType,
+  supabase: SupabaseClient<Database>,
   userId: string,
   page: number,
   limit: number
@@ -55,7 +56,7 @@ export async function getGenerationsForUser(
  * @returns The generation or null if not found
  */
 export async function getGenerationById(
-  supabase: SupabaseClientType,
+  supabase: SupabaseClient<Database>,
   generation_id: number,
   user_id: string
 ): Promise<{ generation: GenerationDTO | null; error: Error | null }> {

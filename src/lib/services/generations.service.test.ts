@@ -3,22 +3,23 @@ import { getGenerationsForUser, getGenerationById } from "./generations.service"
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { GenerationDTO } from "../../types";
 import type { PostgrestResponse, PostgrestError } from "@supabase/supabase-js";
+import type { Database } from "../../db/database.types";
 
 // --- Mock Types --- //
 // Mock for standard query builder chain (select, eq, order, range)
 interface MockDataQueryBuilder {
-  select: Mock<(columns: string, options?: any) => any>; // Relaxed select args/return for flexibility
-  eq: Mock<(column: string, value: any) => MockDataQueryBuilder>;
+  select: Mock<(columns: string, options?: Record<string, unknown>) => MockDataQueryBuilder>;
+  eq: Mock<(column: string, value: unknown) => MockDataQueryBuilder>;
   order: Mock<(column: string, options: { ascending: boolean }) => MockDataQueryBuilder>;
   range: Mock<(from: number, to: number) => Promise<PostgrestResponse<GenerationDTO>>>;
-  single: Mock<() => Promise<PostgrestResponse<GenerationDTO>>>; // Added single()
+  single: Mock<() => Promise<PostgrestResponse<GenerationDTO>>>;
 }
 
 // Mock for the count query's 'eq' method (returns promise)
 type MockCountQueryEq = Mock<(column: string, value: string) => Promise<PostgrestResponse<GenerationDTO>>>;
 
 // --- Mocks (initialized in beforeEach) --- //
-let mockSupabase: SupabaseClient;
+let mockSupabase: SupabaseClient<Database>;
 let mockDataQueryBuilder: MockDataQueryBuilder;
 let mockCountEq: MockCountQueryEq;
 
@@ -40,19 +41,39 @@ describe("Generations Service", () => {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
       order: vi.fn().mockReturnThis(),
-      range: vi.fn().mockResolvedValue({ data: [], error: null, count: null, status: 200, statusText: "OK" } as any),
-      single: vi.fn().mockResolvedValue({ data: null, error: null, count: null, status: 200, statusText: "OK" } as any),
+      range: vi.fn().mockResolvedValue({
+        data: [],
+        error: null,
+        count: null,
+        status: 200,
+        statusText: "OK",
+      } as unknown as PostgrestResponse<GenerationDTO>),
+      single: vi.fn().mockResolvedValue({
+        data: null,
+        error: null,
+        count: null,
+        status: 200,
+        statusText: "OK",
+      } as unknown as PostgrestResponse<GenerationDTO>),
     };
 
     // --- Mock Count Query Path for getGenerationsForUser ---
-    mockCountEq = vi
-      .fn()
-      .mockResolvedValue({ data: null, error: null, count: 0, status: 200, statusText: "OK" } as any);
+    mockCountEq = vi.fn().mockResolvedValue({
+      data: null,
+      error: null,
+      count: 0,
+      status: 200,
+      statusText: "OK",
+    } as unknown as PostgrestResponse<GenerationDTO>);
     const mockCountSelectFn = vi.fn().mockReturnValue({ eq: mockCountEq });
 
     // --- Mock Supabase Client ---
     mockSupabase = {
-      from: vi.fn().mockImplementation((_tableName: string) => {
+      from: vi.fn().mockImplementation((tableName: string) => {
+        if (!tableName) {
+          throw new Error("Table name must be provided");
+        }
+
         return {
           select: vi.fn((columns: string, options?: { count?: "exact"; head?: boolean }) => {
             if (options?.count === "exact" && options?.head === true) {
@@ -65,7 +86,7 @@ describe("Generations Service", () => {
           }),
         };
       }),
-    } as unknown as SupabaseClient;
+    } as unknown as SupabaseClient<Database>;
   });
 
   // --- Tests for getGenerationsForUser --- //
@@ -112,17 +133,17 @@ describe("Generations Service", () => {
         count: expectedCount,
         status: 200,
         statusText: "OK",
-      } as any);
+      } as unknown as PostgrestResponse<GenerationDTO>);
       mockDataQueryBuilder.range.mockResolvedValueOnce({
         data: expectedData,
         error: null,
         count: null,
         status: 200,
         statusText: "OK",
-      } as any);
+      } as unknown as PostgrestResponse<GenerationDTO>);
 
       // Act
-      const result = await getGenerationsForUser(mockSupabase as any, userId, page, limit);
+      const result = await getGenerationsForUser(mockSupabase, userId, page, limit);
 
       // Assert
       expect(result.data).toEqual(expectedData);
@@ -141,17 +162,23 @@ describe("Generations Service", () => {
 
     it("should return empty data and total 0 if no generations found", async () => {
       // Arrange
-      mockCountEq.mockResolvedValueOnce({ data: null, error: null, count: 0, status: 200, statusText: "OK" } as any);
+      mockCountEq.mockResolvedValueOnce({
+        data: null,
+        error: null,
+        count: 0,
+        status: 200,
+        statusText: "OK",
+      } as unknown as PostgrestResponse<GenerationDTO>);
       mockDataQueryBuilder.range.mockResolvedValueOnce({
         data: [],
         error: null,
         count: null,
         status: 200,
         statusText: "OK",
-      } as any);
+      } as unknown as PostgrestResponse<GenerationDTO>);
 
       // Act
-      const result = await getGenerationsForUser(mockSupabase as any, userId, 1, 10);
+      const result = await getGenerationsForUser(mockSupabase, userId, 1, 10);
 
       // Assert
       expect(result.data).toEqual([]);
@@ -161,19 +188,23 @@ describe("Generations Service", () => {
     it("should throw an error if fetching data fails", async () => {
       const dbError = createMockPostgrestError("Data fetch failed", "DB500");
       // Arrange
-      mockCountEq.mockResolvedValueOnce({ data: null, error: null, count: 10, status: 200, statusText: "OK" } as any); // Count succeeds
+      mockCountEq.mockResolvedValueOnce({
+        data: null,
+        error: null,
+        count: 10,
+        status: 200,
+        statusText: "OK",
+      } as unknown as PostgrestResponse<GenerationDTO>); // Count succeeds
       mockDataQueryBuilder.range.mockResolvedValueOnce({
         data: null,
         error: dbError,
         count: null,
         status: 500,
         statusText: "Err",
-      } as any); // Range fails
+      } as unknown as PostgrestResponse<GenerationDTO>); // Range fails
 
       // Act & Assert
-      await expect(getGenerationsForUser(mockSupabase as any, userId, 1, 10)).rejects.toThrow(
-        "Failed to fetch generations"
-      );
+      await expect(getGenerationsForUser(mockSupabase, userId, 1, 10)).rejects.toThrow("Failed to fetch generations");
     });
 
     it("should return total 0 if count query fails", async () => {
@@ -185,17 +216,17 @@ describe("Generations Service", () => {
         count: null,
         status: 500,
         statusText: "Err",
-      } as any); // Count fails
+      } as unknown as PostgrestResponse<GenerationDTO>); // Count fails
       mockDataQueryBuilder.range.mockResolvedValueOnce({
         data: mockGenerations,
         error: null,
         count: null,
         status: 200,
         statusText: "OK",
-      } as any); // Range succeeds
+      } as unknown as PostgrestResponse<GenerationDTO>); // Range succeeds
 
       // Act
-      const result = await getGenerationsForUser(mockSupabase as any, userId, 1, 10);
+      const result = await getGenerationsForUser(mockSupabase, userId, 1, 10);
 
       // Assert
       expect(result.total).toBe(0);
@@ -228,10 +259,10 @@ describe("Generations Service", () => {
         count: 1,
         status: 200,
         statusText: "OK",
-      } as any);
+      } as unknown as PostgrestResponse<GenerationDTO>);
 
       // Act
-      const result = await getGenerationById(mockSupabase as any, generationId, userId);
+      const result = await getGenerationById(mockSupabase, generationId, userId);
 
       // Assert
       expect(result.generation).toEqual(mockGeneration);
@@ -252,10 +283,10 @@ describe("Generations Service", () => {
         count: 0,
         status: 406,
         statusText: "Not Acceptable",
-      } as any);
+      } as unknown as PostgrestResponse<GenerationDTO>);
 
       // Act
-      const result = await getGenerationById(mockSupabase as any, generationId, userId);
+      const result = await getGenerationById(mockSupabase, generationId, userId);
 
       // Assert
       expect(result.generation).toBeNull();
@@ -270,7 +301,7 @@ describe("Generations Service", () => {
       mockDataQueryBuilder.single.mockRejectedValueOnce(thrownError);
 
       // Act
-      const result = await getGenerationById(mockSupabase as any, generationId, userId);
+      const result = await getGenerationById(mockSupabase, generationId, userId);
 
       // Assert
       expect(result.generation).toBeNull();
@@ -286,10 +317,10 @@ describe("Generations Service", () => {
         count: 0,
         status: 200,
         statusText: "OK",
-      } as any);
+      } as unknown as PostgrestResponse<GenerationDTO>);
 
       // Act
-      const result = await getGenerationById(mockSupabase as any, generationId, userId);
+      const result = await getGenerationById(mockSupabase, generationId, userId);
 
       // Assert
       expect(result.generation).toBeNull();
