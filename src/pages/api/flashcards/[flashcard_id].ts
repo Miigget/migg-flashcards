@@ -85,6 +85,7 @@ export const GET: APIRoute = async ({ params, locals }) => {
         headers: { "Content-Type": "application/json" },
       });
     } catch (serviceError) {
+      // eslint-disable-next-line no-console
       console.error("Error in flashcard service:", serviceError);
 
       // Handle specific service errors with appropriate status codes
@@ -110,6 +111,7 @@ export const GET: APIRoute = async ({ params, locals }) => {
       );
     }
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error("Unexpected error in GET /api/flashcards/[flashcard_id]:", error);
 
     // Handle unexpected errors
@@ -222,6 +224,7 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
     } catch (fetchError) {
       // Log the error but proceed with the original update if fetching fails?
       // Or should we return an error here? For now, log and proceed.
+      // eslint-disable-next-line no-console
       console.error(
         `Error fetching flashcard ${validatedFlashcardId} before update, source modification skipped:`,
         fetchError
@@ -244,6 +247,7 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
         headers: { "Content-Type": "application/json" },
       });
     } catch (serviceError) {
+      // eslint-disable-next-line no-console
       console.error("Error in flashcard service:", serviceError);
 
       // Handle specific service errors with appropriate status codes
@@ -269,6 +273,7 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
       );
     }
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error("Unexpected error in PUT /api/flashcards/[flashcard_id]:", error);
 
     // Handle unexpected errors
@@ -348,6 +353,7 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
         { status: 200, headers: { "Content-Type": "application/json" } }
       );
     } catch (serviceError) {
+      // eslint-disable-next-line no-console
       console.error("Error in flashcard service:", serviceError);
 
       // Handle specific service errors with appropriate status codes
@@ -373,6 +379,7 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
       );
     }
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error("Unexpected error in DELETE /api/flashcards/[flashcard_id]:", error);
 
     // Handle unexpected errors

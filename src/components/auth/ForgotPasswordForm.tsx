@@ -47,12 +47,15 @@ export function ForgotPasswordForm() {
       }
 
       reset();
+      // eslint-disable-next-line no-console
       console.log("API call successful, attempting to show success toast:", result);
       toast.success("Check your email", {
         description: result.message,
       });
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Forgot Password Error:", error);
+      // eslint-disable-next-line no-console
       console.log("Attempting to show error toast.");
       toast.error("Error", {
         description: error instanceof Error ? error.message : "Failed to send reset link.",

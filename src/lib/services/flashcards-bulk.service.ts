@@ -43,6 +43,7 @@ export class FlashcardsBulkService {
       const { data, error } = await this.supabase.from("flashcards").insert(flashcardsToInsert).select();
 
       if (error) {
+        // eslint-disable-next-line no-console
         console.error("Error creating flashcards in bulk:", error);
 
         // Check specific error conditions
@@ -76,6 +77,7 @@ export class FlashcardsBulkService {
       }
 
       // Handle unexpected errors
+      // eslint-disable-next-line no-console
       console.error("Unexpected error in bulkCreateFlashcards:", error);
       throw new FlashcardServiceError(
         "An unexpected error occurred while creating flashcards in bulk",

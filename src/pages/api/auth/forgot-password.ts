@@ -15,6 +15,7 @@ export const POST: APIRoute = async ({ request, cookies, url }) => {
     validatedData = ForgotPasswordSchema.parse(rawData);
   } catch (error) {
     // Log the validation error
+    // eslint-disable-next-line no-console
     console.error("Zod validation error:", error);
     return new Response(JSON.stringify({ error: "Invalid email format." }), { status: 400 });
   }
@@ -31,6 +32,7 @@ export const POST: APIRoute = async ({ request, cookies, url }) => {
 
   if (error) {
     // Log the error for debugging, but don't expose details to the client
+    // eslint-disable-next-line no-console
     console.error("Supabase forgot password error:", error);
     // Return a generic success message regardless of whether the email exists
     // This prevents user enumeration attacks

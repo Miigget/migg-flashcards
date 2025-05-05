@@ -46,6 +46,7 @@ try {
   const collectionsData: string[] = await collectionsResponse.json();
   totalCollections = collectionsData.length;
 } catch (error: unknown) {
+  // eslint-disable-next-line no-console
   console.error("Error fetching dashboard stats:", error);
   statsError = error instanceof Error ? error.message : "An unknown error occurred while fetching statistics.";
 }

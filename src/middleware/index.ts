@@ -64,12 +64,14 @@ export const onRequest = defineMiddleware(async ({ locals, cookies, url, request
 
   // If trying to access a protected route without a user, redirect to login
   if (!locals.user && !pathIsPublic) {
+    // eslint-disable-next-line no-console
     console.log(`Redirecting unauthenticated access to ${url.pathname} -> /auth/login`);
     return redirect("/auth/login");
   }
 
   // If trying to access auth pages while already logged in, redirect to /dashboard
   if (locals.user && (url.pathname === "/auth/login" || url.pathname === "/auth/register")) {
+    // eslint-disable-next-line no-console
     console.log(`Redirecting logged in user from ${url.pathname} -> /dashboard`);
     return redirect("/dashboard");
   }

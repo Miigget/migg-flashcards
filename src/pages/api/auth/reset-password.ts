@@ -16,6 +16,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const rawData = await request.json();
     validatedData = ResetPasswordSchema.parse(rawData);
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error("Zod validation error:", error);
     return new Response(JSON.stringify({ error: "Invalid password format or missing password." }), { status: 400 });
   }
@@ -27,6 +28,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   const { error } = await supabase.auth.updateUser({ password: validatedData.password });
 
   if (error) {
+    // eslint-disable-next-line no-console
     console.error("Supabase reset password error:", error);
     return new Response(
       JSON.stringify({ error: error.message || "Failed to update password." }),

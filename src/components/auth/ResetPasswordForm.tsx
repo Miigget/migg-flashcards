@@ -59,6 +59,7 @@ export function ResetPasswordForm() {
         window.location.href = "/auth/login";
       }, 1000);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Reset Password Error:", error);
       toast.error("Error", {
         description: error instanceof Error ? error.message : "Failed to update password.",

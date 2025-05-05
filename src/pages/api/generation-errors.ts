@@ -49,6 +49,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
     // Return formatted response
     return new Response(JSON.stringify(response), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error("Error fetching generation error logs:", error);
     return new Response(JSON.stringify({ message: "Internal server error" }), {
       status: 500,

@@ -36,6 +36,7 @@ export function useCreateFlashcard(): UseCreateFlashcardReturn {
             throw new Error(`HTTP error ${response.status}: Failed to parse error response.`);
           }
         } catch (parseError: unknown) {
+          // eslint-disable-next-line no-console
           console.error("Failed to parse error response:", parseError);
           // Fallback if JSON parsing fails completely
           errorPayload = {
@@ -44,8 +45,9 @@ export function useCreateFlashcard(): UseCreateFlashcardReturn {
           };
         }
         setError(errorPayload);
-        toast.error("Error", { description: errorPayload.message });
+        // eslint-disable-next-line no-console
         console.error("API Error:", errorPayload);
+        toast.error("Error", { description: errorPayload.message });
         throw new Error(errorPayload.message); // Throw error to be caught by the calling component
       }
 
@@ -55,6 +57,7 @@ export function useCreateFlashcard(): UseCreateFlashcardReturn {
       return createdFlashcard;
     } catch (err) {
       // Catch fetch errors or errors thrown from response handling
+      // eslint-disable-next-line no-console
       console.error("useCreateFlashcard Error:", err);
       const errorMessage = err instanceof Error ? err.message : "An unknown error occurred during flashcard creation.";
       // Ensure the error state reflects the caught error if it wasn't set already

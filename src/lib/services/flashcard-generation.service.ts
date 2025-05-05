@@ -92,6 +92,7 @@ class FlashcardGenerationService {
       return result;
     } catch (error) {
       // Log error
+      // eslint-disable-next-line no-console
       console.error("Error during flashcard generation:", error);
       // Pass userId to error logging
       await this.logGenerationError(error, this.generateHash(text), text.length, userId);
@@ -131,6 +132,7 @@ class FlashcardGenerationService {
       .single();
 
     if (error) {
+      // eslint-disable-next-line no-console
       console.error("Error creating generation record:", error);
       throw new Error(`Failed to create generation record: ${error.message}`);
     }
@@ -158,6 +160,7 @@ class FlashcardGenerationService {
       .eq("generation_id", generationId);
 
     if (error) {
+      // eslint-disable-next-line no-console
       console.error("Error updating generation record:", error);
       throw new Error(`Failed to update generation record: ${error.message}`);
     }
@@ -268,10 +271,12 @@ class FlashcardGenerationService {
       });
 
       // Debug the response
+      // eslint-disable-next-line no-console
       console.log("OpenRouter response:", JSON.stringify(response, null, 2));
 
       // Check if response has the expected structure
       if (!response || !response.choices || !response.choices.length || !response.choices[0].message) {
+        // eslint-disable-next-line no-console
         console.error("Invalid response structure, falling back to sample flashcards");
         return this.getSampleFlashcards(now, userId);
       }
@@ -280,6 +285,7 @@ class FlashcardGenerationService {
       const content = response.choices[0].message.content;
 
       if (!content) {
+        // eslint-disable-next-line no-console
         console.error("Empty content returned, falling back to sample flashcards");
         return this.getSampleFlashcards(now, userId);
       }
@@ -289,18 +295,22 @@ class FlashcardGenerationService {
       try {
         jsonResponse = JSON.parse(content);
       } catch (parseError) {
+        // eslint-disable-next-line no-console
         console.error("Failed to parse JSON response:", content);
+        // eslint-disable-next-line no-console
         console.error("Parse error details:", parseError);
         return this.getSampleFlashcards(now, userId);
       }
 
       // Log the parsed response
+      // eslint-disable-next-line no-console
       console.log("Parsed JSON response:", JSON.stringify(jsonResponse, null, 2));
 
       // Validate with Zod
       const validationResult = flashcardSchema.safeParse(jsonResponse);
 
       if (!validationResult.success) {
+        // eslint-disable-next-line no-console
         console.error("Validation error:", validationResult.error);
         return this.getSampleFlashcards(now, userId);
       }
@@ -321,15 +331,18 @@ class FlashcardGenerationService {
 
       return candidates;
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Error calling OpenRouter service:", error);
 
       // Szczegółowe logowanie błędów OpenRouter
       if (error && typeof error === "object" && "message" in error) {
+        // eslint-disable-next-line no-console
         console.error("Error message:", error.message);
 
         // Sprawdź czy to błąd od OpenRouter z metadanymi
         if ("error" in error && typeof error.error === "object" && error.error !== null) {
           const openRouterError = error.error as Record<string, unknown>;
+          // eslint-disable-next-line no-console
           console.error("OpenRouter error details:", openRouterError);
 
           // Sprawdź czy są dostępne szczegółowe metadane
@@ -339,14 +352,17 @@ class FlashcardGenerationService {
             openRouterError.metadata !== null
           ) {
             const metadata = openRouterError.metadata as Record<string, unknown>;
+            // eslint-disable-next-line no-console
             console.error("Provider metadata:", metadata);
 
             // Wypisz surową odpowiedź od providera (np. OpenAI)
             if ("raw" in metadata && typeof metadata.raw === "string") {
               try {
                 const rawError = JSON.parse(metadata.raw);
+                // eslint-disable-next-line no-console
                 console.error("Raw provider error:", rawError);
               } catch {
+                // eslint-disable-next-line no-console
                 console.error("Raw provider response (not JSON):", metadata.raw);
               }
             }
@@ -354,6 +370,7 @@ class FlashcardGenerationService {
         }
       }
 
+      // eslint-disable-next-line no-console
       console.error("Falling back to sample flashcards");
 
       // Create a timestamp for all flashcards

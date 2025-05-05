@@ -79,6 +79,7 @@ const CreateFlashcardForm: React.FC<CreateFlashcardFormProps> = ({ collections, 
       collection: data.collection.trim(),
       source: "manual",
     };
+    // eslint-disable-next-line no-console
     console.log("Submitting command:", command);
 
     try {
@@ -90,6 +91,7 @@ const CreateFlashcardForm: React.FC<CreateFlashcardFormProps> = ({ collections, 
       // Redirect to the collection page - maybe redirect to the newly created flashcard detail?
       window.location.href = `/collections/${createdFlashcard.collection}`;
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Form Submission Error:", error);
       const message =
         submitError?.message ||

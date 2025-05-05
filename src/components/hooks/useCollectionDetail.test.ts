@@ -91,6 +91,7 @@ describe("useCollectionDetail", () => {
       if (urlStr.includes(`/api/flashcards/`) && options?.method === "DELETE") {
         return new Response(null, { status: 204 }); // No Content
       }
+      // eslint-disable-next-line no-console
       console.warn(`Unhandled fetch mock request: ${options?.method || "GET"} ${urlStr}`);
       return new Response(`Not Found: ${options?.method || "GET"} ${urlStr}`, { status: 404 });
     });

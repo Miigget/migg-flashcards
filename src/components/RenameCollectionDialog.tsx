@@ -88,6 +88,7 @@ const RenameCollectionDialog: React.FC<RenameCollectionDialogProps> = ({
       // Success is handled by the parent (closing the dialog)
     } catch (submitError) {
       // Error is handled by the parent via the 'error' prop
+      // eslint-disable-next-line no-console
       console.error("Rename submission failed:", submitError);
     }
   };

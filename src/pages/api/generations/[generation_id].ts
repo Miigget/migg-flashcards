@@ -61,6 +61,7 @@ export const GET: APIRoute = async ({ params, locals }) => {
     // 4. Return the generation data
     return new Response(JSON.stringify(generation), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error("Unexpected error in GET /api/generations/[generation_id]:", error);
 
     return new Response(JSON.stringify({ error: "Internal server error" }), {

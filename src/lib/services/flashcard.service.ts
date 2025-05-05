@@ -44,6 +44,7 @@ export class FlashcardService {
       .single();
 
     if (error) {
+      // eslint-disable-next-line no-console
       console.error("Error creating flashcard:", error);
       throw new Error(`Failed to create flashcard: ${error.message}`);
     }
@@ -105,6 +106,7 @@ export class FlashcardService {
 
       // Handle database errors
       if (error) {
+        // eslint-disable-next-line no-console
         console.error("Database error when fetching flashcards:", error);
 
         // Format error message based on error code
@@ -133,6 +135,7 @@ export class FlashcardService {
       }
 
       // Handle unexpected errors
+      // eslint-disable-next-line no-console
       console.error("Unexpected error in getFlashcards:", error);
       throw new FlashcardServiceError(
         "An unexpected error occurred while fetching flashcards",
@@ -171,6 +174,7 @@ export class FlashcardService {
 
       // Handle database errors
       if (error) {
+        // eslint-disable-next-line no-console
         console.error("Error fetching flashcard by ID:", error);
 
         // Handle not found specifically
@@ -205,6 +209,7 @@ export class FlashcardService {
       }
 
       // Handle unexpected errors
+      // eslint-disable-next-line no-console
       console.error("Unexpected error in getFlashcardById:", error);
       throw new FlashcardServiceError(
         "An unexpected error occurred while fetching the flashcard",
@@ -279,6 +284,7 @@ export class FlashcardService {
 
       // Handle database errors
       if (error) {
+        // eslint-disable-next-line no-console
         console.error("Error updating flashcard:", error);
 
         if (error.code === "42P01") {
@@ -302,6 +308,7 @@ export class FlashcardService {
       }
 
       // Handle unexpected errors
+      // eslint-disable-next-line no-console
       console.error("Unexpected error in updateFlashcard:", error);
       throw new FlashcardServiceError(
         "An unexpected error occurred while updating the flashcard",
@@ -363,6 +370,7 @@ export class FlashcardService {
 
       // Handle database errors
       if (error) {
+        // eslint-disable-next-line no-console
         console.error("Error deleting flashcard:", error);
 
         if (error.code === "42P01") {
@@ -380,6 +388,7 @@ export class FlashcardService {
       }
 
       // Handle unexpected errors
+      // eslint-disable-next-line no-console
       console.error("Unexpected error in deleteFlashcard:", error);
       throw new FlashcardServiceError(
         "An unexpected error occurred while deleting the flashcard",

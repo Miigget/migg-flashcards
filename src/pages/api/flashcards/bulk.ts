@@ -103,6 +103,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error("Error creating flashcards in bulk:", error);
 
     // Handle service-specific errors

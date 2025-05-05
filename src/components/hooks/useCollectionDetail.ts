@@ -69,6 +69,7 @@ export function useCollectionDetail(initialCollectionName: string) {
         isLoading: false,
       }));
     } catch (error: unknown) {
+      // eslint-disable-next-line no-console
       console.error("Error fetching flashcards:", error);
       const apiError = error as ApiError;
       setState((prev) => ({

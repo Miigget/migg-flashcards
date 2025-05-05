@@ -58,6 +58,7 @@ export function RegisterForm() {
 
       window.location.href = "/auth/login";
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Registration error:", error);
       toast.error("Registration Failed", {
         description: error instanceof Error ? error.message : "An unexpected error occurred.",

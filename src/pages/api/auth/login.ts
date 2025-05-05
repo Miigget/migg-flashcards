@@ -22,6 +22,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   });
 
   if (error) {
+    // eslint-disable-next-line no-console
     console.error("Supabase login error:", error.message); // Log server-side errors
     return new Response(JSON.stringify({ error: error.message || "Invalid login credentials" }), {
       status: 400, // Use 400 or 401 depending on desired behavior for invalid credentials

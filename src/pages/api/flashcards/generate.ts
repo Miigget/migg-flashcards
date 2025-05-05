@@ -57,6 +57,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       },
     });
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error("Error generating flashcards:", error);
 
     // Return error response

@@ -52,6 +52,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
         });
       }
       // Log the unexpected error for debugging
+      // eslint-disable-next-line no-console
       console.error("Supabase signUp error:", error);
       return new Response(JSON.stringify({ error: error.message || "Registration failed." }), {
         status: error instanceof AuthApiError ? error.status : 500,
@@ -75,6 +76,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       }
     );
   } catch (err) {
+    // eslint-disable-next-line no-console
     console.error("Unexpected error during registration:", err);
     return new Response(JSON.stringify({ error: "An unexpected server error occurred." }), {
       status: 500,

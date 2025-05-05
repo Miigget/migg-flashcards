@@ -123,6 +123,7 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
       throw serviceError;
     }
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error("Error updating collection:", error);
 
     return new Response(JSON.stringify({ error: "Internal server error" }), {
@@ -204,6 +205,7 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
       }
     );
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error("Error deleting collection:", error);
 
     return new Response(JSON.stringify({ error: "Internal server error" }), {

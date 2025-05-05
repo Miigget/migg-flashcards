@@ -18,6 +18,7 @@ async function _getUniqueCollections(supabase: SupabaseClientType, userId: strin
     .order("collection");
 
   if (error) {
+    // eslint-disable-next-line no-console
     console.error("Error retrieving collections:", error);
     throw error; // Re-throw the original Supabase error
   }
@@ -52,6 +53,7 @@ async function _checkCollectionExists(
   // No .limit(1) needed when using count
 
   if (error) {
+    // eslint-disable-next-line no-console
     console.error("Error checking collection existence:", error);
     throw error; // Re-throw the original Supabase error
   }
@@ -79,6 +81,7 @@ async function _getFlashcardsInCollectionCount(
     .eq("collection", collectionName);
 
   if (error) {
+    // eslint-disable-next-line no-console
     console.error("Error counting flashcards in collection:", error);
     throw error;
   }
@@ -116,6 +119,7 @@ async function _renameCollection(
   // Use internal service call via the exported 'service' object
   const collectionExists = await service.checkCollectionExists(supabase, userId, currentName);
   if (!collectionExists) {
+    // eslint-disable-next-line no-console
     console.log(`Collection "${currentName}" does not exist for user ${userId} to rename.`);
     return { count: 0, collectionExists: false };
   }
@@ -135,10 +139,12 @@ async function _renameCollection(
   // No .select() needed after update when using count option directly
 
   if (error) {
+    // eslint-disable-next-line no-console
     console.error("Error renaming collection (update operation):", error);
     throw error;
   }
 
+  // eslint-disable-next-line no-console
   console.log(
     `Renamed collection "${currentName}" to "${newName}" for user ${userId}. Updated ${count ?? 0} flashcards.`
   );
@@ -160,6 +166,7 @@ async function _deleteCollection(
   // Use internal service call via the exported 'service' object
   const collectionExists = await service.checkCollectionExists(supabase, userId, collectionName);
   if (!collectionExists) {
+    // eslint-disable-next-line no-console
     console.log(`Collection "${collectionName}" does not exist for user ${userId} to delete.`);
     return { count: 0, collectionExists: false };
   }
@@ -172,11 +179,13 @@ async function _deleteCollection(
   // No select needed here if we don't need the deleted data or count
 
   if (error) {
+    // eslint-disable-next-line no-console
     console.error("Error deleting collection:", error);
     throw error;
   }
 
   // Although 'count' from delete might be useful, returning the count *before* deletion seems more informative.
+  // eslint-disable-next-line no-console
   console.log(`Deleted collection "${collectionName}" for user ${userId}. Removed ${countBeforeDelete} flashcards.`);
   return { count: countBeforeDelete, collectionExists: true };
 }

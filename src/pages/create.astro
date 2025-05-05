@@ -37,12 +37,14 @@ try {
     if (queryParamCollection && collections.includes(queryParamCollection)) {
       initialCollection = queryParamCollection;
     } else if (queryParamCollection) {
+      // eslint-disable-next-line no-console
       console.warn(
         `Initial collection '${queryParamCollection}' from query param not found in user's collections. Ignoring.`
       );
     }
   }
 } catch (error: unknown) {
+  // eslint-disable-next-line no-console
   console.error("Error fetching collections:", error);
   // Perform type check if specific error properties are needed
   let message = "An unknown error occurred";

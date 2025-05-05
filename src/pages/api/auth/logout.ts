@@ -9,6 +9,7 @@ export const POST: APIRoute = async ({ cookies, request, redirect }) => {
   const { error } = await supabase.auth.signOut();
 
   if (error) {
+    // eslint-disable-next-line no-console
     console.error("Supabase logout error:", error.message);
     // Return an error response, or redirect to login with an error indicator?
     // For simplicity, redirecting is often fine, but returning JSON might be better for JS clients.

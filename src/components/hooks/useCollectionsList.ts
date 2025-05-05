@@ -41,6 +41,7 @@ export function useCollectionsList() {
       }));
       setCollections(initialCollections);
     } catch (error: unknown) {
+      // eslint-disable-next-line no-console
       console.error("Error fetching collection names:", error);
       const apiError = error as ApiError; // Basic assertion
       setErrorNames({ status: apiError?.status || 500, message: apiError?.message || "Unknown error fetching names" });
@@ -87,6 +88,7 @@ export function useCollectionsList() {
           // Return structure matching the catch block for consistency
           return { name: collection.name, count: data.total, error: null };
         } catch (error: unknown) {
+          // eslint-disable-next-line no-console
           console.error(`Error fetching count for ${collection.name}:`, error);
           // Ensure the error conforms to ApiError structure
           const apiError: ApiError =
@@ -145,6 +147,7 @@ export function useCollectionsList() {
             // Add more specific checks if other structured error types are expected
 
             const apiError: ApiError = { status, message };
+            // eslint-disable-next-line no-console
             console.error(`Count fetch failed for ${collection.name} (rejected):`, reason);
             return { ...collection, flashcardCount: null, isLoadingCount: false, errorCount: apiError };
           }
@@ -155,7 +158,8 @@ export function useCollectionsList() {
     };
 
     fetchCounts();
-    // Dependency: only run when names finish loading OR if collectionNames array ref changes
+
+    // Reason: Adding 'collections' causes an infinite loop. Logic relies on reading state within fetchCounts.
   }, [collectionNames, isLoadingNames]); // Removed collections dependency to avoid loops
 
   // Dialog Handlers

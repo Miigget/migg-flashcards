@@ -99,6 +99,7 @@ const EditFlashcardDialog: React.FC<EditFlashcardDialogProps> = ({
       // Success handled by parent
     } catch (submitError) {
       // Error handled by parent via prop
+      // eslint-disable-next-line no-console
       console.error("Edit flashcard submission failed:", submitError);
     }
   };

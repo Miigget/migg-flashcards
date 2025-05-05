@@ -55,6 +55,7 @@ export function LoginForm() {
       const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred.";
       setError(errorMessage); // Set general error state
       toast.error(errorMessage); // Display error using toast
+      // eslint-disable-next-line no-console
       console.error("Login error:", err);
     } finally {
       setIsLoading(false);

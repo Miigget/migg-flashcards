@@ -33,6 +33,7 @@ export async function getGenerationsForUser(
     .range(offset, offset + limit - 1);
 
   if (error) {
+    // eslint-disable-next-line no-console
     console.error("Error fetching generations:", error);
     throw new Error("Failed to fetch generations");
   }

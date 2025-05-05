@@ -39,6 +39,7 @@ const DeleteConfirmationDialog: React.FC<DeleteConfirmationDialogProps> = ({
       // Success handled by parent
     } catch (submitError) {
       // Error handled by parent via prop
+      // eslint-disable-next-line no-console
       console.error("Delete confirmation failed:", submitError);
     }
   };

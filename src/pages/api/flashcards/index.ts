@@ -74,6 +74,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error("Error creating flashcard:", error);
 
     return new Response(
@@ -148,6 +149,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
         headers: { "Content-Type": "application/json" },
       });
     } catch (serviceError) {
+      // eslint-disable-next-line no-console
       console.error("Error in flashcard service:", serviceError);
 
       if (serviceError instanceof FlashcardServiceError) {
@@ -171,6 +173,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
       );
     }
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error("Error fetching flashcards:", error);
 
     return new Response(

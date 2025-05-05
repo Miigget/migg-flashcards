@@ -10,6 +10,7 @@ export const GET: APIRoute = async ({ locals }) => {
 
     // Check if supabase client exists (middleware should provide it)
     if (!supabase) {
+      // eslint-disable-next-line no-console
       console.error("Supabase client not found in locals. Check middleware.");
       return new Response(JSON.stringify({ error: "Server configuration error" }), { status: 500 });
     }
@@ -34,6 +35,7 @@ export const GET: APIRoute = async ({ locals }) => {
       },
     });
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error("Error fetching collections:", error);
 
     return new Response(JSON.stringify({ error: "Internal server error" }), {

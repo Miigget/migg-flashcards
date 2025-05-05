@@ -28,6 +28,7 @@ export async function getGenerationErrorLogs(
     .range(offset, offset + limit - 1);
 
   if (error) {
+    // eslint-disable-next-line no-console
     console.error("Error fetching generation error logs:", error);
     throw new Error(`Failed to fetch generation error logs: ${error.message}`);
   }
