@@ -197,6 +197,12 @@ describe("CollectionDetailView", () => {
   });
 
   it("should render collection name and flashcards list from hook viewModel", () => {
+    // Make sure mock returns the defaultViewModel
+    mockUseCollectionDetail.mockReturnValue({
+      ...defaultHandlers,
+      viewModel: defaultViewModel,
+    });
+
     render(<CollectionDetailView initialCollectionName={initialCollectionName} />);
 
     expect(screen.getByRole("heading", { name: initialCollectionName })).toBeInTheDocument();

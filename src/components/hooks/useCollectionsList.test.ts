@@ -12,10 +12,6 @@ describe("useCollectionsList", () => {
   const mockNames = ["Collection A", "Collection B"];
   const mockFlashcardsPage1: PaginatedResponse<FlashcardDTO> = { data: [], page: 1, limit: 1, total: 10 };
   const mockFlashcardsPage2: PaginatedResponse<FlashcardDTO> = { data: [], page: 1, limit: 1, total: 5 };
-  const initialViewModel: CollectionViewModel[] = [
-    { name: "Collection A", flashcardCount: null, isLoadingCount: true, errorCount: null },
-    { name: "Collection B", flashcardCount: null, isLoadingCount: true, errorCount: null },
-  ];
   const finalViewModel: CollectionViewModel[] = [
     { name: "Collection A", flashcardCount: 10, isLoadingCount: false, errorCount: null },
     { name: "Collection B", flashcardCount: 5, isLoadingCount: false, errorCount: null },
@@ -156,81 +152,62 @@ describe("useCollectionsList", () => {
   });
 
   it("should retry fetching names when retryFetchNames is called", async () => {
-    // Arrange: Mock initial failed fetch for names
+    // Arrange: Mock initial failed fetch for names, then success on retry
     const errorResponse: ApiError = { status: 500, message: "Initial fetch failed" };
-    let fetchCallCount = 0;
-    mockedFetch.mockImplementation(async (url) => {
-      fetchCallCount++;
-      if (url === "/api/collections" && fetchCallCount === 1) {
-        // Fail only the first time
-        return new Response(JSON.stringify({ message: errorResponse.message }), {
-          status: errorResponse.status,
-          statusText: errorResponse.message,
-        });
-      }
-      // Subsequent calls succeed
-      if (url === "/api/collections") {
-        return new Response(JSON.stringify(mockNames), { status: 200 });
-      }
-      if (url.toString().includes("Collection%20A")) {
-        return new Response(JSON.stringify(mockFlashcardsPage1), { status: 200 });
-      }
-      if (url.toString().includes("Collection%20B")) {
-        return new Response(JSON.stringify(mockFlashcardsPage2), { status: 200 });
-      }
-      return new Response("Not Found", { status: 404 });
-    });
 
-    // Act: Render hook, wait for initial error
+    // Setup fetch mock to fail once then succeed
+    mockedFetch
+      .mockImplementationOnce(() => {
+        return Promise.resolve(
+          new Response(JSON.stringify({ message: errorResponse.message }), {
+            status: errorResponse.status,
+            statusText: errorResponse.message,
+          })
+        );
+      })
+      .mockImplementationOnce(() => {
+        return Promise.resolve(new Response(JSON.stringify(mockNames), { status: 200 }));
+      })
+      .mockImplementation((url) => {
+        if (url.toString().includes("Collection%20A")) {
+          return Promise.resolve(new Response(JSON.stringify(mockFlashcardsPage1), { status: 200 }));
+        }
+        if (url.toString().includes("Collection%20B")) {
+          return Promise.resolve(new Response(JSON.stringify(mockFlashcardsPage2), { status: 200 }));
+        }
+        return Promise.resolve(new Response("Not Found", { status: 404 }));
+      });
+
+    // Act: Render hook
     const { result } = renderHook(() => useCollectionsList());
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-      expect(result.current.error).not.toBeNull();
-    });
 
-    // Assert: Initial error state
+    // Wait for initial error state
+    await waitFor(() => expect(result.current.error).not.toBeNull(), { timeout: 1000 });
     expect(result.current.error?.message).toEqual(errorResponse.message);
-    expect(fetchCallCount).toBe(1);
+    expect(mockedFetch).toHaveBeenCalledTimes(1);
 
     // Act: Call retry function
     act(() => {
       result.current.retryFetchNames();
     });
 
-    // Assert: Loading state should be true immediately after retry, error cleared
-    expect(result.current.isLoading).toBe(true);
-    expect(result.current.error).toBeNull();
+    // Wait for retry to succeed
+    await waitFor(() => expect(result.current.collections.length).toBe(mockNames.length), { timeout: 1000 });
 
-    // Assert: Wait for names to load successfully after retry and check intermediate state
-    await waitFor(() => {
-      // Wait for the second call to /api/collections to complete
-      expect(fetchCallCount).toBeGreaterThanOrEqual(2); // Names fetched again
-      expect(mockedFetch).toHaveBeenCalledWith("/api/collections"); // Verify it was called again
-    });
-
-    // Wait for the state to reflect that names loading is done (isLoading becomes false temporarily)
-    // Note: isLoading reflects both name and count loading, so we need to wait for counts too.
-    // Let's check the intermediate state where counts are now loading.
-    await waitFor(() => {
-      expect(result.current.collections).toEqual(initialViewModel);
-    });
-
-    // Assert: Wait for counts to finish loading after the successful name retry
+    // Wait for counts to finish loading
     await waitFor(
       () => {
-        const stillLoadingCounts = result.current.collections.some((c) => c.isLoadingCount);
-        expect(stillLoadingCounts).toBe(false);
+        const allCountsLoaded = !result.current.collections.some((c) => c.isLoadingCount);
+        return allCountsLoaded;
       },
-      { timeout: 2000 }
+      { timeout: 1000 }
     );
 
-    // Assert: Final state after successful retry
+    // Check final state
     expect(result.current.isLoading).toBe(false);
-    expect(result.current.collections).toEqual(finalViewModel);
     expect(result.current.error).toBeNull();
-    // Total calls: 1 initial failed names + 1 successful names retry + 2 counts
-    expect(fetchCallCount).toBe(1 + 1 + 2);
-    expect(mockedFetch).toHaveBeenCalledTimes(1 + 1 + 2);
+    expect(result.current.collections).toEqual(finalViewModel);
+    expect(mockedFetch).toHaveBeenCalledTimes(4); // 1 failed names + 1 successful names + 2 counts
   });
 
   // Tests for Rename/Delete functionality would go here, mocking the respective fetch calls

@@ -1,5 +1,5 @@
 /// <reference types="vitest/globals" />
-import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { PostgrestError } from "@supabase/supabase-js";
 import { FlashcardService, FlashcardServiceError } from "./flashcard.service";
 import type { CreateFlashcardCommand, FlashcardDTO, UpdateFlashcardCommand } from "@/types"; // Assuming types are in src/types

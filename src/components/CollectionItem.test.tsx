@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import CollectionItem from "./CollectionItem";
@@ -68,10 +68,12 @@ describe("CollectionItem", () => {
     expect(detailsLink).toHaveAttribute("href", `/collections/${encodeURIComponent(mockCollection.name)}`);
   });
 
-  it("should render Rename and Delete buttons", () => {
+  it("should render Rename and Delete buttons", async () => {
     render(<CollectionItem {...defaultProps} />);
-    expect(screen.getByRole("button", { name: /Zmień nazwę/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Usuń/i })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /Zmień nazwę/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /Usuń/i })).toBeInTheDocument();
+    });
   });
 
   it("should call onRenameClick with collection name when Rename button is clicked", async () => {

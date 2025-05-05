@@ -8,7 +8,7 @@ import type { PostgrestResponse, PostgrestError } from "@supabase/supabase-js";
 // --- Mock Types --- //
 // Mock for the final query builder step (.insert().select())
 interface MockInsertSelectBuilder {
-  insert: Mock<(data: any[]) => MockInsertSelectBuilder>;
+  insert: Mock<(data: FlashcardCandidateDto[]) => MockInsertSelectBuilder>;
   select: Mock<() => Promise<PostgrestResponse<FlashcardDTO>>>;
 }
 
@@ -34,7 +34,13 @@ describe("FlashcardsBulk Service", () => {
     // Mock the final insert().select() chain
     mockInsertSelectBuilder = {
       insert: vi.fn().mockReturnThis(),
-      select: vi.fn().mockResolvedValue({ data: [], error: null, status: 201, statusText: "Created" } as any),
+      select: vi.fn().mockResolvedValue({
+        data: [],
+        error: null,
+        status: 201,
+        statusText: "Created",
+        count: null,
+      } as unknown as PostgrestResponse<FlashcardDTO>),
     };
 
     // Mock the Supabase client
@@ -43,7 +49,7 @@ describe("FlashcardsBulk Service", () => {
     } as unknown as SupabaseClient;
 
     // Instantiate the service with the mock client
-    flashcardsBulkService = new FlashcardsBulkService(mockSupabase as any);
+    flashcardsBulkService = new FlashcardsBulkService(mockSupabase);
   });
 
   describe("bulkCreateFlashcards", () => {
@@ -68,7 +74,8 @@ describe("FlashcardsBulk Service", () => {
         error: null,
         status: 201,
         statusText: "Created",
-      } as any);
+        count: null,
+      } as unknown as PostgrestResponse<FlashcardDTO>);
       const expectedInsertPayload = mockFlashcardCandidates.map((fc) => ({ ...fc, user_id: userId }));
 
       // Act
@@ -105,7 +112,8 @@ describe("FlashcardsBulk Service", () => {
         error: dbError,
         status: 409,
         statusText: "Conflict",
-      } as any);
+        count: null,
+      } as unknown as PostgrestResponse<FlashcardDTO>);
 
       // Act & Assert
       await expect(flashcardsBulkService.bulkCreateFlashcards(mockFlashcardCandidates, userId)).rejects.toThrow(
@@ -127,7 +135,8 @@ describe("FlashcardsBulk Service", () => {
         error: dbError,
         status: 409,
         statusText: "Conflict",
-      } as any);
+        count: null,
+      } as unknown as PostgrestResponse<FlashcardDTO>);
 
       // Act & Assert
       await expect(flashcardsBulkService.bulkCreateFlashcards(mockFlashcardCandidates, userId)).rejects.toThrow(
@@ -144,7 +153,8 @@ describe("FlashcardsBulk Service", () => {
         error: dbError,
         status: 500,
         statusText: "Internal Server Error",
-      } as any);
+        count: null,
+      } as unknown as PostgrestResponse<FlashcardDTO>);
 
       // Act & Assert
       await expect(flashcardsBulkService.bulkCreateFlashcards(mockFlashcardCandidates, userId)).rejects.toThrow(
@@ -153,7 +163,7 @@ describe("FlashcardsBulk Service", () => {
     });
 
     it("should rethrow FlashcardServiceError if caught", async () => {
-      const customError = new FlashcardServiceError("A pre-existing condition", "PRECONDITION_FAILED", 412);
+      const customError = new FlashcardServiceError("A pre-existing condition", "VALIDATION_ERROR", 412);
       // Arrange: Make the insert call itself throw our specific error
       mockInsertSelectBuilder.insert.mockImplementationOnce(() => {
         throw customError;
@@ -188,7 +198,8 @@ describe("FlashcardsBulk Service", () => {
         error: null,
         status: 201,
         statusText: "Created",
-      } as any);
+        count: null,
+      } as unknown as PostgrestResponse<FlashcardDTO>);
       const expectedInsertPayload = mockFlashcardCandidates.map((fc) => ({ ...fc, user_id: userId }));
 
       // Act

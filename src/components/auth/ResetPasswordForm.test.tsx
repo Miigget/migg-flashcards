@@ -66,13 +66,20 @@ describe("ResetPasswordForm", () => {
   });
 
   it("allows user to input new password and confirmation", async () => {
+    const user = userEvent.setup({
+      // Configure userEvent with a shorter delay to prevent timeout
+      delay: 1,
+    });
+
     render(<ResetPasswordForm />);
+
     const newPasswordInput = screen.getByLabelText(/^New Password$/i);
     const confirmPasswordInput = screen.getByLabelText(/Confirm New Password/i);
 
     await user.type(newPasswordInput, "newSecurePassword123");
     await user.type(confirmPasswordInput, "newSecurePassword123");
 
+    // Proste asercje bez waitFor
     expect(newPasswordInput).toHaveValue("newSecurePassword123");
     expect(confirmPasswordInput).toHaveValue("newSecurePassword123");
   });
@@ -91,13 +98,19 @@ describe("ResetPasswordForm", () => {
 
   it("shows validation error for password too short", async () => {
     render(<ResetPasswordForm />);
+    const user = userEvent.setup({
+      delay: 1, // Set a minimal delay
+    });
+
     await user.type(screen.getByLabelText(/^New Password$/i), "short");
     await user.type(screen.getByLabelText(/Confirm New Password/i), "short");
     const submitButton = screen.getByRole("button", { name: /Change Password/i });
 
     await user.click(submitButton);
 
-    expect(await screen.findByText(/Password must be at least 6 characters/i)).toBeVisible();
+    await waitFor(() => {
+      expect(screen.getByText(/Password must be at least 6 characters/i)).toBeVisible();
+    });
     expect(fetch).not.toHaveBeenCalled();
   });
 
@@ -210,15 +223,17 @@ describe("ResetPasswordForm", () => {
     });
 
     render(<ResetPasswordForm />);
+    const user = userEvent.setup({ delay: 1 }); // Use a shorter delay
+
     await user.type(screen.getByLabelText(/^New Password$/i), "newSecurePassword123");
     await user.type(screen.getByLabelText(/Confirm New Password/i), "newSecurePassword123");
     const submitButton = screen.getByRole("button", { name: /Change Password/i });
 
     await user.click(submitButton);
 
-    // expect(fetch).toHaveBeenCalledTimes(1); // Check fetch directly after click
-    // Don't wrap fetch check in waitFor
-    expect(fetch).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledTimes(1);
+    });
 
     // Check if toast.error was called, waiting for it
     await waitFor(() => {
@@ -226,7 +241,6 @@ describe("ResetPasswordForm", () => {
     });
 
     // Wait specifically for button to become enabled again
-    // Ensure the button is truly enabled and not just not-disabled
     await waitFor(() => {
       expect(submitButton).toBeEnabled();
     });

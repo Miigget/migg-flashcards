@@ -36,10 +36,18 @@ describe("EditFlashcardDialog", () => {
   it("should render dialog with flashcard data when open", () => {
     render(<EditFlashcardDialog {...defaultProps} />);
 
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    // Dialog powinien być otwarty bo isOpen=true
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toBeInTheDocument();
+
+    // Sprawdzamy czy zawartość jest poprawnie wyświetlana
     expect(screen.getByText("Edytuj fiszkę")).toBeInTheDocument();
-    expect(screen.getByLabelText("Przód")).toHaveValue(mockFlashcard.front);
-    expect(screen.getByLabelText("Tył")).toHaveValue(mockFlashcard.back);
+
+    const frontInput = screen.getByLabelText("Przód");
+    const backInput = screen.getByLabelText("Tył");
+
+    expect(frontInput).toHaveValue(mockFlashcard.front);
+    expect(backInput).toHaveValue(mockFlashcard.back);
     expect(screen.getByRole("button", { name: /Anuluj/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Zapisz zmiany/i })).toBeInTheDocument();
   });

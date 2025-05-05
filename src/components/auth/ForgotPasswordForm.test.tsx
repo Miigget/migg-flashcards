@@ -53,11 +53,14 @@ describe("ForgotPasswordForm", () => {
 
   it("shows validation error for empty email on submit", async () => {
     render(<ForgotPasswordForm />);
+    const user = userEvent.setup({ delay: 1 }); // Use a shorter delay for user interactions
     const submitButton = screen.getByRole("button", { name: /Send Reset Link/i });
 
     await user.click(submitButton);
 
-    expect(await screen.findByText(/Invalid email address/i)).toBeVisible();
+    await waitFor(() => {
+      expect(screen.getByText(/Invalid email address/i)).toBeVisible();
+    });
     expect(fetch).not.toHaveBeenCalled();
   });
 

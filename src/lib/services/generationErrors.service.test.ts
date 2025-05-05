@@ -7,7 +7,7 @@ import type { PostgrestResponse, PostgrestError } from "@supabase/supabase-js";
 // --- Mock Types --- //
 // Mock for the data query builder chain
 interface MockDataQueryBuilder {
-  select: Mock<(columns: string, options?: { count: "exact"; head: true }) => any>;
+  select: Mock<(columns: string, options?: { count: "exact"; head: true }) => MockDataQueryBuilder>;
   eq: Mock<(column: string, value: string) => MockDataQueryBuilder>;
   order: Mock<(column: string, options: { ascending: boolean }) => MockDataQueryBuilder>;
   range: Mock<(from: number, to: number) => Promise<PostgrestResponse<GenerationErrorLogDTO>>>;
@@ -51,7 +51,7 @@ describe("GenerationErrors Service", () => {
         count: null,
         status: 200,
         statusText: "OK",
-      } as any), // Use 'as any' temporarily to bypass strict typing issues
+      } as unknown as PostgrestResponse<GenerationErrorLogDTO>),
     };
 
     // --- Mock Count Query Path ---
@@ -62,14 +62,14 @@ describe("GenerationErrors Service", () => {
       count: 0,
       status: 200,
       statusText: "OK",
-    } as any);
+    } as unknown as PostgrestResponse<GenerationErrorLogDTO>);
 
     // 2. Mock the 'select' method for the count query - returns object containing the 'eq' mock
     const mockCountSelectFn: MockCountQuerySelect = vi.fn().mockReturnValue({ eq: mockCountEq });
 
     // --- Mock Supabase Client ---
     mockSupabase = {
-      from: vi.fn().mockImplementation((_tableName: string) => {
+      from: vi.fn().mockImplementation(() => {
         return {
           // This select mock differentiates between count and data paths
           select: vi.fn((columns: string, options?: { count?: "exact"; head?: boolean }) => {
@@ -125,7 +125,7 @@ describe("GenerationErrors Service", () => {
         count: expectedCount,
         status: 200,
         statusText: "OK",
-      } as any);
+      } as unknown as PostgrestResponse<GenerationErrorLogDTO>);
       // Arrange: Mock the promise returned by 'range' in the data path
       mockDataQueryBuilder.range.mockResolvedValueOnce({
         data: expectedData,
@@ -133,7 +133,7 @@ describe("GenerationErrors Service", () => {
         count: null,
         status: 200,
         statusText: "OK",
-      } as any);
+      } as unknown as PostgrestResponse<GenerationErrorLogDTO>);
 
       // Act
       const result: PaginatedResponse<GenerationErrorLogDTO> = await getGenerationErrorLogs(mockSupabase, userId);
@@ -183,14 +183,14 @@ describe("GenerationErrors Service", () => {
         count: expectedCount,
         status: 200,
         statusText: "OK",
-      } as any);
+      } as unknown as PostgrestResponse<GenerationErrorLogDTO>);
       mockDataQueryBuilder.range.mockResolvedValueOnce({
         data: expectedData,
         error: null,
         count: null,
         status: 200,
         statusText: "OK",
-      } as any);
+      } as unknown as PostgrestResponse<GenerationErrorLogDTO>);
 
       // Act
       const result = await getGenerationErrorLogs(mockSupabase, userId, page, limit);
@@ -209,14 +209,20 @@ describe("GenerationErrors Service", () => {
 
     it("should return empty data array and total 0 if no logs found", async () => {
       // Arrange
-      mockCountEq.mockResolvedValueOnce({ data: null, error: null, count: 0, status: 200, statusText: "OK" } as any);
+      mockCountEq.mockResolvedValueOnce({
+        data: null,
+        error: null,
+        count: 0,
+        status: 200,
+        statusText: "OK",
+      } as unknown as PostgrestResponse<GenerationErrorLogDTO>);
       mockDataQueryBuilder.range.mockResolvedValueOnce({
         data: [],
         error: null,
         count: null,
         status: 200,
         statusText: "OK",
-      } as any);
+      } as unknown as PostgrestResponse<GenerationErrorLogDTO>);
 
       // Act
       const result = await getGenerationErrorLogs(mockSupabase, userId);
@@ -233,14 +239,20 @@ describe("GenerationErrors Service", () => {
       const dbError = createMockPostgrestError(errorMessage, "DB500");
 
       // Arrange: Count succeeds, data fetch fails
-      mockCountEq.mockResolvedValueOnce({ data: null, error: null, count: 5, status: 200, statusText: "OK" } as any);
+      mockCountEq.mockResolvedValueOnce({
+        data: null,
+        error: null,
+        count: 5,
+        status: 200,
+        statusText: "OK",
+      } as unknown as PostgrestResponse<GenerationErrorLogDTO>);
       mockDataQueryBuilder.range.mockResolvedValueOnce({
         data: null,
         error: dbError,
         count: null,
         status: 500,
         statusText: "Internal Server Error",
-      } as any); // Error response
+      } as unknown as PostgrestResponse<GenerationErrorLogDTO>); // Error response
 
       // Act & Assert
       await expect(getGenerationErrorLogs(mockSupabase, userId)).rejects.toThrow(
@@ -263,7 +275,7 @@ describe("GenerationErrors Service", () => {
         count: null,
         status: 500,
         statusText: "Internal Server Error",
-      } as any);
+      } as unknown as PostgrestResponse<GenerationErrorLogDTO>);
       // Mock data range to succeed
       mockDataQueryBuilder.range.mockResolvedValueOnce({
         data: mockLogs,
@@ -271,7 +283,7 @@ describe("GenerationErrors Service", () => {
         count: null,
         status: 200,
         statusText: "OK",
-      } as any);
+      } as unknown as PostgrestResponse<GenerationErrorLogDTO>);
 
       // Act
       const result = await getGenerationErrorLogs(mockSupabase, userId);
@@ -288,14 +300,20 @@ describe("GenerationErrors Service", () => {
 
     it("should handle null data gracefully", async () => {
       // Arrange: Count succeeds, data is null
-      mockCountEq.mockResolvedValueOnce({ data: null, error: null, count: 5, status: 200, statusText: "OK" } as any);
+      mockCountEq.mockResolvedValueOnce({
+        data: null,
+        error: null,
+        count: 5,
+        status: 200,
+        statusText: "OK",
+      } as unknown as PostgrestResponse<GenerationErrorLogDTO>);
       mockDataQueryBuilder.range.mockResolvedValueOnce({
         data: null,
         error: null,
         count: null,
         status: 200,
         statusText: "OK",
-      } as any);
+      } as unknown as PostgrestResponse<GenerationErrorLogDTO>);
 
       // Act
       const result = await getGenerationErrorLogs(mockSupabase, userId);

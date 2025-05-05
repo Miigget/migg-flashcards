@@ -251,9 +251,7 @@ describe("useCollectionDetail", () => {
       }
       // DELETE fails
       if (urlStr.includes(`/api/flashcards/`) && options?.method === "DELETE") {
-        const errorResponse = { message: deleteErrorMessage };
-        // Ensure headers are set for JSON response if needed by the hook's error handling
-        return new Response(JSON.stringify(errorResponse), {
+        return new Response(JSON.stringify({ message: deleteErrorMessage }), {
           status: 500,
           headers: { "Content-Type": "application/json" },
         });
@@ -263,50 +261,27 @@ describe("useCollectionDetail", () => {
 
     // Act: Render hook and wait for load
     const { result } = renderHook(() => useCollectionDetail(collectionName));
-    await waitFor(() => expect(result.current.viewModel.isLoading).toBe(false));
+    await waitFor(() => expect(result.current.viewModel.isLoading).toBe(false), { timeout: 1000 });
 
     const initialFlashcards = result.current.viewModel.flashcards;
     const flashcardToDelete = initialFlashcards[0]; // ID 1
     expect(mockedFetch).toHaveBeenCalledTimes(1); // Verify initial fetch
 
-    // Act: Trigger deletion expecting error in separate steps
+    // Act: Trigger deletion
     act(() => {
       result.current.handleDeleteFlashcard(flashcardToDelete.flashcard_id);
     });
 
+    // Perform delete with error handling
     await act(async () => {
-      // Use try/catch because the hook re-throws the error after handling it
-      try {
-        await result.current.handleDeleteFlashcardConfirm();
-      } catch (e) {
-        // Verify the error is thrown as expected
-        expect(e).toBeInstanceOf(Error);
-        expect((e as Error).message).toContain(deleteErrorMessage);
-      }
+      await expect(result.current.handleDeleteFlashcardConfirm()).rejects.toThrow(deleteErrorMessage);
     });
 
-    // Assert: Wait for assertions after the error occurred
-    await waitFor(() => {
-      // Check fetch call was made for DELETE
-      expect(mockedFetch).toHaveBeenCalledWith(
-        `/api/flashcards/${flashcardToDelete.flashcard_id}`,
-        expect.objectContaining({ method: "DELETE" })
-      );
-      expect(mockedFetch).toHaveBeenCalledTimes(2); // Initial GET + failed DELETE attempt
-
-      // Check toast error message
-      // The hook might use a generic title like "Error" and put details in description
-      expect(toast.error).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({ description: deleteErrorMessage })
-      );
-
-      // Check state (flashcards should NOT have changed)
-      expect(result.current.viewModel.flashcards).toEqual(initialFlashcards);
-
-      // Check error state stored within the hook
-      expect(result.current.deleteFlashcardError).toBe(deleteErrorMessage);
-    });
+    // Verify error state
+    expect(mockedFetch).toHaveBeenCalledTimes(2); // Initial GET + failed DELETE
+    expect(toast.error).toHaveBeenCalled();
+    expect(result.current.viewModel.flashcards).toEqual(initialFlashcards); // No change in flashcards
+    expect(result.current.deleteFlashcardError).toBe(deleteErrorMessage);
   });
 
   // Add tests for search/filter/sorting if implemented

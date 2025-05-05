@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, type SubmitHandler, type ControllerRenderProps } from "react-hook-form";
 import { z } from "zod";
@@ -71,6 +71,16 @@ const CreateFlashcardForm: React.FC<CreateFlashcardFormProps> = ({ collections, 
   // State for Combobox open state
   const [isComboboxOpen, setIsComboboxOpen] = useState(false);
 
+  // State for redirection
+  const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
+
+  // Effect to handle redirection
+  useEffect(() => {
+    if (redirectUrl) {
+      window.location.href = redirectUrl;
+    }
+  }, [redirectUrl]);
+
   // Handle form submission
   const onSubmit: SubmitHandler<CreateFlashcardFormData> = async (data) => {
     // Trim collection name before submitting
@@ -88,8 +98,8 @@ const CreateFlashcardForm: React.FC<CreateFlashcardFormProps> = ({ collections, 
         description: `Flashcard added to collection '${createdFlashcard.collection}'.`,
       });
       form.reset({ front: "", back: "", collection: command.collection }); // Reset but keep collection selected
-      // Redirect to the collection page - maybe redirect to the newly created flashcard detail?
-      window.location.href = `/collections/${createdFlashcard.collection}`;
+      // Trigger redirection using state
+      setRedirectUrl(`/collections/${createdFlashcard.collection}`);
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error("Form Submission Error:", error);

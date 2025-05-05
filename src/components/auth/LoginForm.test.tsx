@@ -50,13 +50,20 @@ describe("LoginForm", () => {
   });
 
   it("allows user to input email and password", async () => {
+    const user = userEvent.setup({
+      // Configure userEvent with a shorter delay to prevent timeout
+      delay: 1,
+    });
+
     render(<LoginForm />);
+
     const emailInput = screen.getByLabelText(/Email/i);
     const passwordInput = screen.getByLabelText(/Password/i);
 
     await user.type(emailInput, "test@example.com");
     await user.type(passwordInput, "password123");
 
+    // Proste asercje bez waitFor
     expect(emailInput).toHaveValue("test@example.com");
     expect(passwordInput).toHaveValue("password123");
   });

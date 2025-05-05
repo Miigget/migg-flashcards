@@ -59,9 +59,9 @@ export function useCollectionsList() {
       return;
     }
 
-    const fetchCounts = async () => {
+    const fetchCounts = (currentCollections: CollectionViewModel[]) => {
       // Identify collections that need counts fetched
-      const collectionsToFetch = collections.filter((c) => c.isLoadingCount);
+      const collectionsToFetch = currentCollections.filter((c) => c.isLoadingCount);
       if (collectionsToFetch.length === 0) return;
 
       const countPromises = collectionsToFetch.map(async (collection) => {
@@ -104,63 +104,59 @@ export function useCollectionsList() {
         }
       });
 
-      const results = await Promise.allSettled(countPromises);
+      Promise.allSettled(countPromises).then((results) => {
+        setCollections((prevCollections) => {
+          // Calculate the next state based on previous state and results
+          return prevCollections.map((collection) => {
+            // Find the index of this collection within the original list that was fetched
+            const indexInFetched = collectionsToFetch.findIndex((c) => c.name === collection.name);
 
-      setCollections((prevCollections) => {
-        // Calculate the next state based on previous state and results
-        const newCollections = prevCollections.map((collection) => {
-          // Find the index of this collection within the original list that was fetched
-          const indexInFetched = collectionsToFetch.findIndex((c) => c.name === collection.name);
-
-          // If this collection wasn't fetched in this batch, return it unchanged
-          if (indexInFetched === -1) {
-            return collection;
-          }
-
-          const result = results[indexInFetched];
-
-          if (result.status === "fulfilled") {
-            const { count, error } = result.value;
-            if (error) {
-              // Error occurred during fetch and was caught, returned in value
-              return { ...collection, flashcardCount: null, isLoadingCount: false, errorCount: error };
-            } else {
-              // Success
-              return { ...collection, flashcardCount: count, isLoadingCount: false, errorCount: null };
+            // If this collection wasn't fetched in this batch, return it unchanged
+            if (indexInFetched === -1) {
+              return collection;
             }
-          } else {
-            // result.status === "rejected"
-            // Promise was rejected (e.g., network error before catch)
-            const reason = result.reason;
-            let message = `Network error fetching count for ${collection.name}`;
-            let status = 500;
 
-            if (reason instanceof Error) {
-              message = reason.message;
-              // Attempt to get status if it's a custom error with status
-              if ("status" in reason && typeof reason.status === "number") {
-                status = reason.status;
+            const result = results[indexInFetched];
+
+            if (result.status === "fulfilled") {
+              const { count, error } = result.value;
+              if (error) {
+                // Error occurred during fetch and was caught, returned in value
+                return { ...collection, flashcardCount: null, isLoadingCount: false, errorCount: error };
+              } else {
+                // Success
+                return { ...collection, flashcardCount: count, isLoadingCount: false, errorCount: null };
               }
-            } else if (typeof reason === "string") {
-              message = reason;
-            }
-            // Add more specific checks if other structured error types are expected
+            } else {
+              // result.status === "rejected"
+              // Promise was rejected (e.g., network error before catch)
+              const reason = result.reason;
+              let message = `Network error fetching count for ${collection.name}`;
+              let status = 500;
 
-            const apiError: ApiError = { status, message };
-            // eslint-disable-next-line no-console
-            console.error(`Count fetch failed for ${collection.name} (rejected):`, reason);
-            return { ...collection, flashcardCount: null, isLoadingCount: false, errorCount: apiError };
-          }
+              if (reason instanceof Error) {
+                message = reason.message;
+                // Attempt to get status if it's a custom error with status
+                if ("status" in reason && typeof reason.status === "number") {
+                  status = reason.status;
+                }
+              } else if (typeof reason === "string") {
+                message = reason;
+              }
+              // Add more specific checks if other structured error types are expected
+
+              const apiError: ApiError = { status, message };
+              // eslint-disable-next-line no-console
+              console.error(`Count fetch failed for ${collection.name} (rejected):`, reason);
+              return { ...collection, flashcardCount: null, isLoadingCount: false, errorCount: apiError };
+            }
+          });
         });
-        // Return the fully calculated new state array
-        return newCollections;
       });
     };
 
-    fetchCounts();
-
-    // Reason: Adding 'collections' causes an infinite loop. Logic relies on reading state within fetchCounts.
-  }, [collectionNames, isLoadingNames]); // Removed collections dependency to avoid loops
+    fetchCounts(collections);
+  }, [collectionNames, isLoadingNames, collections]);
 
   // Dialog Handlers
   const handleRenameClick = useCallback((name: string) => {

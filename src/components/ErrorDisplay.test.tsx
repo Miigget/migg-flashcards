@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect } from "vitest";
 import ErrorDisplay from "./ErrorDisplay";
@@ -10,17 +10,19 @@ describe("ErrorDisplay", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
-  it("should render the error message and status from ApiError object", () => {
+  it("should render the error message and status from ApiError object", async () => {
     const errorMessage = "Something went wrong";
     const errorStatus = 500;
     const apiError: ApiError = { message: errorMessage, status: errorStatus };
     render(<ErrorDisplay error={apiError} />);
 
-    const alert = screen.getByRole("alert");
-    expect(screen.getByText(/Wystąpił błąd/)).toBeInTheDocument();
-    expect(alert).toBeInTheDocument();
-    expect(alert).toHaveTextContent(errorMessage);
-    expect(alert).toHaveTextContent(`(Status: ${errorStatus})`);
+    await waitFor(() => {
+      const alert = screen.getByRole("alert");
+      expect(screen.getByText(/Wystąpił błąd/)).toBeInTheDocument();
+      expect(alert).toBeInTheDocument();
+      expect(alert).toHaveTextContent(errorMessage);
+      expect(alert).toHaveTextContent(`(Status: ${errorStatus})`);
+    });
   });
 
   it("should render the error message without status if status is missing", () => {

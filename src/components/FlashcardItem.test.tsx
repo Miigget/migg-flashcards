@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import FlashcardItem from "./FlashcardItem";
@@ -30,11 +30,13 @@ describe("FlashcardItem", () => {
     vi.clearAllMocks();
   });
 
-  it("should render flashcard front and back content", () => {
+  it("should render flashcard front and back content", async () => {
     render(<FlashcardItem {...defaultProps} />);
 
-    expect(screen.getByText(mockFlashcard.front)).toBeInTheDocument();
-    expect(screen.getByText(mockFlashcard.back)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(mockFlashcard.front)).toBeInTheDocument();
+      expect(screen.getByText(mockFlashcard.back)).toBeInTheDocument();
+    });
   });
 
   it("should render Edit and Delete buttons", () => {

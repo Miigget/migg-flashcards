@@ -229,7 +229,7 @@ describe("Step1_TextInput Component", () => {
   // We can't easily test the onRetryGenerate callback without a more complex ErrorMessage mock
   // or by directly testing the ErrorMessage component to ensure it calls its onRetry prop.
 
-  it("should update character counter based on text prop", () => {
+  it("should update character counter based on text prop", async () => {
     const { rerender } = render(
       <Step1_TextInput
         text=""
@@ -241,8 +241,11 @@ describe("Step1_TextInput Component", () => {
         onRetryGenerate={mockOnRetryGenerate}
       />
     );
+
+    // Check initial state
     expect(screen.getByTestId("char-counter")).toHaveTextContent(`0/10000`);
 
+    // Update with some text
     rerender(
       <Step1_TextInput
         text="Hello"
@@ -254,11 +257,14 @@ describe("Step1_TextInput Component", () => {
         onRetryGenerate={mockOnRetryGenerate}
       />
     );
+
+    // Check updated counter
     expect(screen.getByTestId("char-counter")).toHaveTextContent(`5/10000`);
 
+    // Update with longer text
     rerender(
       <Step1_TextInput
-        text={validText} // Length 110
+        text={validText}
         validationError={null}
         isLoading={false}
         apiError={null}
@@ -267,6 +273,9 @@ describe("Step1_TextInput Component", () => {
         onRetryGenerate={mockOnRetryGenerate}
       />
     );
-    expect(screen.getByTestId("char-counter")).toHaveTextContent(`110/10000`);
+
+    // Check counter with longer text
+    const expectedLength = validText.length;
+    expect(screen.getByTestId("char-counter")).toHaveTextContent(`${expectedLength}/10000`);
   });
 });

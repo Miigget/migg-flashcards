@@ -169,13 +169,24 @@ describe("Step2_ReviewCandidates Component", () => {
   });
 
   it("should call onProceedToSave when the proceed button is clicked", async () => {
-    const user = userEvent.setup();
-    const propsWithAccepted = { ...defaultProps, candidates: mockCandidates };
-    render(<Step2_ReviewCandidates {...propsWithAccepted} />);
+    const user = userEvent.setup({
+      // Configure userEvent with shorter delays
+      delay: 1,
+    });
 
+    // W mockCandidates mamy już 1 zaakceptowany, więc przycisk powinien być aktywny
+    render(<Step2_ReviewCandidates {...defaultProps} />);
+
+    // Pobierz przycisk
     const proceedButton = screen.getByRole("button", { name: /Przejdź do zapisu/i });
+
+    // Sprawdź czy przycisk jest aktywny
     expect(proceedButton).toBeEnabled();
+
+    // Kliknij przycisk
     await user.click(proceedButton);
+
+    // Sprawdź czy funkcja została wywołana
     expect(mockOnProceedToSave).toHaveBeenCalledTimes(1);
   });
 

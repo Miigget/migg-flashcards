@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Mock } from "vitest";
 import type { PostgrestError } from "@supabase/supabase-js";
 import { FlashcardGenerationService } from "./flashcard-generation.service";
-import type { FlashcardCandidateDto, GenerationDTO, FlashcardDTO } from "@/types";
+import type { FlashcardCandidateDto, GenerationDTO } from "@/types";
 import { createSupabaseServerInstance } from "@/db/supabase.client";
 import { getOpenRouterClient } from "./openrouter";
 import { OpenRouterService } from "./openrouter.service";
@@ -11,9 +11,9 @@ import * as crypto from "crypto";
 
 // --- Global Mock Variables --- //
 // Use 'let' and define outside factory/beforeEach
-let mockChat: Mock<any, any>;
-let mockCreateJsonSchema: Mock<any, any>;
-let mockSchemaBuilder: { addProperty: Mock<any, any>; build: Mock<any, any> };
+let mockChat: Mock<unknown[], unknown>;
+let mockCreateJsonSchema: Mock<unknown[], unknown>;
+let mockSchemaBuilder: { addProperty: Mock<unknown[], unknown>; build: Mock<unknown[], unknown> };
 
 // --- Mock Dependencies --- //
 vi.mock("@/db/supabase.client");
@@ -27,8 +27,8 @@ vi.mock("./openrouter.service", () => {
 
   // Assign EXTERNAL mock functions to the prototype
   // These will be initialized in beforeEach
-  MockOpenRouterService.prototype.createJsonSchema = (...args) => mockCreateJsonSchema(...args);
-  MockOpenRouterService.prototype.chat = (...args) => mockChat(...args);
+  MockOpenRouterService.prototype.createJsonSchema = (...args: unknown[]) => mockCreateJsonSchema(...args);
+  MockOpenRouterService.prototype.chat = (...args: unknown[]) => mockChat(...args);
 
   // Expose the mock class
   return {
@@ -49,34 +49,46 @@ type SupabaseClientType = ReturnType<typeof createSupabaseServerInstance>;
 
 // Type for the mocked Supabase client instance
 interface MockSupabaseClient extends SupabaseClientType {
-  from: vi.Mock<[string], MockSupabaseChain>;
+  from: Mock<[string], MockSupabaseChain>;
   // Add queue control methods directly to the client mock instance type
-  mockQueryResult: (result: { data?: any; error?: PostgrestError | null; count?: number | null }) => MockSupabaseChain;
+  mockQueryResult: (result: {
+    data?: unknown;
+    error?: PostgrestError | null;
+    count?: number | null;
+  }) => MockSupabaseChain;
   clearMockQueue: () => void;
   // Add auth type explicitly if needed by linter
   auth: {
-    getUser: Mock<any, Promise<{ data: { user: { id: string } | null }; error: Error | null }>>;
+    getUser: Mock<unknown[], Promise<{ data: { user: { id: string } | null }; error: Error | null }>>;
   };
 }
 
 // Type for the chainable query builder methods
 interface MockSupabaseChain {
-  select: vi.Mock<any[], MockSupabaseChain>;
-  insert: vi.Mock<[object | object[]], MockSupabaseChain>;
-  update: vi.Mock<[object], MockSupabaseChain>;
-  delete: vi.Mock<[], MockSupabaseChain>;
-  eq: vi.Mock<[string, any], MockSupabaseChain>;
+  select: Mock<unknown[], MockSupabaseChain>;
+  insert: Mock<[object | object[]], MockSupabaseChain>;
+  update: Mock<[object], MockSupabaseChain>;
+  delete: Mock<[], MockSupabaseChain>;
+  eq: Mock<[string, unknown], MockSupabaseChain>;
   // Add other methods if needed by flashcard-generation.service
-  single: vi.Mock<[], MockSupabaseChain>;
-  then: <TResult1 = { data: any; error: PostgrestError | null; count: number | null }, TResult2 = never>(
+  single: Mock<[], MockSupabaseChain>;
+  then: <TResult1 = { data: unknown; error: PostgrestError | null; count: number | null }, TResult2 = never>(
     onfulfilled?:
-      | ((value: { data: any; error: PostgrestError | null; count: number | null }) => TResult1 | PromiseLike<TResult1>)
+      | ((value: {
+          data: unknown;
+          error: PostgrestError | null;
+          count: number | null;
+        }) => TResult1 | PromiseLike<TResult1>)
       | undefined
       | null,
-    onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null
+    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | undefined | null
   ) => Promise<TResult1 | TResult2>;
   // Keep the mock setup methods
-  mockQueryResult: (result: { data?: any; error?: PostgrestError | null; count?: number | null }) => MockSupabaseChain;
+  mockQueryResult: (result: {
+    data?: unknown;
+    error?: PostgrestError | null;
+    count?: number | null;
+  }) => MockSupabaseChain;
   clearMockQueue: () => void;
 }
 
@@ -87,10 +99,10 @@ const createMockSupabase = (): MockSupabaseClient => {
 
   // Factory function to create a new chain instance
   const createChain = (): MockSupabaseChain => {
-    let resultsQueue: { data?: any; error?: PostgrestError | null; count?: number | null }[] = [];
+    let resultsQueue: { data?: unknown; error?: PostgrestError | null; count?: number | null }[] = [];
     const chainInstance: Partial<MockSupabaseChain> = {}; // Use Partial initially
 
-    const mockQueryResult = (result: { data?: any; error?: PostgrestError | null; count?: number | null }) => {
+    const mockQueryResult = (result: { data?: unknown; error?: PostgrestError | null; count?: number | null }) => {
       resultsQueue.push(result);
       return chainInstance as MockSupabaseChain; // Return the fully formed chain
     };
@@ -117,7 +129,7 @@ const createMockSupabase = (): MockSupabaseClient => {
     return chainInstance as MockSupabaseChain;
   };
 
-  const mockGetUser = vi.fn<any, Promise<{ data: { user: { id: string } | null }; error: Error | null }>>();
+  const mockGetUser = vi.fn<unknown[], Promise<{ data: { user: { id: string } | null }; error: Error | null }>>();
 
   const client = {
     from: vi.fn().mockImplementation((tableName: string) => {
@@ -139,7 +151,7 @@ const createMockSupabase = (): MockSupabaseClient => {
     // },
     // Add helper to get a specific chain for assertions
     getChain: (tableName: string): MockSupabaseChain | undefined => chains[tableName],
-  } as any as MockSupabaseClient;
+  } as unknown as MockSupabaseClient;
 
   return client;
 };
@@ -209,7 +221,7 @@ describe("Flashcard Generation Service", () => {
     vi.mocked(crypto.createHash).mockReturnValue({
       update: vi.fn().mockReturnThis(),
       digest: vi.fn(() => "mocked-hash-123"),
-    } as any);
+    } as unknown);
 
     // Mock Supabase user
     vi.mocked(mockSupabaseInstance.auth.getUser).mockResolvedValue({ data: { user: { id: testUserId } }, error: null });

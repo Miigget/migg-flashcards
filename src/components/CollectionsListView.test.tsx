@@ -231,7 +231,7 @@ describe("CollectionsListView", () => {
     expect(mockHandleRenameClick).toHaveBeenCalledWith("Collection A");
   });
 
-  it("should show rename dialog when renameTargetName is set", async () => {
+  it("should show rename dialog when renameTargetName is set", () => {
     const targetName = "Collection B";
     mockUseCollectionsList.mockReturnValueOnce({
       ...defaultHookState,
@@ -239,7 +239,8 @@ describe("CollectionsListView", () => {
     });
     render(<CollectionsListView />);
 
-    const dialog = await screen.findByRole("dialog", { name: /rename dialog/i });
+    // Dialog powinien być wyświetlony natychmiast po renderze
+    const dialog = screen.getByRole("dialog", { name: /rename dialog/i });
     expect(dialog).toBeInTheDocument();
     expect(within(dialog).getByText(`Rename ${targetName}`)).toBeInTheDocument();
   });

@@ -184,12 +184,18 @@ describe("RegisterForm", () => {
     });
 
     // Check if toast.error was called - updated based on component implementation
-    expect(toast.error).toHaveBeenCalledWith("Registration Failed", {
-      description: apiErrorMsg,
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith("Registration Failed", {
+        description: apiErrorMsg,
+      });
     });
 
     expect(window.location.href).toBe(""); // No redirect on error
-    expect(submitButton).not.toBeDisabled();
+
+    await waitFor(() => {
+      expect(submitButton).not.toBeDisabled();
+    });
+
     expect(toast.success).not.toHaveBeenCalled();
   });
 });

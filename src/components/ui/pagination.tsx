@@ -43,7 +43,9 @@ function PaginationLink({ className, isActive, size = "icon", ...props }: Pagina
         className
       )}
       {...props}
-    />
+    >
+      {props.children || <span className="sr-only">Page</span>}
+    </a>
   );
 }
 

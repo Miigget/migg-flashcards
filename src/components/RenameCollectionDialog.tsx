@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -47,27 +47,30 @@ const RenameCollectionDialog: React.FC<RenameCollectionDialogProps> = ({
     }
   }, [isOpen, currentName]);
 
-  const validateName = (name: string): boolean => {
-    if (!name.trim()) {
-      setValidationError("Nazwa kolekcji nie może być pusta.");
-      return false;
-    }
-    if (name.length > MAX_NAME_LENGTH) {
-      setValidationError(`Nazwa kolekcji nie może przekraczać ${MAX_NAME_LENGTH} znaków.`);
-      return false;
-    }
-    if (name === currentName) {
-      // No change, technically valid but maybe disable submit? Or handle in submit.
-      setValidationError(null); // Or maybe "Nazwa nie została zmieniona."
-      return true; // Allow submission to close dialog
-    }
-    if (existingNames.includes(name)) {
-      setValidationError("Kolekcja o tej nazwie już istnieje.");
-      return false;
-    }
-    setValidationError(null);
-    return true;
-  };
+  const validateName = useCallback(
+    (name: string): boolean => {
+      if (!name.trim()) {
+        setValidationError("Nazwa kolekcji nie może być pusta.");
+        return false;
+      }
+      if (name.length > MAX_NAME_LENGTH) {
+        setValidationError(`Nazwa kolekcji nie może przekraczać ${MAX_NAME_LENGTH} znaków.`);
+        return false;
+      }
+      if (name === currentName) {
+        // No change, technically valid but maybe disable submit? Or handle in submit.
+        setValidationError(null); // Or maybe "Nazwa nie została zmieniona."
+        return true; // Allow submission to close dialog
+      }
+      if (existingNames.includes(name)) {
+        setValidationError("Kolekcja o tej nazwie już istnieje.");
+        return false;
+      }
+      setValidationError(null);
+      return true;
+    },
+    [currentName, existingNames]
+  );
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
@@ -98,7 +101,7 @@ const RenameCollectionDialog: React.FC<RenameCollectionDialogProps> = ({
     if (isOpen) {
       validateName(newName);
     }
-  }, [existingNames, newName, isOpen]);
+  }, [existingNames, newName, isOpen, validateName]);
 
   const canSubmit = !validationError && !isSubmitting && newName.trim() !== "" && newName !== currentName;
 
