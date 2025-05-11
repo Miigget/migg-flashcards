@@ -11,23 +11,19 @@ const SelectedLayout = user ? MainLayout : Layout;
 ---
 
 <SelectedLayout title="MiggFlashcards">
-  <main
-    class="min-h-screen flex flex-col items-center justify-center p-6 md:p-12 bg-gradient-to-b from-gray-50 to-white dark:from-slate-950 dark:to-slate-900"
-  >
+  <main class="min-h-screen flex flex-col items-center justify-center p-6 md:p-12 bg-background">
     <div class="max-w-4xl w-full mx-auto text-center space-y-8">
       <!-- Hero section -->
-      <h1 class="text-4xl md:text-6xl font-bold tracking-tight text-slate-900 dark:text-white">
-        <span class="text-gray-700 dark:text-gray-300">Migg</span>Flashcards
+      <h1 class="text-4xl md:text-6xl font-bold tracking-tight text-foreground">
+        <span class="text-muted-foreground">Migg</span>Flashcards
       </h1>
 
-      <p class="text-xl md:text-2xl text-slate-700 dark:text-slate-300 max-w-3xl mx-auto">
-        Learn faster with AI-powered flashcards
-      </p>
+      <p class="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto">Learn faster with AI-powered flashcards</p>
 
       <!-- Key features -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
-        <div class="p-6 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
-          <div class="text-gray-700 dark:text-gray-300 mb-4">
+        <div class="p-6 rounded-lg border border-border bg-card shadow-sm">
+          <div class="text-muted-foreground mb-4">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="24"
@@ -45,14 +41,14 @@ const SelectedLayout = user ? MainLayout : Layout;
                 d="M12 16h3.5a3.5 3.5 0 1 1 0 7H12v-7z"></path></svg
             >
           </div>
-          <h3 class="text-lg font-semibold mb-2 text-slate-900 dark:text-white">AI-Powered Generation</h3>
-          <p class="text-slate-600 dark:text-slate-400">
+          <h3 class="text-lg font-semibold mb-2 text-foreground">AI-Powered Generation</h3>
+          <p class="text-muted-foreground">
             Automatically create high-quality flashcards from your text with our AI technology
           </p>
         </div>
 
-        <div class="p-6 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
-          <div class="text-gray-700 dark:text-gray-300 mb-4">
+        <div class="p-6 rounded-lg border border-border bg-card shadow-sm">
+          <div class="text-muted-foreground mb-4">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="24"
@@ -66,14 +62,14 @@ const SelectedLayout = user ? MainLayout : Layout;
               class="mx-auto"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4l3 3"></path></svg
             >
           </div>
-          <h3 class="text-lg font-semibold mb-2 text-slate-900 dark:text-white">Spaced Repetition</h3>
-          <p class="text-slate-600 dark:text-slate-400">
+          <h3 class="text-lg font-semibold mb-2 text-foreground">Spaced Repetition</h3>
+          <p class="text-muted-foreground">
             Learn efficiently with our proven spaced repetition algorithm for better retention
           </p>
         </div>
 
-        <div class="p-6 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
-          <div class="text-gray-700 dark:text-gray-300 mb-4">
+        <div class="p-6 rounded-lg border border-border bg-card shadow-sm">
+          <div class="text-muted-foreground mb-4">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="24"
@@ -89,24 +85,22 @@ const SelectedLayout = user ? MainLayout : Layout;
               ></path><path d="M9 16h6"></path></svg
             >
           </div>
-          <h3 class="text-lg font-semibold mb-2 text-slate-900 dark:text-white">Easy Collection Management</h3>
-          <p class="text-slate-600 dark:text-slate-400">
+          <h3 class="text-lg font-semibold mb-2 text-foreground">Easy Collection Management</h3>
+          <p class="text-muted-foreground">
             Organize and manage your flashcard collections with an intuitive interface
           </p>
         </div>
       </div>
 
       <!-- Product description -->
-      <div
-        class="mt-12 bg-white dark:bg-slate-800 p-8 rounded-xl shadow-md border border-slate-200 dark:border-slate-700"
-      >
-        <h2 class="text-2xl font-bold mb-4 text-slate-900 dark:text-white">Revolutionize Your Learning Process</h2>
-        <p class="text-slate-600 dark:text-slate-400 mb-6">
+      <div class="mt-12 bg-card p-8 rounded-xl shadow-md border border-border">
+        <h2 class="text-2xl font-bold mb-4 text-foreground">Revolutionize Your Learning Process</h2>
+        <p class="text-muted-foreground mb-6">
           MiggFlashcards eliminates the time-consuming process of manually creating educational flashcards. Our AI
           technology analyzes your text and automatically generates high-quality flashcards, allowing you to focus on
           what matters most – learning.
         </p>
-        <p class="text-slate-600 dark:text-slate-400">
+        <p class="text-muted-foreground">
           Simply paste your text, review the AI-generated flashcards, and start learning with our effective spaced
           repetition system. Perfect for students, professionals, and lifelong learners.
         </p>
@@ -117,7 +111,7 @@ const SelectedLayout = user ? MainLayout : Layout;
         !user && (
           <div class="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
             <a href="/auth/register">
-              <Button size="lg" className="w-full sm:w-auto bg-black hover:bg-gray-800 text-white">
+              <Button size="lg" className="w-full sm:w-auto">
                 {" "}
                 Get Started{" "}
               </Button>

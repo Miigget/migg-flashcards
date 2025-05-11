@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner"; // Import toast for displaying errors
+import { Loader2 } from "lucide-react";
 
 // Define Zod schema for validation
 const loginSchema = z.object({
@@ -62,49 +63,43 @@ export function LoginForm() {
     }
   };
 
-  // Original handle submit is replaced by react-hook-form's handleSubmit(onSubmit)
-
   return (
     <Card className="w-full max-w-sm">
       <CardHeader>
         <CardTitle className="text-2xl">Login</CardTitle>
         <CardDescription>Enter your email below to login to your account.</CardDescription>
       </CardHeader>
-      {/* Add noValidate and use react-hook-form's handleSubmit */}
       <form noValidate onSubmit={handleSubmit(onSubmit)}>
-        <CardContent className="grid gap-2">
+        <CardContent className="grid gap-4">
           <div className="grid gap-2">
             <Label htmlFor="email">Email</Label>
-            {/* Register email input */}
             <Input
               id="email"
               type="email"
               placeholder="Enter your email"
-              {...register("email")} // Register with react-hook-form
-              aria-invalid={errors.email ? "true" : "false"} // Accessibility
+              {...register("email")}
+              aria-invalid={errors.email ? "true" : "false"}
+              disabled={isLoading}
             />
-            {/* Display email error message */}
             {errors.email && <p className="text-sm text-red-600 mt-1">{errors.email.message}</p>}
           </div>
           <div className="grid gap-2">
             <Label htmlFor="password">Password</Label>
-            {/* Register password input */}
             <Input
               id="password"
               type="password"
               placeholder="Enter your password"
-              {...register("password")} // Register with react-hook-form
-              aria-invalid={errors.password ? "true" : "false"} // Accessibility
+              {...register("password")}
+              aria-invalid={errors.password ? "true" : "false"}
+              disabled={isLoading}
             />
-            {/* Display password error message */}
             {errors.password && <p className="text-sm text-red-600 mt-1">{errors.password.message}</p>}
           </div>
         </CardContent>
         <CardFooter className="flex flex-col items-start">
-          {/* Display general form error */}
           {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
-          {/* Button type is submit, handled by react-hook-form */}
-          <Button type="submit" className="w-full mt-6" disabled={isLoading}>
+          <Button type="submit" className="w-full mt-4" disabled={isLoading}>
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {isLoading ? "Logging in..." : "Log in"}
           </Button>
           <div className="mt-4 text-center text-sm w-full">

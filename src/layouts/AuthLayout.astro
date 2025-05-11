@@ -3,6 +3,7 @@
 import "@/styles/global.css"; // Corrected import path
 // import { Toaster } from "@/components/ui/toaster"; // Remove old toaster import
 import { Toaster } from "@/components/ui/sonner"; // Import Sonner Toaster
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface Props {
   title: string;
@@ -22,9 +23,16 @@ const { title } = Astro.props; // Uncommented
     <meta name="generator" content={Astro.generator} />
     <title>{title} - Migg Flashcards</title>
     {/* Use title from props */}
+    <script is:inline>
+const theme = localStorage.getItem("theme") || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.classList.toggle("dark", theme === "dark");
+</script>
   </head>
   <body class="min-h-screen bg-background font-sans antialiased">
     <main class="flex min-h-screen flex-col items-center justify-center">
+      <div class="absolute top-4 right-4">
+        <ThemeToggle client:load />
+      </div>
       {/* <!-- TODO: Add Logo Here --> */}
       <slot />
     </main>

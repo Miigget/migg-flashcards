@@ -15,6 +15,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const gitignorePath = path.resolve(__dirname, ".gitignore");
 
+// Base TypeScript + JS config
 const baseConfig = tseslint.config({
   extends: [eslint.configs.recommended, tseslint.configs.strict, tseslint.configs.stylistic],
   rules: {
@@ -23,6 +24,7 @@ const baseConfig = tseslint.config({
   },
 });
 
+// Accessibility (jsx-a11y) config
 const jsxA11yConfig = tseslint.config({
   files: ["**/*.{js,jsx,ts,tsx}"],
   extends: [jsxA11y.flatConfigs.recommended],
@@ -34,6 +36,7 @@ const jsxA11yConfig = tseslint.config({
   },
 });
 
+// React config
 const reactConfig = tseslint.config({
   files: ["**/*.{js,jsx,ts,tsx}"],
   extends: [pluginReact.configs.flat.recommended],
@@ -56,11 +59,24 @@ const reactConfig = tseslint.config({
   },
 });
 
+// Export final ESLint configuration
 export default tseslint.config(
   includeIgnoreFile(gitignorePath),
   baseConfig,
   jsxA11yConfig,
   reactConfig,
+
+  // Prettier plugin for non-Astro files
+  eslintPluginPrettier,
+
+  // Astro plugin and recommended rules
   eslintPluginAstro.configs["flat/recommended"],
-  eslintPluginPrettier
+
+  // Override: disable prettier/prettier for .astro files
+  {
+    files: ["**/*.astro"],
+    rules: {
+      "prettier/prettier": "off",
+    },
+  }
 );

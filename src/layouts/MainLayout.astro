@@ -2,6 +2,7 @@
 import Layout from "./Layout.astro";
 import { Toaster } from "../components/ui/toaster";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface Props {
   title?: string;
@@ -52,6 +53,9 @@ const user = Astro.locals.user;
                 user ? (
                   <>
                     <span class="text-sm font-medium text-muted-foreground">{user.email}</span>
+                    <div class="mx-3">
+                      <ThemeToggle client:load />
+                    </div>
                     <form method="POST" action="/api/auth/logout" class="inline-block">
                       <Button type="submit" variant="outline" size="sm">
                         Log out
@@ -59,11 +63,14 @@ const user = Astro.locals.user;
                     </form>
                   </>
                 ) : (
-                  <a href="/auth/login">
-                    <Button variant="outline" size="sm">
-                      Log in
-                    </Button>
-                  </a>
+                  <>
+                    <ThemeToggle client:load />
+                    <a href="/auth/login">
+                      <Button variant="outline" size="sm">
+                        Log in
+                      </Button>
+                    </a>
+                  </>
                 )
               }
             </div>
