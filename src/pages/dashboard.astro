@@ -58,55 +58,55 @@ const userName = userEmail ? userEmail.split("@")[0] : "User";
 
 <MainLayout title="Dashboard">
   <main class="container mx-auto px-4 py-8 flex flex-col items-center">
-    <h1 class="mb-6 text-3xl font-bold tracking-tight text-center">Witaj, {userName}!</h1>
+    <h1 class="mb-6 text-3xl font-bold tracking-tight text-center">Welcome, {userName}!</h1>
     <p class="mb-6 text-lg text-center">
-      Tutaj znajdziesz podstawowe informacje o Twoim koncie i możliwości szybkiej nawigacji.
+      Here you will find basic information about your account and quick navigation options.
     </p>
 
     <section class="mb-8 w-full max-w-2xl">
       <div class="bg-card text-card-foreground p-6 rounded-lg border shadow-sm mb-6">
-        <!-- <h2 class="text-lg font-semibold mb-4 text-center">Szybkie Akcje</h2> -->
+        <!-- <h2 class="text-lg font-semibold mb-4 text-center">Quick Actions</h2> -->
         <div class="flex justify-center">
           <div class="grid grid-cols-2 gap-y-8 gap-x-12">
             <a href="/generate" class="contents">
-              <Button size="lg" variant="default" className="w-full"> Generuj Fiszki AI </Button>
+              <Button size="lg" variant="default" className="w-full"> AI Generate Flashcards </Button>
             </a>
             <a href="/create" class="contents">
-              <Button size="lg" variant="default" className="w-full"> Stwórz Fiszki Ręcznie </Button>
+              <Button size="lg" variant="default" className="w-full"> Create Flashcards Manually </Button>
             </a>
             <a href="/collections" class="contents">
-              <Button size="lg" variant="default" className="w-full"> Moje Kolekcje </Button>
+              <Button size="lg" variant="default" className="w-full"> My Collections </Button>
             </a>
             <a href="#" class="contents">
-              <Button size="lg" variant="default" className="w-full"> Rozpocznij Naukę </Button>
+              <Button size="lg" variant="default" className="w-full"> Start Learning </Button>
             </a>
           </div>
         </div>
       </div>
 
       <div class="bg-card text-card-foreground p-6 rounded-lg border shadow-sm w-full">
-        <!-- <h2 class="text-lg font-semibold mb-4 text-center">Statystyki</h2> -->
+        <!-- <h2 class="text-lg font-semibold mb-4 text-center">Statistics</h2> -->
         {
           statsError && (
             <div class="text-destructive text-sm mb-4">
-              <p>Błąd ładowania statystyk:</p>
+              <p>Error loading statistics:</p>
               <p>{statsError}</p>
             </div>
           )
         }
         <div class="flex flex-row justify-center items-center">
           <div class="text-center">
-            <span class="block text-muted-foreground text-base">Wszystkie fiszki:</span>
+            <span class="block text-muted-foreground text-base">Flashcards:</span>
             <span class="block text-2xl font-bold">{totalFlashcards ?? "-"}</span>
           </div>
           <div class="text-center ml-32">
-            <span class="block text-muted-foreground text-base">Liczba kolekcji:</span>
+            <span class="block text-muted-foreground text-base">Collections:</span>
             <span class="block text-2xl font-bold">{totalCollections ?? "-"}</span>
           </div>
         </div>
       </div>
     </section>
 
-    {/* Można tu dodać więcej sekcji w przyszłości, np. ostatnio studiowane, etc. */}
+    {/* More sections can be added here in the future, e.g. recently studied, etc. */}
   </main>
 </MainLayout>

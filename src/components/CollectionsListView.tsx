@@ -60,17 +60,15 @@ const CollectionsListView: React.FC = () => {
     return (
       <ErrorDisplay
         error={error}
-        title="Błąd ładowania kolekcji"
-        message="Nie udało się pobrać listy Twoich kolekcji."
+        title="Error loading collections"
+        message="Failed to fetch your list of collections."
         onRetry={retryFetchNames} // Use retry handler from hook
       />
     );
   }
 
   if (collections.length === 0 && !isLoading) {
-    return (
-      <div className="text-center text-muted-foreground py-8">Nie znaleziono żadnych kolekcji. Utwórz pierwszą!</div>
-    );
+    return <div className="text-center text-muted-foreground py-8">No collections found. Create your first one!</div>;
   }
 
   return (
@@ -101,7 +99,7 @@ const CollectionsListView: React.FC = () => {
       {deleteTarget !== null && (
         <DeleteConfirmationDialog
           isOpen={deleteTarget !== null}
-          itemType="kolekcję"
+          itemType="collection"
           itemName={deleteTarget}
           onConfirm={handleDeleteConfirm}
           onCancel={handleDeleteCancel}

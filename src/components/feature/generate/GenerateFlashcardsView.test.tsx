@@ -167,7 +167,7 @@ describe("GenerateFlashcardsView Component", () => {
     // Initial render (call 0) + first rerender (call 1) = check call 1 for step 2 props
     expect(vi.mocked(Stepper).mock.calls[1][0]).toEqual({
       currentStep: 2,
-      steps: ["Wprowadź tekst", "Sprawdź kandydatów", "Zapisz fiszki"], // Corrected step name
+      steps: ["Enter text", "Review candidates", "Save flashcards"],
     });
 
     // Check props for step 3 (after hypothetical step change)
@@ -185,7 +185,7 @@ describe("GenerateFlashcardsView Component", () => {
     expect(vi.mocked(Stepper).mock.calls[2][0]).toEqual({
       // Check the third call after second rerender
       currentStep: 3,
-      steps: ["Wprowadź tekst", "Sprawdź kandydatów", "Zapisz fiszki"],
+      steps: ["Enter text", "Review candidates", "Save flashcards"],
     });
   });
 

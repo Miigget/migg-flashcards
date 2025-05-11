@@ -157,7 +157,7 @@ describe("CollectionsListView", () => {
   });
 
   it("should display error state based on hook", () => {
-    const expectedErrorMessage = "Nie udało się pobrać listy Twoich kolekcji.";
+    const expectedErrorMessage = "Failed to fetch your list of collections.";
     const error: ApiError = { status: 500, message: expectedErrorMessage };
     mockUseCollectionsList.mockReturnValueOnce({
       ...defaultHookState,
@@ -192,7 +192,7 @@ describe("CollectionsListView", () => {
     });
     render(<CollectionsListView />);
 
-    expect(screen.getByText(/Nie znaleziono żadnych kolekcji. Utwórz pierwszą!/i)).toBeInTheDocument();
+    expect(screen.getByText(/No collections found. Create your first one!/i)).toBeInTheDocument();
     expect(screen.queryByRole("listitem")).not.toBeInTheDocument();
   });
 
@@ -239,7 +239,7 @@ describe("CollectionsListView", () => {
     });
     render(<CollectionsListView />);
 
-    // Dialog powinien być wyświetlony natychmiast po renderze
+    // Dialog should be shown immediately after render
     const dialog = screen.getByRole("dialog", { name: /rename dialog/i });
     expect(dialog).toBeInTheDocument();
     expect(within(dialog).getByText(`Rename ${targetName}`)).toBeInTheDocument();

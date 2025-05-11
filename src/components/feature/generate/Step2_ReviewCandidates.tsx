@@ -31,11 +31,11 @@ export default function Step2_ReviewCandidates({
   onProceedToSave,
   onRetryGenerate,
 }: Step2_ReviewCandidatesProps) {
-  // Stan dla modalu edycji
+  // State for edit modal
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingCandidate, setEditingCandidate] = useState<CandidateViewModel | null>(null);
 
-  // Obsługa otwierania modalu edycji
+  // Handle opening edit modal
   const handleEditClick = (tempId: string) => {
     const candidate = candidates.find((c) => c.tempId === tempId);
     if (candidate) {
@@ -44,33 +44,36 @@ export default function Step2_ReviewCandidates({
     }
   };
 
-  // Obsługa zamykania modalu edycji
+  // Handle closing edit modal
   const handleCloseEditModal = () => {
     setIsEditModalOpen(false);
     setEditingCandidate(null);
   };
 
-  // Obliczanie potrzebnych statystyk
+  // Calculate necessary statistics
   const totalCount = candidates.length;
   const acceptedCount = candidates.filter((c) => c.status === "accepted").length;
   const pendingCount = candidates.filter((c) => c.status === "pending").length;
   const discardedCount = candidates.filter((c) => c.status === "discarded").length;
 
-  // Sortowanie kandydatów: najpierw pending, potem accepted, na końcu discarded
+  // Sort candidates: first pending, then accepted, then discarded
   const sortedCandidates = [...candidates].sort((a, b) => {
     const statusOrder = { pending: 0, editing: 1, accepted: 2, discarded: 3 };
     return statusOrder[a.status] - statusOrder[b.status];
   });
 
-  // Czy przycisk "Przejdź do zapisu" powinien być aktywny
+  // Whether the "Proceed to save" button should be active
   const isProceedDisabled = acceptedCount === 0;
 
-  // Renderowanie pustego stanu
+  // Whether to show the "Accept all" button
+  const showAcceptAllButton = pendingCount > 0;
+
+  // Render empty state
   if (totalCount === 0 && !isLoading && !apiError) {
     return (
       <div className="text-center py-12 bg-card rounded-lg border">
         <p className="text-muted-foreground">
-          Brak wygenerowanych kandydatów. Wróć do poprzedniego kroku i wygeneruj fiszki.
+          No candidates generated. Go back to the previous step and generate flashcards.
         </p>
       </div>
     );
@@ -78,38 +81,43 @@ export default function Step2_ReviewCandidates({
 
   return (
     <div className="space-y-6">
-      {/* Nagłówek z informacjami i akcjami zbiorczymi */}
+      {/* Header with information and collective actions */}
       <div className="bg-card p-6 rounded-lg border">
         <div className="flex flex-col md:flex-row justify-between mb-4">
           <div>
-            <h2 className="text-xl font-semibold mb-2">Sprawdź wygenerowane fiszki</h2>
+            <h2 className="text-xl font-semibold mb-2">Review generated flashcards</h2>
             <p className="text-muted-foreground mb-2">
-              Przejrzyj wygenerowane fiszki. Możesz je zaakceptować, edytować lub odrzucić.
+              Review generated flashcards. You can accept, edit or discard them.
             </p>
             <div className="flex gap-3 text-sm">
               <span>
-                Łącznie: <strong>{totalCount}</strong>
+                Total: <strong>{totalCount}</strong>
               </span>
               <span>
-                Zaakceptowane: <strong className="text-primary">{acceptedCount}</strong>
+                Accepted: <strong className="text-primary">{acceptedCount}</strong>
               </span>
               <span>
-                Oczekujące: <strong className="text-amber-500">{pendingCount}</strong>
+                Pending: <strong className="text-amber-500">{pendingCount}</strong>
               </span>
               <span>
-                Odrzucone: <strong className="text-muted-foreground">{discardedCount}</strong>
+                Discarded: <strong className="text-muted-foreground">{discardedCount}</strong>
               </span>
             </div>
           </div>
 
           <div className="flex gap-2 mt-4 md:mt-0">
-            {pendingCount > 0 && (
-              <Button variant="outline" onClick={onAcceptAll} className="whitespace-nowrap">
-                Akceptuj wszystkie
+            {showAcceptAllButton && (
+              <Button
+                variant="outline"
+                onClick={onAcceptAll}
+                className="whitespace-nowrap"
+                data-testid="accept-all-button"
+              >
+                Accept all
               </Button>
             )}
             <Button onClick={onProceedToSave} disabled={isProceedDisabled} className="whitespace-nowrap">
-              Przejdź do zapisu
+              Proceed to save
             </Button>
           </div>
         </div>
@@ -118,14 +126,14 @@ export default function Step2_ReviewCandidates({
       {/* Loader */}
       {isLoading && (
         <div className="py-8 text-center">
-          <LoadingIndicator isLoading={true} text="Generowanie fiszek..." size="lg" />
+          <LoadingIndicator isLoading={true} text="Generating flashcards..." size="lg" />
         </div>
       )}
 
-      {/* Komunikat o błędzie */}
+      {/* Error message */}
       {apiError && <ErrorMessage error={apiError} showRetry={true} onRetry={onRetryGenerate} />}
 
-      {/* Lista kandydatów */}
+      {/* List of candidates */}
       {!isLoading && !apiError && totalCount > 0 && (
         <div className="grid grid-cols-1 gap-4">
           {sortedCandidates.map((candidate) => (
@@ -140,7 +148,7 @@ export default function Step2_ReviewCandidates({
         </div>
       )}
 
-      {/* Modal edycji */}
+      {/* Edit modal */}
       {editingCandidate && (
         <EditCandidateModal
           candidate={editingCandidate}

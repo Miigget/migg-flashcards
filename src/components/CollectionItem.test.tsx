@@ -29,13 +29,13 @@ describe("CollectionItem", () => {
     render(<CollectionItem {...defaultProps} />);
 
     expect(screen.getByText(mockCollection.name)).toBeInTheDocument();
-    expect(screen.getByText(/10 fiszek/i)).toBeInTheDocument(); // Checks count and pluralization
+    expect(screen.getByText(/10 flashcards/i)).toBeInTheDocument(); // Checks count and pluralization
   });
 
   it("should render correct pluralization for 1 flashcard", () => {
     const singleFlashcardCollection = { ...mockCollection, flashcardCount: 1 };
     render(<CollectionItem {...defaultProps} collection={singleFlashcardCollection} />);
-    expect(screen.getByText(/1 fiszka/i)).toBeInTheDocument();
+    expect(screen.getByText(/1 flashcard/i)).toBeInTheDocument();
   });
 
   it("should render Skeleton when isLoadingCount is true", () => {
@@ -44,7 +44,7 @@ describe("CollectionItem", () => {
 
     // Skeleton might not have a specific role, check for its presence by structure or test id if added
     // A simple check might be to ensure the count text is NOT present
-    expect(screen.queryByText(/10 fiszek/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/10 flashcards/i)).not.toBeInTheDocument();
     // More robust: Check for the skeleton component if possible (e.g., via class name or data-testid)
     expect(document.querySelector(".h-4.w-20")).toBeInTheDocument(); // Example check by class
   });
@@ -52,18 +52,18 @@ describe("CollectionItem", () => {
   it("should render error message when errorCount is present", () => {
     const errorCollection = {
       ...mockCollection,
-      errorCount: { status: 500, message: "Failed to load" },
+      errorCount: { status: 500, message: "Loading error" },
       isLoadingCount: false,
     };
     render(<CollectionItem {...defaultProps} collection={errorCollection} />);
 
-    expect(screen.getByText(/Błąd ładowania/i)).toBeInTheDocument();
-    expect(screen.queryByText(/10 fiszek/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/Loading error/i)).toBeInTheDocument();
+    expect(screen.queryByText(/10 flashcards/i)).not.toBeInTheDocument();
   });
 
   it("should render Details link with correct href", () => {
     render(<CollectionItem {...defaultProps} />);
-    const detailsLink = screen.getByRole("link", { name: /Szczegóły/i });
+    const detailsLink = screen.getByRole("link", { name: /Details/i });
     expect(detailsLink).toBeInTheDocument();
     expect(detailsLink).toHaveAttribute("href", `/collections/${encodeURIComponent(mockCollection.name)}`);
   });
@@ -71,15 +71,15 @@ describe("CollectionItem", () => {
   it("should render Rename and Delete buttons", async () => {
     render(<CollectionItem {...defaultProps} />);
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /Zmień nazwę/i })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /Usuń/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /Rename/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /Delete/i })).toBeInTheDocument();
     });
   });
 
   it("should call onRenameClick with collection name when Rename button is clicked", async () => {
     const user = userEvent.setup();
     render(<CollectionItem {...defaultProps} />);
-    const renameButton = screen.getByRole("button", { name: /Zmień nazwę/i });
+    const renameButton = screen.getByRole("button", { name: /Rename/i });
 
     await user.click(renameButton);
 
@@ -91,7 +91,7 @@ describe("CollectionItem", () => {
   it("should call onDeleteClick with collection name when Delete button is clicked", async () => {
     const user = userEvent.setup();
     render(<CollectionItem {...defaultProps} />);
-    const deleteButton = screen.getByRole("button", { name: /Usuń/i });
+    const deleteButton = screen.getByRole("button", { name: /Delete/i });
 
     await user.click(deleteButton);
 

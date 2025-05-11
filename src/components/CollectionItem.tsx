@@ -18,12 +18,12 @@ const CollectionItem: React.FC<CollectionItemProps> = ({ collection, onRenameCli
       return <Skeleton className="h-4 w-20" />; // Placeholder size
     }
     if (collection.errorCount) {
-      return <span className="text-red-500 text-sm">Błąd ładowania</span>;
+      return <span className="text-red-500 text-sm">Loading error</span>;
     }
     return (
       <span className="text-sm text-muted-foreground">
         {collection.flashcardCount}
-        {collection.flashcardCount === 1 ? " fiszka" : " fiszek"}
+        {collection.flashcardCount === 1 ? " flashcard" : " flashcards"}
       </span>
     );
   };
@@ -37,14 +37,14 @@ const CollectionItem: React.FC<CollectionItemProps> = ({ collection, onRenameCli
       <CardFooter className="flex justify-between">
         {/* Use an anchor tag styled as button for navigation */}
         <Button asChild variant="outline" size="sm">
-          <a href={detailUrl}>Szczegóły</a>
+          <a href={detailUrl}>Details</a>
         </Button>
         <div className="space-x-2">
-          <Button variant="ghost" size="sm" onClick={() => onRenameClick(collection.name)}>
-            Zmień nazwę
+          <Button variant="outline" size="sm" onClick={() => onRenameClick(collection.name)}>
+            Rename
           </Button>
-          <Button variant="destructive" size="sm" onClick={() => onDeleteClick(collection.name)}>
-            Usuń
+          <Button size="sm" onClick={() => onDeleteClick(collection.name)}>
+            Delete
           </Button>
         </div>
       </CardFooter>

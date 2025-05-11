@@ -20,11 +20,11 @@ const FlashcardItem: React.FC<FlashcardItemProps> = ({ flashcard, onEditClick, o
         <p className="text-sm text-muted-foreground">{flashcard.back}</p>
       </CardContent>
       <CardFooter className="flex justify-end space-x-2">
-        <Button variant="ghost" size="sm" onClick={() => onEditClick(flashcard)}>
-          Edytuj
+        <Button variant="outline" size="sm" onClick={() => onEditClick(flashcard)}>
+          Edit
         </Button>
-        <Button variant="destructive" size="sm" onClick={() => onDeleteClick(flashcard.flashcard_id)}>
-          Usuń
+        <Button size="sm" onClick={() => onDeleteClick(flashcard.flashcard_id)}>
+          Delete
         </Button>
       </CardFooter>
     </Card>

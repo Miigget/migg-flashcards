@@ -75,21 +75,21 @@ describe("EditCandidateModal Component", () => {
     const dialog = screen.getByRole("dialog");
     expect(dialog).toBeInTheDocument();
 
-    expect(within(dialog).getByRole("heading", { name: /Edytuj fiszkę/i })).toBeInTheDocument();
+    expect(within(dialog).getByRole("heading", { name: /Edit flashcard/i })).toBeInTheDocument();
     expect(
-      within(dialog).getByText(/^Edytuj treść przodu i tyłu fiszki. Kliknij "Zapisz" gdy skończysz.$/i)
+      within(dialog).getByText(/^Edit the front and back of the flashcard. Click "Save" when you're done.$/i)
     ).toBeInTheDocument();
 
     // Check form fields existence and initial values
-    expect(within(dialog).getByLabelText(/Przód fiszki/i)).toBeInTheDocument();
-    expect(within(dialog).getByLabelText(/Przód fiszki/i)).toHaveValue(mockCandidate.front);
+    expect(within(dialog).getByLabelText(/Front of flashcard/i)).toBeInTheDocument();
+    expect(within(dialog).getByLabelText(/Front of flashcard/i)).toHaveValue(mockCandidate.front);
 
-    expect(within(dialog).getByLabelText(/Tył fiszki/i)).toBeInTheDocument();
-    expect(within(dialog).getByLabelText(/Tył fiszki/i)).toHaveValue(mockCandidate.back);
+    expect(within(dialog).getByLabelText(/Back of flashcard/i)).toBeInTheDocument();
+    expect(within(dialog).getByLabelText(/Back of flashcard/i)).toHaveValue(mockCandidate.back);
 
     // Check buttons
-    expect(within(dialog).getByRole("button", { name: /Anuluj/i })).toBeInTheDocument();
-    expect(within(dialog).getByRole("button", { name: /^Zapisz$/i })).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: /Cancel/i })).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: /^Save$/i })).toBeInTheDocument();
   });
 
   it("should update input fields when user types", async () => {
@@ -97,8 +97,8 @@ describe("EditCandidateModal Component", () => {
     renderModal();
     const dialog = screen.getByRole("dialog");
 
-    const frontInput = within(dialog).getByLabelText(/Przód fiszki/i);
-    const backInput = within(dialog).getByLabelText(/Tył fiszki/i);
+    const frontInput = within(dialog).getByLabelText(/Front of flashcard/i);
+    const backInput = within(dialog).getByLabelText(/Back of flashcard/i);
 
     const typedFront = "Updated Question?";
     const typedBack = "Updated Answer.";
@@ -117,7 +117,7 @@ describe("EditCandidateModal Component", () => {
     renderModal();
     const dialog = screen.getByRole("dialog");
 
-    const cancelButton = within(dialog).getByRole("button", { name: /Anuluj/i });
+    const cancelButton = within(dialog).getByRole("button", { name: /Cancel/i });
     await user.click(cancelButton);
 
     expect(mockOnClose).toHaveBeenCalledTimes(1);
@@ -132,9 +132,9 @@ describe("EditCandidateModal Component", () => {
     renderModal();
     const dialog = screen.getByRole("dialog");
 
-    const frontInput = within(dialog).getByLabelText(/Przód fiszki/i);
-    const backInput = within(dialog).getByLabelText(/Tył fiszki/i);
-    const saveButton = within(dialog).getByRole("button", { name: /^Zapisz$/i });
+    const frontInput = within(dialog).getByLabelText(/Front of flashcard/i);
+    const backInput = within(dialog).getByLabelText(/Back of flashcard/i);
+    const saveButton = within(dialog).getByRole("button", { name: /^Save$/i });
 
     const updatedFront = "Edited Front Valid";
     const updatedBack = "Edited Back Valid";
@@ -160,9 +160,9 @@ describe("EditCandidateModal Component", () => {
     const user = userEvent.setup();
     renderModal();
     const dialog = screen.getByRole("dialog");
-    const frontInput = within(dialog).getByLabelText(/Przód fiszki/i);
-    const backInput = within(dialog).getByLabelText(/Tył fiszki/i);
-    const saveButton = within(dialog).getByRole("button", { name: /^Zapisz$/i });
+    const frontInput = within(dialog).getByLabelText(/Front of flashcard/i);
+    const backInput = within(dialog).getByLabelText(/Back of flashcard/i);
+    const saveButton = within(dialog).getByRole("button", { name: /^Save$/i });
 
     // Initial state - button should be enabled
     expect(saveButton).toBeEnabled();

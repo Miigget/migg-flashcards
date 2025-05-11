@@ -12,12 +12,18 @@ interface ErrorDisplayProps {
   className?: string;
 }
 
-const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ error, title = "Wystąpił błąd", message, onRetry, className }) => {
+const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
+  error,
+  title = "Error occurred",
+  message,
+  onRetry,
+  className,
+}) => {
   if (!error) {
     return null;
   }
 
-  const displayMessage = message || error.message || "Nieznany błąd";
+  const displayMessage = message || error.message || "Unknown error";
   const statusText = error.status ? ` (Status: ${error.status})` : "";
 
   return (
@@ -35,7 +41,7 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ error, title = "Wystąpił 
       {onRetry && (
         <div className="mt-4">
           <Button variant="secondary" size="sm" onClick={onRetry}>
-            Spróbuj ponownie
+            Try again
           </Button>
         </div>
       )}

@@ -33,7 +33,7 @@ export default function GenerateFlashcardsView() {
     handleRetryGenerate,
   } = useGenerateFlashcards();
 
-  const steps = ["Wprowadź tekst", "Sprawdź kandydatów", "Zapisz fiszki"];
+  const steps = ["Enter text", "Review candidates", "Save flashcards"];
 
   return (
     <div className="space-y-8">

@@ -25,43 +25,43 @@ export default function CandidateCard({ candidate, onAccept, onDiscard, onEditCl
     >
       <CardContent className="p-4">
         <div className="mb-4">
-          <h3 className="text-sm font-medium text-muted-foreground mb-1">Przód:</h3>
+          <h3 className="text-sm font-medium text-muted-foreground mb-1">Front:</h3>
           <p className="p-2 bg-card rounded border">{candidate.front}</p>
         </div>
         <div>
-          <h3 className="text-sm font-medium text-muted-foreground mb-1">Tył:</h3>
+          <h3 className="text-sm font-medium text-muted-foreground mb-1">Back:</h3>
           <p className="p-2 bg-card rounded border">{candidate.back}</p>
         </div>
       </CardContent>
 
       <CardFooter className="px-4 pb-4 pt-0 flex justify-end gap-2">
         {candidate.status === "pending" ? (
-          // Przyciski w trybie oczekiwania na decyzję
+          // Buttons in pending mode
           <>
             <Button variant="outline" size="sm" onClick={() => onDiscard(candidate.tempId)}>
-              Odrzuć
+              Discard
             </Button>
             <Button variant="outline" size="sm" onClick={() => onEditClick(candidate.tempId)}>
-              Edytuj
+              Edit
             </Button>
             <Button size="sm" onClick={() => onAccept(candidate.tempId)}>
-              Akceptuj
+              Accept
             </Button>
           </>
         ) : candidate.status === "accepted" ? (
-          // Przyciski w trybie zaakceptowanym
+          // Buttons in accepted mode
           <>
             <Button variant="outline" size="sm" onClick={() => onDiscard(candidate.tempId)}>
-              Odrzuć
+              Discard
             </Button>
             <Button variant="outline" size="sm" onClick={() => onEditClick(candidate.tempId)}>
-              Edytuj
+              Edit
             </Button>
           </>
         ) : (
-          // Przyciski w trybie odrzuconym
+          // Buttons in discarded mode
           <Button variant="outline" size="sm" onClick={() => onAccept(candidate.tempId)}>
-            Przywróć
+            Restore
           </Button>
         )}
       </CardFooter>

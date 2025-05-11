@@ -31,22 +31,23 @@ export default function Step3_SaveSelection({
   onCollectionChange,
   onSaveClick,
 }: Step3_SaveSelectionProps) {
-  // Czy przycisk "Zapisz fiszki" powinien być nieaktywny
-  const isSaveDisabled =
-    isLoadingSave || isLoadingCollections || selectedCollection.trim() === "" || acceptedCandidates.length === 0;
+  // Whether the "Save flashcards" button should be disabled
+  const hasValidCollection = selectedCollection.trim() !== "";
+  const hasAcceptedCards = acceptedCandidates.length > 0;
+  const isSaveDisabled = isLoadingSave || isLoadingCollections || !hasValidCollection || !hasAcceptedCards;
 
   return (
     <div className="space-y-6">
-      {/* Nagłówek i wybór kolekcji */}
+      {/* Header and collection selection */}
       <div className="bg-card p-6 rounded-lg border">
-        <h2 className="text-xl font-semibold mb-2">Zapisz fiszki</h2>
+        <h2 className="text-xl font-semibold mb-2">Save flashcards</h2>
         <p className="text-muted-foreground mb-4">
-          Wybierz istniejącą kolekcję lub utwórz nową, aby zapisać {acceptedCandidates.length} zaakceptowanych fiszek.
+          Select existing collection or create new one to save {acceptedCandidates.length} accepted flashcards.
         </p>
 
         <div className="mb-2">
           <label htmlFor="collection-selector" className="block text-sm font-medium mb-1">
-            Kolekcja
+            Collection
           </label>
           <div className="relative">
             <div id="collection-selector">
@@ -54,7 +55,7 @@ export default function Step3_SaveSelection({
                 collections={availableCollections}
                 value={selectedCollection}
                 onChange={onCollectionChange}
-                placeholder="Wybierz lub utwórz kolekcję..."
+                placeholder="Select or create collection..."
                 isLoading={isLoadingCollections}
                 disabled={isLoadingSave}
               />
@@ -67,7 +68,7 @@ export default function Step3_SaveSelection({
           </div>
           {isNewCollection && selectedCollection && (
             <p className="text-xs text-muted-foreground mt-1">
-              Zostanie utworzona nowa kolekcja o nazwie &quot;{selectedCollection}&quot;.
+              A new collection named &quot;{selectedCollection}&quot; will be created.
             </p>
           )}
         </div>
@@ -75,23 +76,23 @@ export default function Step3_SaveSelection({
         {collectionsApiError && <ErrorMessage error={collectionsApiError} className="mt-2" />}
 
         <div className="mt-4 flex justify-end">
-          <Button onClick={onSaveClick} disabled={isSaveDisabled} className="min-w-[150px]">
-            {isLoadingSave ? <LoadingIndicator isLoading={true} size="sm" text="Zapisywanie..." /> : "Zapisz fiszki"}
+          <Button onClick={onSaveClick} disabled={isSaveDisabled} className="min-w-[150px]" data-testid="save-button">
+            {isLoadingSave ? <LoadingIndicator isLoading={true} size="sm" text="Saving..." /> : "Save flashcards"}
           </Button>
         </div>
       </div>
 
-      {/* Błąd zapisywania */}
+      {/* Save error */}
       {saveApiError && <ErrorMessage error={saveApiError} className="mt-4" />}
 
-      {/* Lista zaakceptowanych fiszek */}
+      {/* List of accepted flashcards */}
       <div>
-        <h3 className="text-lg font-medium mb-3">Zaakceptowane fiszki ({acceptedCandidates.length})</h3>
+        <h3 className="text-lg font-medium mb-3">Accepted flashcards ({acceptedCandidates.length})</h3>
         <div className="grid grid-cols-1 gap-4">
           {acceptedCandidates.length === 0 ? (
             <div className="text-center py-8 bg-card rounded-lg border">
               <p className="text-muted-foreground">
-                Brak zaakceptowanych fiszek. Wróć do poprzedniego kroku i zaakceptuj fiszki.
+                No accepted flashcards. Go back to the previous step and accept flashcards.
               </p>
             </div>
           ) : (
@@ -100,11 +101,11 @@ export default function Step3_SaveSelection({
                 <CardContent className="p-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <h4 className="text-sm font-medium text-muted-foreground mb-1">Przód:</h4>
+                      <h4 className="text-sm font-medium text-muted-foreground mb-1">Front:</h4>
                       <p className="p-2 bg-card rounded border">{candidate.front}</p>
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium text-muted-foreground mb-1">Tył:</h4>
+                      <h4 className="text-sm font-medium text-muted-foreground mb-1">Back:</h4>
                       <p className="p-2 bg-card rounded border">{candidate.back}</p>
                     </div>
                   </div>

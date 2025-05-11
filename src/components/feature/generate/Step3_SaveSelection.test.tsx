@@ -97,21 +97,21 @@ describe("Step3_SaveSelection Component", () => {
   it("should render title, summary, collection selector, accepted cards, and buttons", () => {
     render(<Step3_SaveSelection {...defaultProps} />);
 
-    expect(screen.getByRole("heading", { name: /Zapisz fiszki/i })).toBeInTheDocument();
-    expect(screen.getByText(/Wybierz istniejącą kolekcję lub utwórz nową/)).toBeInTheDocument();
-    expect(screen.getByText(`Zaakceptowane fiszki (${mockAcceptedCandidates.length})`)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Save flashcards/i })).toBeInTheDocument();
+    expect(screen.getByText(/Select existing collection or create new/i)).toBeInTheDocument();
+    expect(screen.getByText(`Accepted flashcards (${mockAcceptedCandidates.length})`)).toBeInTheDocument();
 
     // Check CollectionSelector mock rendering (input field)
     expect(screen.getByTestId("collection-input")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/Wybierz lub utwórz kolekcję/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Select or create collection/i)).toBeInTheDocument();
 
     // Check accepted cards are rendered (simple check based on content)
     expect(screen.getByText("Q1")).toBeInTheDocument();
     expect(screen.getByText("A2")).toBeInTheDocument();
 
     // Check save button state (initially disabled)
-    expect(screen.getByRole("button", { name: /Zapisz fiszki/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Zapisz fiszki/i })).toBeDisabled();
+    expect(screen.getByTestId("save-button")).toBeInTheDocument();
+    expect(screen.getByTestId("save-button")).toBeDisabled();
   });
 
   it("should call onCollectionChange when typing in the mocked collection input", async () => {
@@ -154,22 +154,22 @@ describe("Step3_SaveSelection Component", () => {
   it("should enable Save button only when a collection name is entered", () => {
     // 1. Initial state (disabled)
     const { rerender } = render(<Step3_SaveSelection {...defaultProps} selectedCollection="" />);
-    expect(screen.getByRole("button", { name: /Zapisz fiszki/i })).toBeDisabled();
+    expect(screen.getByTestId("save-button")).toBeDisabled();
 
     // 2. Collection selected (enabled)
     rerender(<Step3_SaveSelection {...defaultProps} selectedCollection={"Some Collection"} />);
-    expect(screen.getByRole("button", { name: /Zapisz fiszki/i })).toBeEnabled();
+    expect(screen.getByTestId("save-button")).toBeEnabled();
 
     // 3. Collection selected but no accepted candidates (disabled)
     rerender(<Step3_SaveSelection {...defaultProps} selectedCollection={"Some Collection"} acceptedCandidates={[]} />);
-    expect(screen.getByRole("button", { name: /Zapisz fiszki/i })).toBeDisabled();
+    expect(screen.getByTestId("save-button")).toBeDisabled();
   });
 
   it("should call onSaveClick when the save button is clicked (and enabled)", async () => {
     const user = userEvent.setup();
     // Render with props that enable the button
     render(<Step3_SaveSelection {...defaultProps} selectedCollection={"Chosen Collection"} />);
-    const saveButton = screen.getByRole("button", { name: /Zapisz fiszki/i });
+    const saveButton = screen.getByTestId("save-button");
     expect(saveButton).toBeEnabled(); // Verify enabled state
 
     await user.click(saveButton);
@@ -178,7 +178,7 @@ describe("Step3_SaveSelection Component", () => {
 
   it("should not call onSaveClick when the save button is clicked but disabled", async () => {
     render(<Step3_SaveSelection {...defaultProps} selectedCollection="" />); // Ensure button is disabled
-    const saveButton = screen.getByRole("button", { name: /Zapisz fiszki/i });
+    const saveButton = screen.getByTestId("save-button");
     expect(saveButton).toBeDisabled(); // Verify disabled state
 
     // Attempting to click disabled button should not call the handler
@@ -190,10 +190,10 @@ describe("Step3_SaveSelection Component", () => {
     render(<Step3_SaveSelection {...defaultProps} isLoadingSave={true} selectedCollection={"Some Collection"} />);
 
     expect(screen.getByTestId("loading-indicator")).toBeInTheDocument();
-    expect(screen.getByText(/Zapisywanie.../i)).toBeInTheDocument();
+    expect(screen.getByText(/Saving.../i)).toBeInTheDocument();
 
     // Check button and input are disabled
-    expect(screen.getByRole("button", { name: /Zapisywanie.../i })).toBeDisabled();
+    expect(screen.getByTestId("save-button")).toBeDisabled();
     expect(screen.getByTestId("collection-input")).toBeDisabled();
   });
 
@@ -204,7 +204,7 @@ describe("Step3_SaveSelection Component", () => {
     expect(screen.getByTestId("loading-indicator")).toBeInTheDocument();
 
     // Check button and input are disabled
-    expect(screen.getByRole("button", { name: /Zapisz fiszki/i })).toBeDisabled();
+    expect(screen.getByTestId("save-button")).toBeDisabled();
     expect(screen.getByTestId("collection-input")).toBeDisabled();
   });
 
@@ -215,7 +215,7 @@ describe("Step3_SaveSelection Component", () => {
     expect(screen.getByTestId("error-message")).toBeInTheDocument();
     expect(screen.getByTestId("error-message")).toHaveTextContent(error.message);
     // Button should still be enabled if only save error occurred
-    expect(screen.getByRole("button", { name: /Zapisz fiszki/i })).toBeEnabled();
+    expect(screen.getByTestId("save-button")).toBeEnabled();
   });
 
   it("should show collectionsApiError message when set", () => {
@@ -225,13 +225,13 @@ describe("Step3_SaveSelection Component", () => {
     expect(screen.getByTestId("error-message")).toBeInTheDocument();
     expect(screen.getByTestId("error-message")).toHaveTextContent(error.message);
     // Save button should be disabled as collections are potentially unavailable/loading failed
-    expect(screen.getByRole("button", { name: /Zapisz fiszki/i })).toBeDisabled();
+    expect(screen.getByTestId("save-button")).toBeDisabled();
   });
 
   it("should render empty state for accepted cards if list is empty", async () => {
     render(<Step3_SaveSelection {...defaultProps} acceptedCandidates={[]} />);
     await waitFor(() => {
-      expect(screen.getByText(/Brak zaakceptowanych fiszek/i)).toBeInTheDocument();
+      expect(screen.getByText(/No accepted flashcards/i)).toBeInTheDocument();
     });
   });
 });

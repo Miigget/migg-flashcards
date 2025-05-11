@@ -54,11 +54,15 @@ describe("Step1_TextInput Component", () => {
       />
     );
 
-    expect(screen.getByRole("heading", { name: /Wprowadź tekst/i })).toBeInTheDocument();
-    expect(screen.getByText(/Wprowadź tekst, na podstawie którego AI wygeneruje fiszki/)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/Wklej lub wpisz tutaj swój tekst/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Generuj fiszki/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Generuj fiszki/i })).toBeDisabled(); // Initially disabled
+    expect(screen.getByRole("heading", { name: /Enter text/i })).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Enter source text on which AI will generate flashcards. The text should contain at least 100 characters./
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Paste or type your text here.../i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Generate flashcards/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Generate flashcards/i })).toBeDisabled(); // Initially disabled
     expect(screen.queryByTestId("error-message")).not.toBeInTheDocument();
     expect(screen.queryByTestId("loading-indicator")).not.toBeInTheDocument();
     expect(screen.getByTestId("char-counter")).toHaveTextContent(`0/10000`); // Assuming MAX_TEXT_LENGTH is 10000
@@ -77,7 +81,7 @@ describe("Step1_TextInput Component", () => {
         onRetryGenerate={mockOnRetryGenerate}
       />
     );
-    const textarea = screen.getByPlaceholderText(/Wklej lub wpisz tutaj swój tekst/i);
+    const textarea = screen.getByPlaceholderText(/Paste or type your text here.../i);
 
     await user.type(textarea, "test");
 
@@ -101,7 +105,7 @@ describe("Step1_TextInput Component", () => {
         onRetryGenerate={mockOnRetryGenerate}
       />
     );
-    expect(screen.getByRole("button", { name: /Generuj fiszki/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Generate flashcards/i })).toBeDisabled();
 
     // Test Case 2: Valid text
     rerender(
@@ -115,7 +119,7 @@ describe("Step1_TextInput Component", () => {
         onRetryGenerate={mockOnRetryGenerate}
       />
     );
-    expect(screen.getByRole("button", { name: /Generuj fiszki/i })).toBeEnabled();
+    expect(screen.getByRole("button", { name: /Generate flashcards/i })).toBeEnabled();
 
     // Test Case 3: Valid text but with validation error
     rerender(
@@ -129,7 +133,7 @@ describe("Step1_TextInput Component", () => {
         onRetryGenerate={mockOnRetryGenerate}
       />
     );
-    expect(screen.getByRole("button", { name: /Generuj fiszki/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Generate flashcards/i })).toBeDisabled();
     expect(screen.getByTestId("error-message")).toHaveTextContent("Some validation error");
 
     // Test Case 4: Valid text but loading
@@ -144,7 +148,7 @@ describe("Step1_TextInput Component", () => {
         onRetryGenerate={mockOnRetryGenerate}
       />
     );
-    expect(screen.getByRole("button", { name: /Generuj fiszki/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Generate flashcards/i })).toBeDisabled();
   });
 
   it("should call onGenerateClick when the enabled button is clicked", async () => {
@@ -161,7 +165,7 @@ describe("Step1_TextInput Component", () => {
       />
     );
 
-    const submitButton = screen.getByRole("button", { name: /Generuj fiszki/i });
+    const submitButton = screen.getByRole("button", { name: /Generate flashcards/i });
     expect(submitButton).toBeEnabled(); // Pre-check
 
     await user.click(submitButton);
@@ -182,14 +186,14 @@ describe("Step1_TextInput Component", () => {
       />
     );
 
-    expect(screen.getByPlaceholderText(/Wklej lub wpisz tutaj swój tekst/i)).toBeDisabled();
-    expect(screen.getByRole("button", { name: /Generuj fiszki/i })).toBeDisabled();
+    expect(screen.getByPlaceholderText(/Paste or type your text here.../i)).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Generate flashcards/i })).toBeDisabled();
     expect(screen.getByTestId("loading-indicator")).toBeInTheDocument();
-    expect(screen.getByTestId("loading-indicator")).toHaveTextContent(/Generowanie fiszek/i);
+    expect(screen.getByTestId("loading-indicator")).toHaveTextContent(/Generating flashcards.../i);
   });
 
   it("should display validation error message when validationError prop is set", () => {
-    const errorMsg = "Tekst jest za krótki.";
+    const errorMsg = "Text is too short.";
     render(
       <Step1_TextInput
         text={shortText}
@@ -203,7 +207,7 @@ describe("Step1_TextInput Component", () => {
     );
     expect(screen.getByTestId("error-message")).toBeInTheDocument();
     expect(screen.getByTestId("error-message")).toHaveTextContent(errorMsg);
-    expect(screen.getByRole("button", { name: /Generuj fiszki/i })).toBeDisabled(); // Also check button state
+    expect(screen.getByRole("button", { name: /Generate flashcards/i })).toBeDisabled(); // Also check button state
   });
 
   it("should display API error message with retry button when apiError prop is set", () => {

@@ -36,20 +36,20 @@ describe("EditFlashcardDialog", () => {
   it("should render dialog with flashcard data when open", () => {
     render(<EditFlashcardDialog {...defaultProps} />);
 
-    // Dialog powinien być otwarty bo isOpen=true
+    // Dialog should be open because isOpen=true
     const dialog = screen.getByRole("dialog");
     expect(dialog).toBeInTheDocument();
 
-    // Sprawdzamy czy zawartość jest poprawnie wyświetlana
-    expect(screen.getByText("Edytuj fiszkę")).toBeInTheDocument();
+    // Check if content is displayed correctly
+    expect(screen.getByText("Edit flashcard")).toBeInTheDocument();
 
-    const frontInput = screen.getByLabelText("Przód");
-    const backInput = screen.getByLabelText("Tył");
+    const frontInput = screen.getByLabelText("Front");
+    const backInput = screen.getByLabelText("Back");
 
     expect(frontInput).toHaveValue(mockFlashcard.front);
     expect(backInput).toHaveValue(mockFlashcard.back);
-    expect(screen.getByRole("button", { name: /Anuluj/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Zapisz zmiany/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Cancel/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Save changes/i })).toBeInTheDocument();
   });
 
   it("should not render when isOpen is false", () => {
@@ -60,8 +60,8 @@ describe("EditFlashcardDialog", () => {
   it("should update front and back fields on user input", async () => {
     const user = userEvent.setup();
     render(<EditFlashcardDialog {...defaultProps} />);
-    const frontInput = screen.getByLabelText("Przód");
-    const backInput = screen.getByLabelText("Tył");
+    const frontInput = screen.getByLabelText("Front");
+    const backInput = screen.getByLabelText("Back");
     const newFront = "Updated Front";
     const newBack = "Updated Back";
 
@@ -77,7 +77,7 @@ describe("EditFlashcardDialog", () => {
   it("should call onCancel when cancel button is clicked", async () => {
     const user = userEvent.setup();
     render(<EditFlashcardDialog {...defaultProps} />);
-    const cancelButton = screen.getByRole("button", { name: /Anuluj/i });
+    const cancelButton = screen.getByRole("button", { name: /Cancel/i });
 
     await user.click(cancelButton);
 
@@ -88,9 +88,9 @@ describe("EditFlashcardDialog", () => {
   it("should call onEditSubmit with updated fields when form is submitted with valid changes", async () => {
     const user = userEvent.setup();
     render(<EditFlashcardDialog {...defaultProps} />);
-    const frontInput = screen.getByLabelText("Przód");
-    const backInput = screen.getByLabelText("Tył");
-    const submitButton = screen.getByRole("button", { name: /Zapisz zmiany/i });
+    const frontInput = screen.getByLabelText("Front");
+    const backInput = screen.getByLabelText("Back");
+    const submitButton = screen.getByRole("button", { name: /Save changes/i });
     const updatedFront = "New Valid Front";
     const updatedBack = "New Valid Back";
 
@@ -111,8 +111,8 @@ describe("EditFlashcardDialog", () => {
   it("should call onEditSubmit with only the changed field", async () => {
     const user = userEvent.setup();
     render(<EditFlashcardDialog {...defaultProps} />);
-    const frontInput = screen.getByLabelText("Przód");
-    const submitButton = screen.getByRole("button", { name: /Zapisz zmiany/i });
+    const frontInput = screen.getByLabelText("Front");
+    const submitButton = screen.getByRole("button", { name: /Save changes/i });
     const updatedFront = "Only Front Changed";
 
     await user.clear(frontInput);
@@ -130,7 +130,7 @@ describe("EditFlashcardDialog", () => {
   it("should call onCancel when submitting without any changes", async () => {
     const user = userEvent.setup();
     render(<EditFlashcardDialog {...defaultProps} />);
-    const submitButton = screen.getByRole("button", { name: /Zapisz zmiany/i });
+    const submitButton = screen.getByRole("button", { name: /Save changes/i });
 
     // No changes made
     await user.click(submitButton);
@@ -144,15 +144,15 @@ describe("EditFlashcardDialog", () => {
   it("should show validation error and disable submit if front is empty", async () => {
     const user = userEvent.setup();
     render(<EditFlashcardDialog {...defaultProps} />);
-    const frontInput = screen.getByLabelText("Przód");
-    const submitButton = screen.getByRole("button", { name: /Zapisz zmiany/i });
+    const frontInput = screen.getByLabelText("Front");
+    const submitButton = screen.getByRole("button", { name: /Save changes/i });
 
     await user.clear(frontInput);
     // Trigger validation by trying to submit or tabbing away (userEvent handles some implicit validation)
     await user.click(submitButton);
 
     await waitFor(() => {
-      expect(screen.getByText("Pole 'Przód' nie może być puste.")).toBeInTheDocument();
+      expect(screen.getByText("Field 'Front' cannot be empty.")).toBeInTheDocument();
     });
     expect(submitButton).toBeDisabled();
     expect(mockOnEditSubmit).not.toHaveBeenCalled();
@@ -161,14 +161,14 @@ describe("EditFlashcardDialog", () => {
   it("should show validation error and disable submit if back is empty", async () => {
     const user = userEvent.setup();
     render(<EditFlashcardDialog {...defaultProps} />);
-    const backInput = screen.getByLabelText("Tył");
-    const submitButton = screen.getByRole("button", { name: /Zapisz zmiany/i });
+    const backInput = screen.getByLabelText("Back");
+    const submitButton = screen.getByRole("button", { name: /Save changes/i });
 
     await user.clear(backInput);
     await user.click(submitButton);
 
     await waitFor(() => {
-      expect(screen.getByText("Pole 'Tył' nie może być puste.")).toBeInTheDocument();
+      expect(screen.getByText("Field 'Back' cannot be empty.")).toBeInTheDocument();
     });
     expect(submitButton).toBeDisabled();
     expect(mockOnEditSubmit).not.toHaveBeenCalled();
@@ -177,8 +177,8 @@ describe("EditFlashcardDialog", () => {
   it("should show validation error if front exceeds max length", async () => {
     const user = userEvent.setup();
     render(<EditFlashcardDialog {...defaultProps} />);
-    const frontInput = screen.getByLabelText("Przód");
-    const submitButton = screen.getByRole("button", { name: /Zapisz zmiany/i });
+    const frontInput = screen.getByLabelText("Front");
+    const submitButton = screen.getByRole("button", { name: /Save changes/i });
     const longFront = "a".repeat(201); // MAX_FRONT_LENGTH = 200
 
     await user.clear(frontInput);
@@ -186,7 +186,7 @@ describe("EditFlashcardDialog", () => {
     await user.click(submitButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/Pole 'Przód' nie może przekraczać 200 znaków./)).toBeInTheDocument();
+      expect(screen.getByText(/Field 'Front' cannot exceed 200 characters./)).toBeInTheDocument();
     });
     expect(submitButton).toBeDisabled();
   });
@@ -194,8 +194,8 @@ describe("EditFlashcardDialog", () => {
   it("should show validation error if back exceeds max length", async () => {
     const user = userEvent.setup();
     render(<EditFlashcardDialog {...defaultProps} />);
-    const backInput = screen.getByLabelText("Tył");
-    const submitButton = screen.getByRole("button", { name: /Zapisz zmiany/i });
+    const backInput = screen.getByLabelText("Back");
+    const submitButton = screen.getByRole("button", { name: /Save changes/i });
     const longBack = "a".repeat(501); // MAX_BACK_LENGTH = 500
 
     await user.clear(backInput);
@@ -203,7 +203,7 @@ describe("EditFlashcardDialog", () => {
     await user.click(submitButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/Pole 'Tył' nie może przekraczać 500 znaków./)).toBeInTheDocument();
+      expect(screen.getByText(/Field 'Back' cannot exceed 500 characters./)).toBeInTheDocument();
     });
     expect(submitButton).toBeDisabled();
   });
@@ -213,16 +213,16 @@ describe("EditFlashcardDialog", () => {
   it("should disable inputs and buttons, show loading text when isSubmitting is true", () => {
     render(<EditFlashcardDialog {...defaultProps} isSubmitting={true} />);
 
-    const submitButton = screen.getByRole("button", { name: /Zapisywanie.../i });
-    const cancelButton = screen.getByRole("button", { name: /Anuluj/i });
-    const frontInput = screen.getByLabelText("Przód");
-    const backInput = screen.getByLabelText("Tył");
+    const submitButton = screen.getByRole("button", { name: /Saving.../i });
+    const cancelButton = screen.getByRole("button", { name: /Cancel/i });
+    const frontInput = screen.getByLabelText("Front");
+    const backInput = screen.getByLabelText("Back");
 
     expect(submitButton).toBeDisabled();
     expect(cancelButton).toBeDisabled();
     expect(frontInput).toBeDisabled();
     expect(backInput).toBeDisabled();
-    expect(screen.queryByRole("button", { name: /Zapisz zmiany/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Save changes/i })).not.toBeInTheDocument();
   });
 
   it("should display error message from error prop", () => {
@@ -237,14 +237,14 @@ describe("EditFlashcardDialog", () => {
   it("should clear validation errors when dialog reopens with same flashcard", async () => {
     const user = userEvent.setup();
     const { rerender } = render(<EditFlashcardDialog {...defaultProps} />);
-    const frontInput = screen.getByLabelText("Przód");
-    const submitButton = screen.getByRole("button", { name: /Zapisz zmiany/i });
+    const frontInput = screen.getByLabelText("Front");
+    const submitButton = screen.getByRole("button", { name: /Save changes/i });
 
     // Create validation error
     await user.clear(frontInput);
     await user.click(submitButton);
     await waitFor(() => {
-      expect(screen.getByText("Pole 'Przód' nie może być puste.")).toBeInTheDocument();
+      expect(screen.getByText("Field 'Front' cannot be empty.")).toBeInTheDocument();
     });
 
     // "Close" and "reopen" the dialog with the same flashcard data, but change the key to force a full reset
@@ -253,12 +253,12 @@ describe("EditFlashcardDialog", () => {
 
     // Wait for the validation error to disappear first, ensuring the effect ran
     await waitFor(() => {
-      expect(screen.queryByText("Pole 'Przód' nie może być puste.")).not.toBeInTheDocument();
+      expect(screen.queryByText("Field 'Front' cannot be empty.")).not.toBeInTheDocument();
     });
 
     // Now re-query the input inside waitFor and check its value
     await waitFor(() => {
-      const inputAfterReopen = screen.getByLabelText("Przód");
+      const inputAfterReopen = screen.getByLabelText("Front");
       expect(inputAfterReopen).toHaveValue(mockFlashcard.front);
     });
 

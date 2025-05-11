@@ -18,7 +18,7 @@ describe("ErrorDisplay", () => {
 
     await waitFor(() => {
       const alert = screen.getByRole("alert");
-      expect(screen.getByText(/Wystąpił błąd/)).toBeInTheDocument();
+      expect(screen.getByText(/Error occurred/)).toBeInTheDocument();
       expect(alert).toBeInTheDocument();
       expect(alert).toHaveTextContent(errorMessage);
       expect(alert).toHaveTextContent(`(Status: ${errorStatus})`);
@@ -54,7 +54,7 @@ describe("ErrorDisplay", () => {
     const apiError: ApiError = { message: "Needs retry", status: 503 };
     render(<ErrorDisplay error={apiError} onRetry={onRetryMock} />);
 
-    const retryButton = screen.getByRole("button", { name: /Spróbuj ponownie/i });
+    const retryButton = screen.getByRole("button", { name: /Try again/i });
     expect(retryButton).toBeInTheDocument();
   });
 
@@ -64,7 +64,7 @@ describe("ErrorDisplay", () => {
     const apiError: ApiError = { message: "Retry this", status: 503 };
     render(<ErrorDisplay error={apiError} onRetry={onRetryMock} />);
 
-    const retryButton = screen.getByRole("button", { name: /Spróbuj ponownie/i });
+    const retryButton = screen.getByRole("button", { name: /Try again/i });
     await user.click(retryButton);
 
     expect(onRetryMock).toHaveBeenCalledTimes(1);
@@ -86,7 +86,7 @@ describe("ErrorDisplay", () => {
 
     const alert = screen.getByRole("alert");
     expect(alert).toBeInTheDocument();
-    expect(alert).toHaveTextContent("Nieznany błąd");
+    expect(alert).toHaveTextContent("Unknown error");
     expect(alert).toHaveTextContent("(Status: 401)");
   });
 });

@@ -54,9 +54,9 @@ const DeleteConfirmationDialog: React.FC<DeleteConfirmationDialogProps> = ({
       {/* Call onCancel when closing */}
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Potwierdź usunięcie</DialogTitle>
+          <DialogTitle>Confirm deletion</DialogTitle>
           <DialogDescription>
-            Czy na pewno chcesz usunąć {itemType} &quot;{itemName}&quot;?
+            Are you sure you want to delete {itemType} &quot;{itemName}&quot;?
             {additionalInfo && <span className="mt-2 block">{additionalInfo}</span>}
           </DialogDescription>
         </DialogHeader>
@@ -69,11 +69,11 @@ const DeleteConfirmationDialog: React.FC<DeleteConfirmationDialogProps> = ({
         <DialogFooter>
           <DialogClose asChild>
             <Button type="button" variant="outline" disabled={isDeleting}>
-              Anuluj
+              Cancel
             </Button>
           </DialogClose>
-          <Button type="button" variant="destructive" onClick={handleConfirm} disabled={isDeleting}>
-            {isDeleting ? "Usuwanie..." : "Potwierdź"}
+          <Button type="button" onClick={handleConfirm} disabled={isDeleting}>
+            {isDeleting ? "Deleting..." : "Confirm"}
           </Button>
         </DialogFooter>
       </DialogContent>

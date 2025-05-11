@@ -50,20 +50,20 @@ const RenameCollectionDialog: React.FC<RenameCollectionDialogProps> = ({
   const validateName = useCallback(
     (name: string): boolean => {
       if (!name.trim()) {
-        setValidationError("Nazwa kolekcji nie może być pusta.");
+        setValidationError("Collection name cannot be empty.");
         return false;
       }
       if (name.length > MAX_NAME_LENGTH) {
-        setValidationError(`Nazwa kolekcji nie może przekraczać ${MAX_NAME_LENGTH} znaków.`);
+        setValidationError(`Collection name cannot exceed ${MAX_NAME_LENGTH} characters.`);
         return false;
       }
       if (name === currentName) {
         // No change, technically valid but maybe disable submit? Or handle in submit.
-        setValidationError(null); // Or maybe "Nazwa nie została zmieniona."
+        setValidationError(null); // Or maybe "Name has not been changed."
         return true; // Allow submission to close dialog
       }
       if (existingNames.includes(name)) {
-        setValidationError("Kolekcja o tej nazwie już istnieje.");
+        setValidationError("A collection with this name already exists.");
         return false;
       }
       setValidationError(null);
@@ -111,14 +111,14 @@ const RenameCollectionDialog: React.FC<RenameCollectionDialogProps> = ({
       {/* Call onCancel when closing */}
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Zmień nazwę kolekcji</DialogTitle>
-          <DialogDescription>Wprowadź nową nazwę dla kolekcji &quot;{currentName}&quot;.</DialogDescription>
+          <DialogTitle>Rename collection</DialogTitle>
+          <DialogDescription>Enter a new name for the collection &quot;{currentName}&quot;.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="collection-name" className="text-right">
-                Nowa nazwa
+                New name
               </Label>
               <Input
                 id="collection-name"
@@ -139,11 +139,11 @@ const RenameCollectionDialog: React.FC<RenameCollectionDialogProps> = ({
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="outline" disabled={isSubmitting}>
-                Anuluj
+                Cancel
               </Button>
             </DialogClose>
             <Button type="submit" disabled={!canSubmit}>
-              {isSubmitting ? "Zapisywanie..." : "Zapisz"}
+              {isSubmitting ? "Saving..." : "Save"}
             </Button>
           </DialogFooter>
         </form>

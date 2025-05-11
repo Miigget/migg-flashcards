@@ -60,16 +60,16 @@ const EditFlashcardDialog: React.FC<EditFlashcardDialogProps> = ({
   const validateFields = (): boolean => {
     const errors: { front?: string; back?: string } = {};
     if (!front.trim()) {
-      errors.front = "Pole 'Przód' nie może być puste.";
+      errors.front = "Field 'Front' cannot be empty.";
     }
     if (front.length > MAX_FRONT_LENGTH) {
-      errors.front = `Pole 'Przód' nie może przekraczać ${MAX_FRONT_LENGTH} znaków.`;
+      errors.front = `Field 'Front' cannot exceed ${MAX_FRONT_LENGTH} characters.`;
     }
     if (!back.trim()) {
-      errors.back = "Pole 'Tył' nie może być puste.";
+      errors.back = "Field 'Back' cannot be empty.";
     }
     if (back.length > MAX_BACK_LENGTH) {
-      errors.back = `Pole 'Tył' nie może przekraczać ${MAX_BACK_LENGTH} znaków.`;
+      errors.back = `Field 'Back' cannot exceed ${MAX_BACK_LENGTH} characters.`;
     }
     // Add collection validation if enabled
 
@@ -108,14 +108,14 @@ const EditFlashcardDialog: React.FC<EditFlashcardDialogProps> = ({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Edytuj fiszkę</DialogTitle>
-          <DialogDescription>Zmień zawartość fiszki.</DialogDescription>
+          <DialogTitle>Edit flashcard</DialogTitle>
+          <DialogDescription>Change the content of the flashcard.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             {/* Front Field */}
             <div className="grid gap-2">
-              <Label htmlFor="flashcard-front">Przód</Label>
+              <Label htmlFor="flashcard-front">Front</Label>
               <Input
                 id="flashcard-front"
                 value={front}
@@ -134,7 +134,7 @@ const EditFlashcardDialog: React.FC<EditFlashcardDialogProps> = ({
 
             {/* Back Field */}
             <div className="grid gap-2">
-              <Label htmlFor="flashcard-back">Tył</Label>
+              <Label htmlFor="flashcard-back">Back</Label>
               <Textarea
                 id="flashcard-back"
                 value={back}
@@ -165,11 +165,11 @@ const EditFlashcardDialog: React.FC<EditFlashcardDialogProps> = ({
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="outline" disabled={isSubmitting}>
-                Anuluj
+                Cancel
               </Button>
             </DialogClose>
             <Button type="submit" disabled={isSubmitting || Object.keys(validationErrors).length > 0}>
-              {isSubmitting ? "Zapisywanie..." : "Zapisz zmiany"}
+              {isSubmitting ? "Saving..." : "Save changes"}
             </Button>
           </DialogFooter>
         </form>

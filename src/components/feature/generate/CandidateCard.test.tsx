@@ -63,10 +63,10 @@ describe("CandidateCard Component", () => {
 
     expect(screen.getByText(mockCandidatePending.front)).toBeInTheDocument();
     expect(screen.getByText(mockCandidatePending.back)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /odrzuć/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /edytuj/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /akceptuj/i })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /przywróć/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /discard/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /edit/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /accept/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /restore/i })).not.toBeInTheDocument();
   });
 
   it("should render correct buttons for accepted status", () => {
@@ -78,10 +78,10 @@ describe("CandidateCard Component", () => {
         onEditClick={mockOnEditClick}
       />
     );
-    expect(screen.getByRole("button", { name: /odrzuć/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /edytuj/i })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /akceptuj/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /przywróć/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /discard/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /edit/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /accept/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /restore/i })).not.toBeInTheDocument();
   });
 
   it("should render correct button for discarded status", () => {
@@ -93,10 +93,10 @@ describe("CandidateCard Component", () => {
         onEditClick={mockOnEditClick}
       />
     );
-    expect(screen.getByRole("button", { name: /przywróć/i })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /odrzuć/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /edytuj/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /akceptuj/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /restore/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /discard/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /edit/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /accept/i })).not.toBeInTheDocument();
   });
 
   it("should call onEditClick with the tempId when the edit button is clicked (pending status)", async () => {
@@ -110,7 +110,7 @@ describe("CandidateCard Component", () => {
       />
     );
 
-    const editButton = screen.getByRole("button", { name: /edytuj/i });
+    const editButton = screen.getByRole("button", { name: /edit/i });
     await user.click(editButton);
 
     expect(mockOnEditClick).toHaveBeenCalledTimes(1);
@@ -130,7 +130,7 @@ describe("CandidateCard Component", () => {
       />
     );
 
-    const discardButton = screen.getByRole("button", { name: /odrzuć/i });
+    const discardButton = screen.getByRole("button", { name: /discard/i });
     await user.click(discardButton);
 
     expect(mockOnDiscard).toHaveBeenCalledTimes(1);
@@ -150,7 +150,7 @@ describe("CandidateCard Component", () => {
       />
     );
 
-    const acceptButton = screen.getByRole("button", { name: /akceptuj/i });
+    const acceptButton = screen.getByRole("button", { name: /accept/i });
     await user.click(acceptButton);
 
     expect(mockOnAccept).toHaveBeenCalledTimes(1);
@@ -170,7 +170,7 @@ describe("CandidateCard Component", () => {
       />
     );
 
-    const restoreButton = screen.getByRole("button", { name: /przywróć/i });
+    const restoreButton = screen.getByRole("button", { name: /restore/i });
     await user.click(restoreButton);
 
     expect(mockOnAccept).toHaveBeenCalledTimes(1);
@@ -199,14 +199,14 @@ describe("CandidateCard Component", () => {
       />
     );
     // Check buttons are still there for pending status
-    expect(screen.getByRole("button", { name: /odrzuć/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /edytuj/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /akceptuj/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /discard/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /edit/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /accept/i })).toBeInTheDocument();
 
     // Check that the elements containing the text are rendered, even if empty.
     // Find the <p> tags next to the corresponding <h3> labels.
-    const frontParagraph = screen.getByText(/Przód:/i).nextElementSibling;
-    const backParagraph = screen.getByText(/Tył:/i).nextElementSibling;
+    const frontParagraph = screen.getByText(/Front:/i).nextElementSibling;
+    const backParagraph = screen.getByText(/Back:/i).nextElementSibling;
 
     expect(frontParagraph).toBeInTheDocument();
     expect(backParagraph).toBeInTheDocument();

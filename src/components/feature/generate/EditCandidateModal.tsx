@@ -15,17 +15,17 @@ interface EditCandidateModalProps {
 }
 
 export default function EditCandidateModal({ candidate, isOpen, onClose, onSave }: EditCandidateModalProps) {
-  // Stan lokalny dla pól formularza edycji
+  // Local state for form fields
   const [editedFront, setEditedFront] = useState(candidate.front);
   const [editedBack, setEditedBack] = useState(candidate.back);
   const [frontError, setFrontError] = useState<string | null>(null);
   const [backError, setBackError] = useState<string | null>(null);
 
-  // Limity znaków
+  // Character limits
   const MAX_FRONT_LENGTH = 200;
   const MAX_BACK_LENGTH = 500;
 
-  // Resetowanie stanu formularza gdy otworzymy modal z nowym kandydatem
+  // Resetting form state when opening modal with new candidate
   useEffect(() => {
     if (isOpen) {
       setEditedFront(candidate.front);
@@ -35,25 +35,25 @@ export default function EditCandidateModal({ candidate, isOpen, onClose, onSave 
     }
   }, [isOpen, candidate]);
 
-  // Walidacja pól
+  // Field validation
   const validateFields = (): boolean => {
     let isValid = true;
 
     if (editedFront.trim() === "") {
-      setFrontError("Przód fiszki nie może być pusty");
+      setFrontError("Front of flashcard cannot be empty");
       isValid = false;
     } else if (editedFront.length > MAX_FRONT_LENGTH) {
-      setFrontError(`Przód fiszki nie może przekraczać ${MAX_FRONT_LENGTH} znaków`);
+      setFrontError(`Front of flashcard cannot exceed ${MAX_FRONT_LENGTH} characters`);
       isValid = false;
     } else {
       setFrontError(null);
     }
 
     if (editedBack.trim() === "") {
-      setBackError("Tył fiszki nie może być pusty");
+      setBackError("Back of flashcard cannot be empty");
       isValid = false;
     } else if (editedBack.length > MAX_BACK_LENGTH) {
-      setBackError(`Tył fiszki nie może przekraczać ${MAX_BACK_LENGTH} znaków`);
+      setBackError(`Back of flashcard cannot exceed ${MAX_BACK_LENGTH} characters`);
       isValid = false;
     } else {
       setBackError(null);
@@ -62,7 +62,7 @@ export default function EditCandidateModal({ candidate, isOpen, onClose, onSave 
     return isValid;
   };
 
-  // Obsługa zapisu
+  // Save handling
   const handleSave = () => {
     if (validateFields()) {
       onSave({
@@ -74,7 +74,7 @@ export default function EditCandidateModal({ candidate, isOpen, onClose, onSave 
     }
   };
 
-  // Czy przycisk zapisu powinien być nieaktywny
+  // Whether the save button should be disabled
   const isSaveDisabled =
     editedFront.trim() === "" ||
     editedBack.trim() === "" ||
@@ -85,22 +85,22 @@ export default function EditCandidateModal({ candidate, isOpen, onClose, onSave 
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Edytuj fiszkę</DialogTitle>
+          <DialogTitle>Edit flashcard</DialogTitle>
           <DialogDescription>
-            Edytuj treść przodu i tyłu fiszki. Kliknij &quot;Zapisz&quot; gdy skończysz.
+            Edit the front and back of the flashcard. Click &quot;Save&quot; when you're done.
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
             <label htmlFor="front" className="text-sm font-medium">
-              Przód fiszki
+              Front of flashcard
             </label>
             <Input
               id="front"
               value={editedFront}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditedFront(e.target.value)}
-              placeholder="Wprowadź tekst przodu fiszki..."
+              placeholder="Enter the front text of the flashcard..."
               className="w-full"
             />
             <CharacterCounter current={editedFront.length} max={MAX_FRONT_LENGTH} />
@@ -109,13 +109,13 @@ export default function EditCandidateModal({ candidate, isOpen, onClose, onSave 
 
           <div className="grid gap-2">
             <label htmlFor="back" className="text-sm font-medium">
-              Tył fiszki
+              Back of flashcard
             </label>
             <Textarea
               id="back"
               value={editedBack}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEditedBack(e.target.value)}
-              placeholder="Wprowadź tekst tyłu fiszki..."
+              placeholder="Enter the back text of the flashcard..."
               className="w-full min-h-[100px]"
             />
             <CharacterCounter current={editedBack.length} max={MAX_BACK_LENGTH} />
@@ -125,10 +125,10 @@ export default function EditCandidateModal({ candidate, isOpen, onClose, onSave 
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
-            Anuluj
+            Cancel
           </Button>
           <Button onClick={handleSave} disabled={isSaveDisabled}>
-            Zapisz
+            Save
           </Button>
         </DialogFooter>
       </DialogContent>

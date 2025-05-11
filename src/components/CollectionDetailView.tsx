@@ -100,8 +100,8 @@ const CollectionDetailView: React.FC<CollectionDetailViewProps> = ({ initialColl
     return (
       <ErrorDisplay
         error={viewModel.error}
-        title="Błąd ładowania szczegółów kolekcji"
-        message={viewModel.error.message || "Nie udało się pobrać danych dla tej kolekcji."}
+        title="Error loading collection details"
+        message={viewModel.error.message || "Failed to fetch data for this collection."}
         onRetry={handleRetryFetch}
       />
     );
@@ -114,30 +114,30 @@ const CollectionDetailView: React.FC<CollectionDetailViewProps> = ({ initialColl
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold tracking-tight">{viewModel.collectionName}</h1>
           <div className="space-x-2">
-            <Button size="sm" onClick={handleRenameClick} disabled={isSubmittingAny}>
-              Zmień nazwę
+            <Button size="sm" variant="outline" onClick={handleRenameClick} disabled={isSubmittingAny}>
+              Rename
             </Button>
-            <Button size="sm" variant="destructive" onClick={handleDeleteClick} disabled={isSubmittingAny}>
-              Usuń Kolekcję
+            <Button size="sm" onClick={handleDeleteClick} disabled={isSubmittingAny}>
+              Delete
             </Button>
           </div>
         </div>
 
         <div className="mb-6 space-x-2">
           <Button asChild disabled={isSubmittingAny}>
-            <a href={studyUrl}>Rozpocznij naukę</a>
+            <a href={studyUrl}>Start learning</a>
           </Button>
           <Button asChild variant="outline" disabled={isSubmittingAny}>
-            <a href={createUrl}>Dodaj fiszkę</a>
+            <a href={createUrl}>Add flashcard</a>
           </Button>
           <Button asChild variant="outline" disabled={isSubmittingAny}>
-            <a href={generateUrl}>Generuj AI</a>
+            <a href={generateUrl}>AI Generate</a>
           </Button>
         </div>
 
-        <h2 className="text-xl font-semibold mb-4">Fiszki ({viewModel.pagination.totalItems})</h2>
+        <h2 className="text-xl font-semibold mb-4">Flashcards ({viewModel.pagination.totalItems})</h2>
         {viewModel.flashcards.length === 0 && !viewModel.isLoading ? (
-          <p>Brak fiszek w tej kolekcji.</p>
+          <p>No flashcards in this collection.</p>
         ) : (
           <div className="space-y-4">
             {viewModel.flashcards.map((fc) => (
@@ -174,9 +174,9 @@ const CollectionDetailView: React.FC<CollectionDetailViewProps> = ({ initialColl
 
       <DeleteConfirmationDialog
         isOpen={showDeleteDialog}
-        itemType="kolekcję"
+        itemType="collection"
         itemName={viewModel.collectionName}
-        additionalInfo={`Spowoduje to usunięcie wszystkich ${viewModel.pagination.totalItems} fiszek w tej kolekcji.`}
+        additionalInfo={`This will delete all ${viewModel.pagination.totalItems} flashcards in this collection.`}
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
         isDeleting={isSubmittingDelete}
@@ -198,7 +198,7 @@ const CollectionDetailView: React.FC<CollectionDetailViewProps> = ({ initialColl
           return (
             <DeleteConfirmationDialog
               isOpen={deleteFlashcardTargetId !== null}
-              itemType="fiszkę"
+              itemType="flashcard"
               itemName={
                 flashcardToDelete
                   ? `"${flashcardToDelete.front.substring(0, 30)}..."`

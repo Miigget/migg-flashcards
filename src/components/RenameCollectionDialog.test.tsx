@@ -26,11 +26,12 @@ describe("RenameCollectionDialog", () => {
     render(<RenameCollectionDialog {...defaultProps} />);
 
     expect(screen.getByRole("dialog")).toBeInTheDocument();
-    expect(screen.getByText("Zmień nazwę kolekcji")).toBeInTheDocument();
-    expect(screen.getByText(/Wprowadź nową nazwę dla kolekcji "Old Name"/)).toBeInTheDocument();
-    expect(screen.getByLabelText("Nowa nazwa")).toHaveValue(defaultProps.currentName);
-    expect(screen.getByRole("button", { name: /Anuluj/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Zapisz/i })).toBeInTheDocument();
+    expect(screen.getByText("Rename collection")).toBeInTheDocument();
+    expect(screen.getByText(/Enter a new name for the collection/)).toBeInTheDocument();
+    expect(screen.getByText(/Old Name/)).toBeInTheDocument();
+    expect(screen.getByLabelText("New name")).toHaveValue(defaultProps.currentName);
+    expect(screen.getByRole("button", { name: /Cancel/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Save/i })).toBeInTheDocument();
   });
 
   it("should not render the dialog when isOpen is false", () => {
@@ -41,7 +42,7 @@ describe("RenameCollectionDialog", () => {
   it("should update input value on change", async () => {
     const user = userEvent.setup();
     render(<RenameCollectionDialog {...defaultProps} />);
-    const input = screen.getByLabelText("Nowa nazwa");
+    const input = screen.getByLabelText("New name");
     const newValue = "New Collection Name";
 
     await user.clear(input);
@@ -53,7 +54,7 @@ describe("RenameCollectionDialog", () => {
   it("should call onCancel when cancel button is clicked", async () => {
     const user = userEvent.setup();
     render(<RenameCollectionDialog {...defaultProps} />);
-    const cancelButton = screen.getByRole("button", { name: /Anuluj/i });
+    const cancelButton = screen.getByRole("button", { name: /Cancel/i });
 
     await user.click(cancelButton);
 
@@ -64,8 +65,8 @@ describe("RenameCollectionDialog", () => {
   it("should call onRenameSubmit with the new name when form is submitted with valid data", async () => {
     const user = userEvent.setup();
     render(<RenameCollectionDialog {...defaultProps} />);
-    const input = screen.getByLabelText("Nowa nazwa");
-    const submitButton = screen.getByRole("button", { name: /Zapisz/i });
+    const input = screen.getByLabelText("New name");
+    const submitButton = screen.getByRole("button", { name: /Save/i });
     const validNewName = "Valid New Name";
 
     await user.clear(input);
@@ -82,13 +83,13 @@ describe("RenameCollectionDialog", () => {
   it("should disable submit button and show validation error if name is empty", async () => {
     const user = userEvent.setup();
     render(<RenameCollectionDialog {...defaultProps} />);
-    const input = screen.getByLabelText("Nowa nazwa");
-    const submitButton = screen.getByRole("button", { name: /Zapisz/i });
+    const input = screen.getByLabelText("New name");
+    const submitButton = screen.getByRole("button", { name: /Save/i });
 
     await user.clear(input);
 
     expect(submitButton).toBeDisabled();
-    expect(screen.getByText("Nazwa kolekcji nie może być pusta.")).toBeInTheDocument();
+    expect(screen.getByText("Collection name cannot be empty.")).toBeInTheDocument();
     await user.click(submitButton); // Try submitting
     expect(mockOnRenameSubmit).not.toHaveBeenCalled();
   });
@@ -96,15 +97,15 @@ describe("RenameCollectionDialog", () => {
   it("should disable submit button and show validation error if name exceeds max length", async () => {
     const user = userEvent.setup();
     render(<RenameCollectionDialog {...defaultProps} />);
-    const input = screen.getByLabelText("Nowa nazwa");
-    const submitButton = screen.getByRole("button", { name: /Zapisz/i });
+    const input = screen.getByLabelText("New name");
+    const submitButton = screen.getByRole("button", { name: /Save/i });
     const longName = "a".repeat(31); // MAX_NAME_LENGTH is 30
 
     await user.clear(input);
     await user.type(input, longName);
 
     expect(submitButton).toBeDisabled();
-    expect(screen.getByText(/Nazwa kolekcji nie może przekraczać 30 znaków./)).toBeInTheDocument();
+    expect(screen.getByText(/Collection name cannot exceed 30 characters./)).toBeInTheDocument();
     await user.click(submitButton); // Try submitting
     expect(mockOnRenameSubmit).not.toHaveBeenCalled();
   });
@@ -112,8 +113,8 @@ describe("RenameCollectionDialog", () => {
   it("should disable submit button if name is the same as currentName", async () => {
     const user = userEvent.setup();
     render(<RenameCollectionDialog {...defaultProps} />);
-    const input = screen.getByLabelText("Nowa nazwa");
-    const submitButton = screen.getByRole("button", { name: /Zapisz/i });
+    const input = screen.getByLabelText("New name");
+    const submitButton = screen.getByRole("button", { name: /Save/i });
 
     // Initial state has currentName, button should be disabled
     expect(submitButton).toBeDisabled();
@@ -131,15 +132,15 @@ describe("RenameCollectionDialog", () => {
   it("should disable submit button and show validation error if name exists in existingNames", async () => {
     const user = userEvent.setup();
     render(<RenameCollectionDialog {...defaultProps} />);
-    const input = screen.getByLabelText("Nowa nazwa");
-    const submitButton = screen.getByRole("button", { name: /Zapisz/i });
+    const input = screen.getByLabelText("New name");
+    const submitButton = screen.getByRole("button", { name: /Save/i });
     const existingName = "Existing Name 1";
 
     await user.clear(input);
     await user.type(input, existingName);
 
     expect(submitButton).toBeDisabled();
-    expect(screen.getByText("Kolekcja o tej nazwie już istnieje.")).toBeInTheDocument();
+    expect(screen.getByText("A collection with this name already exists.")).toBeInTheDocument();
     await user.click(submitButton); // Try submitting
     expect(mockOnRenameSubmit).not.toHaveBeenCalled();
   });
@@ -149,15 +150,15 @@ describe("RenameCollectionDialog", () => {
   it("should disable buttons and show loading text when isSubmitting is true", () => {
     render(<RenameCollectionDialog {...defaultProps} isSubmitting={true} />);
 
-    const submitButton = screen.getByRole("button", { name: /Zapisywanie.../i });
-    const cancelButton = screen.getByRole("button", { name: /Anuluj/i });
-    const input = screen.getByLabelText("Nowa nazwa");
+    const submitButton = screen.getByRole("button", { name: /Saving.../i });
+    const cancelButton = screen.getByRole("button", { name: /Cancel/i });
+    const input = screen.getByLabelText("New name");
 
     expect(submitButton).toBeInTheDocument();
     expect(submitButton).toBeDisabled();
     expect(cancelButton).toBeDisabled();
     expect(input).toBeDisabled();
-    expect(screen.queryByRole("button", { name: /Zapisz/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Save/i })).not.toBeInTheDocument();
   });
 
   it("should display error message from error prop", () => {
@@ -175,12 +176,12 @@ describe("RenameCollectionDialog", () => {
     const user = userEvent.setup();
     const submitError = "Server error occurred previously";
     render(<RenameCollectionDialog {...defaultProps} error={submitError} />);
-    const input = screen.getByLabelText("Nowa nazwa");
+    const input = screen.getByLabelText("New name");
 
     // Introduce a validation error
     await user.clear(input);
 
-    expect(screen.getByText("Nazwa kolekcji nie może być pusta.")).toBeInTheDocument();
+    expect(screen.getByText("Collection name cannot be empty.")).toBeInTheDocument();
     expect(screen.queryByText(submitError)).not.toBeInTheDocument(); // Validation error takes precedence
   });
 });

@@ -120,14 +120,14 @@ describe("Step2_ReviewCandidates Component", () => {
   it("should render title, stats, and action buttons", () => {
     render(<Step2_ReviewCandidates {...defaultProps} />);
 
-    expect(screen.getByRole("heading", { name: /Sprawdź wygenerowane fiszki/i })).toBeInTheDocument();
-    expect(screen.getByText(/Łącznie:/i)).toHaveTextContent("Łącznie: 3");
-    expect(screen.getByText(/Zaakceptowane:/i)).toHaveTextContent("Zaakceptowane: 1");
-    expect(screen.getByText(/Oczekujące:/i)).toHaveTextContent("Oczekujące: 2");
-    expect(screen.getByText(/Odrzucone:/i)).toHaveTextContent("Odrzucone: 0");
+    expect(screen.getByRole("heading", { name: /Review generated flashcards/i })).toBeInTheDocument();
+    expect(screen.getByText(/Total:/i)).toHaveTextContent("Total: 3");
+    expect(screen.getByText(/Accepted:/i)).toHaveTextContent("Accepted: 1");
+    expect(screen.getByText(/Pending:/i)).toHaveTextContent("Pending: 2");
+    expect(screen.getByText(/Discarded:/i)).toHaveTextContent("Discarded: 0");
 
-    expect(screen.getByRole("button", { name: /Akceptuj wszystkie/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Przejdź do zapisu/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Accept all/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Proceed to save/i })).toBeInTheDocument();
   });
 
   it("should call onAccept when accept button inside a mock card is clicked", async () => {
@@ -163,7 +163,7 @@ describe("Step2_ReviewCandidates Component", () => {
   it("should call onAcceptAll when the accept all button is clicked", async () => {
     const user = userEvent.setup();
     render(<Step2_ReviewCandidates {...defaultProps} />);
-    const acceptAllButton = screen.getByRole("button", { name: /Akceptuj wszystkie/i });
+    const acceptAllButton = screen.getByTestId("accept-all-button");
     await user.click(acceptAllButton);
     expect(mockOnAcceptAll).toHaveBeenCalledTimes(1);
   });
@@ -174,48 +174,50 @@ describe("Step2_ReviewCandidates Component", () => {
       delay: 1,
     });
 
-    // W mockCandidates mamy już 1 zaakceptowany, więc przycisk powinien być aktywny
+    // In mockCandidates we already have 1 accepted, so the button should be enabled
     render(<Step2_ReviewCandidates {...defaultProps} />);
 
-    // Pobierz przycisk
-    const proceedButton = screen.getByRole("button", { name: /Przejdź do zapisu/i });
+    // Get the button
+    const proceedButton = screen.getByRole("button", { name: /Proceed to save/i });
 
-    // Sprawdź czy przycisk jest aktywny
+    // Check if the button is enabled
     expect(proceedButton).toBeEnabled();
 
-    // Kliknij przycisk
+    // Click the button
     await user.click(proceedButton);
 
-    // Sprawdź czy funkcja została wywołana
+    // Check if the function was called
     expect(mockOnProceedToSave).toHaveBeenCalledTimes(1);
   });
 
   it("should disable the Proceed button if there are no accepted candidates", () => {
     const noAcceptedCandidates = mockCandidates.map((c) => ({ ...c, status: "pending" as const }));
     render(<Step2_ReviewCandidates {...defaultProps} candidates={noAcceptedCandidates} />);
-    expect(screen.getByText(/Zaakceptowane:/i)).toHaveTextContent("Zaakceptowane: 0");
-    expect(screen.getByRole("button", { name: /Przejdź do zapisu/i })).toBeDisabled();
+    expect(screen.getByText(/Accepted:/i)).toHaveTextContent("Accepted: 0");
+    expect(screen.getByRole("button", { name: /Proceed to save/i })).toBeDisabled();
   });
 
   it("should enable the Proceed button if there are accepted candidates", () => {
     render(<Step2_ReviewCandidates {...defaultProps} candidates={mockCandidates} />);
-    expect(screen.getByText(/Zaakceptowane:/i)).toHaveTextContent("Zaakceptowane: 1");
-    expect(screen.getByRole("button", { name: /Przejdź do zapisu/i })).toBeEnabled();
+    expect(screen.getByText(/Accepted:/i)).toHaveTextContent("Accepted: 1");
+    expect(screen.getByRole("button", { name: /Proceed to save/i })).toBeEnabled();
   });
 
   it("should hide Accept All button if no pending candidates", () => {
     const noPendingCandidates = mockCandidates.map((c) => ({ ...c, status: "accepted" as const }));
     render(<Step2_ReviewCandidates {...defaultProps} candidates={noPendingCandidates} />);
-    expect(screen.queryByRole("button", { name: /Akceptuj wszystkie/i })).not.toBeInTheDocument();
+    expect(screen.queryByTestId("accept-all-button")).not.toBeInTheDocument();
   });
 
   it("should render an empty state message if candidates array is empty and not loading/error", () => {
     render(<Step2_ReviewCandidates {...defaultProps} candidates={[]} />);
 
     expect(screen.queryByTestId(/candidate-card-/i)).not.toBeInTheDocument();
-    expect(screen.getByText(/Brak wygenerowanych kandydatów/i)).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /Akceptuj wszystkie/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /Przejdź do zapisu/i })).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/No candidates generated. Go back to the previous step and generate flashcards./i)
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Accept all/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Proceed to save/i })).not.toBeInTheDocument();
   });
 
   it("should render loading indicator when isLoading is true", () => {

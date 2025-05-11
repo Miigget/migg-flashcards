@@ -236,7 +236,7 @@ describe("CollectionDetailView", () => {
     expect(MockedErrorDisplay).toHaveBeenCalledWith(
       expect.objectContaining({
         error: error,
-        title: "Błąd ładowania szczegółów kolekcji",
+        title: "Error loading collection details",
         message: error.message,
         onRetry: defaultHandlers.handleRetryFetch,
       }),
@@ -260,7 +260,7 @@ describe("CollectionDetailView", () => {
     });
     render(<CollectionDetailView initialCollectionName={initialCollectionName} />);
 
-    expect(screen.getByText(/brak fiszek w tej kolekcji/i)).toBeInTheDocument();
+    expect(screen.getByText(/no flashcards in this collection/i)).toBeInTheDocument();
     expect(screen.queryByRole("listitem")).not.toBeInTheDocument();
     expect(screen.queryByTestId("pagination-controls")).not.toBeInTheDocument();
   });
@@ -286,7 +286,7 @@ describe("CollectionDetailView", () => {
     });
     render(<CollectionDetailView initialCollectionName={initialCollectionName} />);
 
-    const confirmDialog = await screen.findByRole("alertdialog", { name: /delete fiszkę dialog/i });
+    const confirmDialog = await screen.findByRole("alertdialog", { name: /delete flashcard dialog/i });
     expect(confirmDialog).toBeInTheDocument();
 
     const confirmButton = within(confirmDialog).getByRole("button", { name: /confirm delete/i });
