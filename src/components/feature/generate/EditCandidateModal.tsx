@@ -87,7 +87,7 @@ export default function EditCandidateModal({ candidate, isOpen, onClose, onSave 
         <DialogHeader>
           <DialogTitle>Edit flashcard</DialogTitle>
           <DialogDescription>
-            Edit the front and back of the flashcard. Click &quot;Save&quot; when you're done.
+            Edit the front and back of the flashcard. Click &quot;Save&quot; when you&apos;re done.
           </DialogDescription>
         </DialogHeader>
 
