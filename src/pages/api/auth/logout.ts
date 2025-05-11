@@ -23,5 +23,5 @@ export const POST: APIRoute = async ({ cookies, request, redirect }) => {
 
   // Redirect to the login page after successful logout
   // Use 303 See Other for redirect after POST
-  return redirect("/auth/login", 303);
+  return redirect("/", 303);
 };

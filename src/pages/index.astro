@@ -1,9 +1,16 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import MainLayout from "../layouts/MainLayout.astro";
 import { Button } from "@/components/ui/button";
+
+// Sprawdź, czy użytkownik jest zalogowany
+const user = Astro.locals.user;
+
+// Wybierz odpowiedni layout w zależności od tego, czy użytkownik jest zalogowany
+const SelectedLayout = user ? MainLayout : Layout;
 ---
 
-<Layout title="MiggFlashcards">
+<SelectedLayout title="MiggFlashcards">
   <main
     class="min-h-screen flex flex-col items-center justify-center p-6 md:p-12 bg-gradient-to-b from-gray-50 to-white dark:from-slate-950 dark:to-slate-900"
   >
@@ -105,15 +112,25 @@ import { Button } from "@/components/ui/button";
         </p>
       </div>
 
-      <!-- CTA buttons -->
-      <div class="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
-        <a href="/auth/register">
-          <Button size="lg" className="w-full sm:w-auto bg-black hover:bg-gray-800 text-white"> Get Started </Button>
-        </a>
-        <a href="/auth/login">
-          <Button size="lg" variant="outline" className="w-full sm:w-auto"> Log In </Button>
-        </a>
-      </div>
+      <!-- CTA buttons - pokazywane tylko gdy użytkownik NIE jest zalogowany -->
+      {
+        !user && (
+          <div class="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="/auth/register">
+              <Button size="lg" className="w-full sm:w-auto bg-black hover:bg-gray-800 text-white">
+                {" "}
+                Get Started{" "}
+              </Button>
+            </a>
+            <a href="/auth/login">
+              <Button size="lg" variant="outline" className="w-full sm:w-auto">
+                {" "}
+                Log In{" "}
+              </Button>
+            </a>
+          </div>
+        )
+      }
     </div>
   </main>
-</Layout>
+</SelectedLayout>
