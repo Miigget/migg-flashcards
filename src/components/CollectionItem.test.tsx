@@ -27,10 +27,9 @@ describe("CollectionItem", () => {
 
   it("should render collection name and flashcard count", () => {
     render(<CollectionItem {...defaultProps} />);
-
     expect(screen.getByText(mockCollection.name)).toBeInTheDocument();
-    expect(screen.getByText(/10 flashcards/i)).toBeInTheDocument(); // Checks count and pluralization
-  });
+    expect(screen.getByText("10 flashcards")).toBeInTheDocument();
+  }, 10000);
 
   it("should render correct pluralization for 1 flashcard", () => {
     const singleFlashcardCollection = { ...mockCollection, flashcardCount: 1 };

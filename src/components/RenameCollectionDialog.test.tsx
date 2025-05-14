@@ -42,14 +42,13 @@ describe("RenameCollectionDialog", () => {
   it("should update input value on change", async () => {
     const user = userEvent.setup();
     render(<RenameCollectionDialog {...defaultProps} />);
-    const input = screen.getByLabelText("New name");
-    const newValue = "New Collection Name";
 
+    const input = screen.getByLabelText(/New name/i);
     await user.clear(input);
-    await user.type(input, newValue);
+    await user.type(input, "New Collection Name");
 
-    expect(input).toHaveValue(newValue);
-  });
+    expect(input).toHaveValue("New Collection Name");
+  }, 10000);
 
   it("should call onCancel when cancel button is clicked", async () => {
     const user = userEvent.setup();

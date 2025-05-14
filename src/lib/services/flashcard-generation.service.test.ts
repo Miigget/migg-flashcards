@@ -11,9 +11,9 @@ import * as crypto from "crypto";
 
 // --- Global Mock Variables --- //
 // Use 'let' and define outside factory/beforeEach
-let mockChat: Mock<unknown[], unknown>;
-let mockCreateJsonSchema: Mock<unknown[], unknown>;
-let mockSchemaBuilder: { addProperty: Mock<unknown[], unknown>; build: Mock<unknown[], unknown> };
+let mockChat: Mock;
+let mockCreateJsonSchema: Mock;
+let mockSchemaBuilder: { addProperty: Mock; build: Mock };
 
 // --- Mock Dependencies --- //
 vi.mock("@/db/supabase.client");
@@ -162,33 +162,6 @@ let mockGenerationsChain: MockSupabaseChain;
 let mockErrorLogsChain: MockSupabaseChain;
 let flashcardGenerationService: FlashcardGenerationService;
 const testUserId = "test-user-gen-123";
-// Define structure for fallback data based on service behavior
-const fallbackFlashcards: FlashcardCandidateDto[] = [
-  {
-    flashcard_id: 0,
-    front: "Przykładowa fiszka - Przód 1",
-    back: "Przykładowa fiszka - Tył 1",
-    collection: "default",
-    source: "ai-full",
-    user_id: testUserId, // Use testUserId placeholder initially, will be updated in test
-    created_at: expect.any(String), // Expect any string for timestamp
-    updated_at: expect.any(String),
-    generation_id: -1, // Match getSampleFlashcards
-    status: "candidate", // Match getSampleFlashcards
-  },
-  {
-    flashcard_id: 0,
-    front: "Przykładowa fiszka - Przód 2",
-    back: "Przykładowa fiszka - Tył 2",
-    collection: "default",
-    source: "ai-full",
-    user_id: testUserId,
-    created_at: expect.any(String),
-    updated_at: expect.any(String),
-    generation_id: -1,
-    status: "candidate",
-  },
-];
 
 describe("Flashcard Generation Service", () => {
   beforeEach(async () => {
@@ -369,7 +342,7 @@ describe("Flashcard Generation Service", () => {
       );
     });
 
-    it("should log error and return fallback data if AI service call fails", async () => {
+    it("should log error and throw if AI service call fails", async () => {
       // Arrange
       const aiError = new Error("AI service unavailable");
       // 1. Mock Supabase generations insert success
@@ -380,25 +353,20 @@ describe("Flashcard Generation Service", () => {
       // 3. Mock OpenRouter failure
       mockChat.mockRejectedValue(aiError);
 
-      // Act: Call the service method
-      const result = await flashcardGenerationService.generateFlashcards(inputText);
+      // Act & Assert: Call the service method and expect it to throw
+      await expect(flashcardGenerationService.generateFlashcards(inputText)).rejects.toThrow(
+        `Flashcard generation failed: ${aiError.message}`
+      );
 
-      // Assert: Ensure fallback data is returned
-      // Create expected fallback manually, matching service logic (original generation_id)
-      const expectedFallbackResult: FlashcardCandidateDto[] = fallbackFlashcards.map((f) => ({
-        ...f,
-        user_id: testUserId,
-        generation_id: mockGenerationRecord.generation_id, // Expect original gen ID
-      }));
-      // Compare candidates, ignoring timestamps
-      expect(result.candidates).toMatchObject(expectedFallbackResult);
-      expect(result.generated_count).toBe(fallbackFlashcards.length); // Expect fallback count
-      expect(result.generation_id).toBe(mockGenerationRecord.generation_id.toString()); // Should still return original generation ID
-
-      // Assert: Ensure the error log WAS NOT inserted into the DB (error handled internally by fallback)
-      expect(mockErrorLogsChain.insert).not.toHaveBeenCalled();
-      // Optionally check that generations update WAS called (since fallback still happens)
-      expect(mockGenerationsChain.update).toHaveBeenCalled();
+      // Assert: Ensure the error log was inserted into the DB
+      expect(mockErrorLogsChain.insert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          user_id: testUserId,
+          error_message: expect.stringContaining(aiError.message),
+          source_text_hash: expectedHash,
+          model: "openrouter.ai",
+        })
+      );
     });
 
     it("should log error and re-throw if updating generation record fails", async () => {
@@ -450,7 +418,7 @@ describe("Flashcard Generation Service", () => {
       expect(mockChat).not.toHaveBeenCalled();
     });
 
-    it("should log error and return fallback data if AI response parsing fails (Zod validation)", async () => {
+    it("should log error and throw if AI response parsing fails (Zod validation)", async () => {
       // Arrange
       const invalidAiResponse = {
         choices: [
@@ -468,25 +436,20 @@ describe("Flashcard Generation Service", () => {
       // 3. Mock OpenRouter success with invalid response
       mockChat.mockResolvedValue(invalidAiResponse);
 
-      // Act: Call the service method
-      const result = await flashcardGenerationService.generateFlashcards(inputText);
+      // Act & Assert: Call the service method and expect it to throw
+      await expect(flashcardGenerationService.generateFlashcards(inputText)).rejects.toThrow(
+        "Flashcard generation failed: Empty content returned from AI service"
+      );
 
-      // Assert: Ensure fallback data is returned (matching the updated fallbackFlashcards structure)
-      // Create expected fallback manually, matching service logic (original generation_id)
-      const expectedFallbackResult: FlashcardCandidateDto[] = fallbackFlashcards.map((f) => ({
-        ...f,
-        user_id: testUserId,
-        generation_id: mockGenerationRecord.generation_id, // Expect original gen ID
-      }));
-      // Compare candidates, ignoring timestamps
-      expect(result.candidates).toMatchObject(expectedFallbackResult);
-      expect(result.generated_count).toBe(fallbackFlashcards.length); // Expect fallback count
-      expect(result.generation_id).toBe(mockGenerationRecord.generation_id.toString());
-
-      // Assert: Ensure the error log WAS NOT inserted into the DB (error handled internally by fallback)
-      expect(mockErrorLogsChain.insert).not.toHaveBeenCalled();
-      // Optionally check that generations update WAS called (since fallback still happens)
-      expect(mockGenerationsChain.update).toHaveBeenCalled();
+      // Assert: Ensure the error log was inserted into the DB
+      expect(mockErrorLogsChain.insert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          user_id: testUserId,
+          error_message: expect.stringContaining("Empty content returned"),
+          source_text_hash: expectedHash,
+          model: "openrouter.ai",
+        })
+      );
     });
   });
 });

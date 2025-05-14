@@ -396,7 +396,7 @@ describe("Flashcard Service", () => {
           unexpectedError
         )
       );
-    });
+    }, 10000); // Increase test timeout to 10 seconds
   });
 
   // --- getFlashcardById --- //

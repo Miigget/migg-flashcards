@@ -41,7 +41,7 @@ export class OpenRouterService {
       temperature: 0.7,
       max_tokens: 1000,
     },
-    timeoutMs = 30000,
+    timeoutMs = 60000,
     headers = {},
   }: {
     apiKey: string;

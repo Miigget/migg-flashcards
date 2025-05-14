@@ -254,6 +254,7 @@ class FlashcardGenerationService {
         6. Avoid overly complex or compound questions
         7. Ensure the answer provides complete information to answer the question
         8. For longer texts, aim to cover all major concepts and important details
+        9. IMPORTANT: Do not create more than 50 flashcards, as this will cause the generation to fail
         
         Respond ONLY with the JSON structure of flashcards.
       `;
@@ -276,18 +277,14 @@ class FlashcardGenerationService {
 
       // Check if response has the expected structure
       if (!response || !response.choices || !response.choices.length || !response.choices[0].message) {
-        // eslint-disable-next-line no-console
-        console.error("Invalid response structure, falling back to sample flashcards");
-        return this.getSampleFlashcards(now, userId);
+        throw new Error("Invalid response structure from AI service");
       }
 
       // Extract and validate the response
       const content = response.choices[0].message.content;
 
       if (!content) {
-        // eslint-disable-next-line no-console
-        console.error("Empty content returned, falling back to sample flashcards");
-        return this.getSampleFlashcards(now, userId);
+        throw new Error("Empty content returned from AI service");
       }
 
       // Try to parse the JSON content
@@ -299,7 +296,7 @@ class FlashcardGenerationService {
         console.error("Failed to parse JSON response:", content);
         // eslint-disable-next-line no-console
         console.error("Parse error details:", parseError);
-        return this.getSampleFlashcards(now, userId);
+        throw new Error("Failed to parse AI response: invalid JSON format");
       }
 
       // Log the parsed response
@@ -312,7 +309,7 @@ class FlashcardGenerationService {
       if (!validationResult.success) {
         // eslint-disable-next-line no-console
         console.error("Validation error:", validationResult.error);
-        return this.getSampleFlashcards(now, userId);
+        throw new Error("AI response validation failed: " + validationResult.error.message);
       }
 
       // Transform the validated response into FlashcardCandidateDto[]
@@ -370,14 +367,10 @@ class FlashcardGenerationService {
         }
       }
 
-      // eslint-disable-next-line no-console
-      console.error("Falling back to sample flashcards");
-
-      // Create a timestamp for all flashcards
-      const now = new Date().toISOString();
-
-      // Return sample cards in case of errors
-      return this.getSampleFlashcards(now, userId);
+      // Throw the error instead of returning fallback data
+      throw error instanceof Error
+        ? new Error(`Flashcard generation failed: ${error.message}`)
+        : new Error("Flashcard generation failed: Unknown error");
     }
   }
 

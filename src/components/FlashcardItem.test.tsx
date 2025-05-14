@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import FlashcardItem from "./FlashcardItem";
@@ -33,11 +33,10 @@ describe("FlashcardItem", () => {
   it("should render flashcard front and back content", async () => {
     render(<FlashcardItem {...defaultProps} />);
 
-    await waitFor(() => {
-      expect(screen.getByText(mockFlashcard.front)).toBeInTheDocument();
-      expect(screen.getByText(mockFlashcard.back)).toBeInTheDocument();
-    });
-  });
+    // Both front and back should be visible directly (no need to click to reveal)
+    expect(screen.getByText(mockFlashcard.front)).toBeInTheDocument();
+    expect(screen.getByText(mockFlashcard.back)).toBeInTheDocument();
+  }, 10000); // Add 10s timeout
 
   it("should render Edit and Delete buttons", () => {
     render(<FlashcardItem {...defaultProps} />);

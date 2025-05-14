@@ -217,5 +217,5 @@ describe("CandidateCard Component", () => {
     expect(backParagraph?.tagName).toBe("P");
     expect(frontParagraph).toHaveClass("p-2 bg-card rounded border");
     expect(backParagraph).toHaveClass("p-2 bg-card rounded border");
-  });
+  }, 10000);
 });

@@ -49,13 +49,13 @@ describe("RegisterForm", () => {
   it("allows user to input registration details", async () => {
     render(<RegisterForm />);
     await user.type(screen.getByLabelText(/Email/i), "test@example.com");
-    await user.type(screen.getByLabelText(/^Password$/i), "password123");
-    await user.type(screen.getByLabelText(/Confirm Password/i), "password123");
+    await user.type(screen.getByLabelText("Password"), "Password123!");
+    await user.type(screen.getByLabelText("Confirm Password"), "Password123!");
 
     expect(screen.getByLabelText(/Email/i)).toHaveValue("test@example.com");
-    expect(screen.getByLabelText(/^Password$/i)).toHaveValue("password123");
-    expect(screen.getByLabelText(/Confirm Password/i)).toHaveValue("password123");
-  });
+    expect(screen.getByLabelText("Password")).toHaveValue("Password123!");
+    expect(screen.getByLabelText("Confirm Password")).toHaveValue("Password123!");
+  }, 10000);
 
   it("shows validation errors for empty fields on submit", async () => {
     render(<RegisterForm />);

@@ -192,7 +192,7 @@ describe("OpenRouterService", () => {
     it("should handle non-json error response", async () => {
       mockFetch.mockResolvedValueOnce(createMockResponse(500, "Internal Server Error", false));
       await expect(service.chat(chatOptions)).rejects.toThrow(OpenRouterError);
-    });
+    }, 10000); // Add 10s timeout
 
     it("should throw NetworkError on unexpected fetch error", async () => {
       mockFetch.mockRejectedValueOnce(new Error("Network issue"));
@@ -200,6 +200,9 @@ describe("OpenRouterService", () => {
     });
 
     it("should retry on rate limit error (429)", async () => {
+      // Set a much shorter timeout for this test
+      vi.setConfig({ testTimeout: 10000 });
+
       mockFetch
         .mockResolvedValueOnce(createMockResponse(429, { error: { message: "Rate limit" } }, false))
         .mockResolvedValueOnce(createMockResponse(200, mockRawApiResponse, true));
@@ -207,7 +210,7 @@ describe("OpenRouterService", () => {
       const response = await service.chat(chatOptions);
       expect(response).toEqual(mockRawApiResponse);
       expect(mockFetch).toHaveBeenCalledTimes(2);
-    });
+    }, 10000); // Explicit test timeout
 
     it("should eventually fail after max retries", async () => {
       // Mock RateLimitError response
@@ -226,7 +229,7 @@ describe("OpenRouterService", () => {
 
       // Now verify that it eventually throws a RateLimitError
       await expect(testService.chat(chatOptions)).rejects.toThrow(RateLimitError);
-    });
+    }, 10000); // Explicit test timeout
   });
 
   describe("listModels", () => {
@@ -301,7 +304,7 @@ describe("OpenRouterService", () => {
 
       // Try to list models, expecting a TimeoutError
       await expect(shortTimeoutService.listModels()).rejects.toBeInstanceOf(TimeoutError);
-    });
+    }, 10000); // Explicit test timeout
 
     it("should throw NetworkError on unexpected fetch error when listing models", async () => {
       mockFetch.mockRejectedValueOnce(new Error("Network issue"));

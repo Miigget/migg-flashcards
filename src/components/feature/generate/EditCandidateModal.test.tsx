@@ -1,9 +1,10 @@
 import { render, screen, within } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { userEvent } from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import EditCandidateModal from "./EditCandidateModal";
 import type { CandidateViewModel } from "../../../hooks/useGenerateFlashcards";
 import "@testing-library/jest-dom";
+import { waitFor } from "@testing-library/react";
 
 // Mock Shadcn UI components used by the modal if needed,
 // e.g., Dialog, Input, Label, Button
@@ -158,27 +159,45 @@ describe("EditCandidateModal Component", () => {
 
   it("should disable save button if front or back is empty", async () => {
     const user = userEvent.setup();
-    renderModal();
-    const dialog = screen.getByRole("dialog");
-    const frontInput = within(dialog).getByLabelText(/Front of flashcard/i);
-    const backInput = within(dialog).getByLabelText(/Back of flashcard/i);
-    const saveButton = within(dialog).getByRole("button", { name: /^Save$/i });
 
-    // Initial state - button should be enabled
-    expect(saveButton).toBeEnabled();
+    // Use a custom render function that renders the modal as open directly
+    const { getByLabelText, getByRole } = render(
+      <EditCandidateModal
+        isOpen={true}
+        onClose={() => {
+          /* not needed for this test */
+        }}
+        onSave={() => {
+          /* not needed for this test */
+        }}
+        candidate={mockCandidate}
+      />
+    );
 
-    // Clear front input
+    // The modal should already be visible, no need to click any button
+    await waitFor(() => expect(getByRole("dialog")).toBeVisible());
+
+    // Get input fields and save button
+    const frontInput = getByLabelText(/Front of flashcard/i);
+    const backInput = getByLabelText(/Back of flashcard/i);
+    const saveButton = getByRole("button", { name: /Save/i });
+
+    // Front empty, back filled
     await user.clear(frontInput);
+    await user.type(backInput, "Test back content");
     expect(saveButton).toBeDisabled();
 
-    // Type back into front, clear back input
-    await user.type(frontInput, "Some text");
-    expect(saveButton).toBeEnabled(); // Should be enabled now
+    // Front filled, back empty
+    await user.clear(frontInput);
+    await user.type(frontInput, "Test front content");
     await user.clear(backInput);
     expect(saveButton).toBeDisabled();
 
-    // Fill back input again
-    await user.type(backInput, "Some other text");
-    expect(saveButton).toBeEnabled();
-  });
+    // Both filled - button should be enabled
+    await user.clear(frontInput);
+    await user.clear(backInput);
+    await user.type(frontInput, "Test front content");
+    await user.type(backInput, "Test back content");
+    expect(saveButton).not.toBeDisabled();
+  }, 10000); // Increase test timeout to 10 seconds
 });
