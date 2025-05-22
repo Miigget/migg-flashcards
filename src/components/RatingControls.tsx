@@ -8,7 +8,7 @@ interface RatingControlsProps {
 }
 
 // Create a custom button style to override default button padding
-const ratingButtonStyle = "py-4 px-1 min-h-[90px] border-2 border-gray-200 flex flex-col items-center justify-center";
+const ratingButtonStyle = "py-4 px-1 min-h-[90px] border-2 border-border flex flex-col items-center justify-center";
 
 export default function RatingControls({ onRate, disabled }: RatingControlsProps) {
   return (
@@ -27,7 +27,7 @@ export default function RatingControls({ onRate, disabled }: RatingControlsProps
       >
         <div className="flex flex-col items-center w-full">
           <span className="text-lg font-medium text-red-600 mb-1">Very Bad</span>
-          <span className="text-xs text-gray-500">&lt;1d</span>
+          <span className="text-xs text-muted-foreground">&lt;1d</span>
         </div>
       </Button>
 
@@ -45,7 +45,7 @@ export default function RatingControls({ onRate, disabled }: RatingControlsProps
       >
         <div className="flex flex-col items-center w-full">
           <span className="text-lg font-medium text-orange-600 mb-1">Bad</span>
-          <span className="text-xs text-gray-500">&lt;3d</span>
+          <span className="text-xs text-muted-foreground">&lt;3d</span>
         </div>
       </Button>
 
@@ -63,7 +63,7 @@ export default function RatingControls({ onRate, disabled }: RatingControlsProps
       >
         <div className="flex flex-col items-center w-full">
           <span className="text-lg font-medium text-yellow-600 mb-1">Good</span>
-          <span className="text-xs text-gray-500">&lt;7d</span>
+          <span className="text-xs text-muted-foreground">&lt;7d</span>
         </div>
       </Button>
 
@@ -81,7 +81,7 @@ export default function RatingControls({ onRate, disabled }: RatingControlsProps
       >
         <div className="flex flex-col items-center w-full">
           <span className="text-lg font-medium text-green-600 mb-1">Easy</span>
-          <span className="text-xs text-gray-500">&lt;14d</span>
+          <span className="text-xs text-muted-foreground">&lt;14d</span>
         </div>
       </Button>
     </div>

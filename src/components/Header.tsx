@@ -20,7 +20,7 @@ export default function Header({ collectionName, currentCardIndex, totalCardsInS
         </Button>
       </div>
 
-      <div className="flex justify-between items-center mb-2 text-sm text-gray-600">
+      <div className="flex justify-between items-center mb-2 text-sm text-muted-foreground">
         <span>
           Card {currentCardIndex} of {totalCardsInSession}
         </span>

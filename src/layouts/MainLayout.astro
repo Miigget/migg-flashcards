@@ -6,9 +6,10 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface Props {
   title?: string;
+  compensateNavSpace?: boolean;
 }
 
-const { title = "MiggFlashcards" } = Astro.props;
+const { title = "MiggFlashcards", compensateNavSpace = false } = Astro.props;
 const user = Astro.locals.user;
 ---
 
@@ -18,74 +19,70 @@ const user = Astro.locals.user;
       <header
         class="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
       >
-        <div class="container flex h-14 items-center">
-          <!-- Left section -->
-          <div class="flex-1 flex justify-center">
-            <div class="flex items-center space-x-6">
-              <div class="mr-4 hidden md:flex">
-                <a href="/" class="flex items-center space-x-2">
-                  <span class="font-bold text-xl">MiggFlashcards</span>
-                </a>
-              </div>
+        <div class="px-4 md:px-6 lg:px-8 flex h-14 items-center justify-between">
+          <!-- Left section with logo and navigation -->
+          <div class="flex items-center space-x-6">
+            <div class="hidden md:flex">
+              <a href="/" class="flex items-center space-x-2">
+                <span class="font-bold text-xl"><span class="text-muted-foreground">Migg</span>Flashcards</span>
+              </a>
             </div>
+            
+            <!-- Navigation moved here -->
+            <nav class="flex items-center space-x-2 text-sm font-medium">
+              <a href="/dashboard">
+                <Button variant="ghost" size="sm">Dashboard</Button>
+              </a>
+              <a href="/collections">
+                <Button variant="ghost" size="sm">Collections</Button>
+              </a>
+              <a href="/generate">
+                <Button variant="ghost" size="sm">Generate</Button>
+              </a>
+              <a href="/create">
+                <Button variant="ghost" size="sm">Create</Button>
+              </a>
+              <a href="/study">
+                <Button variant="ghost" size="sm">Study</Button>
+              </a>
+            </nav>
           </div>
 
-          <!-- Center section with navigation -->
-          <nav class="flex items-center space-x-2 text-sm font-medium">
-            <a href="/dashboard">
-              <Button variant="ghost" size="sm">Dashboard</Button>
-            </a>
-            <a href="/collections">
-              <Button variant="ghost" size="sm">Collections</Button>
-            </a>
-            <a href="/generate">
-              <Button variant="ghost" size="sm">Generate</Button>
-            </a>
-            <a href="/create">
-              <Button variant="ghost" size="sm">Create</Button>
-            </a>
-            <a href="/study">
-              <Button variant="ghost" size="sm">Study</Button>
-            </a>
-          </nav>
-
           <!-- Right section -->
-          <div class="flex-1 flex justify-end">
-            <div class="flex items-center space-x-4">
-              {
-                user ? (
-                  <>
-                    <span class="text-sm font-medium text-muted-foreground">{user.email}</span>
-                    <div class="mx-3">
-                      <ThemeToggle client:load />
-                    </div>
-                    <form method="POST" action="/api/auth/logout" class="inline-block">
-                      <Button type="submit" variant="outline" size="sm">
-                        Log out
-                      </Button>
-                    </form>
-                  </>
-                ) : (
-                  <>
+          <div class="flex items-center space-x-4">
+            {
+              user ? (
+                <>
+                  <span class="text-sm font-medium text-muted-foreground">{user.email}</span>
+                  <div class="mx-3">
                     <ThemeToggle client:load />
-                    <a href="/auth/login">
-                      <Button variant="outline" size="sm">
-                        Log in
-                      </Button>
-                    </a>
-                  </>
-                )
-              }
-            </div>
+                  </div>
+                  <form method="POST" action="/api/auth/logout" class="inline-block">
+                    <Button type="submit" variant="outline" size="sm">
+                      Log out
+                    </Button>
+                  </form>
+                </>
+              ) : (
+                <>
+                  <ThemeToggle client:load />
+                  <a href="/auth/login">
+                    <Button variant="outline" size="sm">
+                      Log in
+                    </Button>
+                  </a>
+                </>
+              )
+            }
           </div>
         </div>
       </header>
-      <div class="flex-1">
+      <div class={`flex-1 ${compensateNavSpace ? "-mt-40" : ""}`}>
         <slot />
       </div>
       <footer class="border-t py-6">
-        <div class="container flex flex-col items-center justify-between gap-4 md:flex-row">
-          <p class="text-center text-sm text-muted-foreground md:text-left">
+        <div class="px-4 md:px-6 lg:px-8 flex flex-col items-center justify-center">
+          <p class="text-center text-sm text-muted-foreground">
             &copy; {new Date().getFullYear()} MiggFlashcards. All rights reserved.
           </p>
         </div>

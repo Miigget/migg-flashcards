@@ -137,7 +137,7 @@ export default function CollectionSelector() {
           >
             <CardContent className="p-6">
               <h3 className="text-lg font-medium mb-2">{collection.name}</h3>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 {collection.isLoadingCount ? (
                   <Skeleton className="h-4 w-16 inline-block" />
                 ) : collection.flashcardCount !== null ? (

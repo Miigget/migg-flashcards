@@ -41,33 +41,33 @@ export default function FlashcardView({ flashcard, isFrontVisible, onFlip }: Fla
       >
         {/* Front of card */}
         <Card
-          className={`absolute w-full h-full backface-hidden border-2 border-gray-200 shadow-md ${
+          className={`absolute w-full h-full backface-hidden border-2 border-border shadow-md ${
             isFrontVisible ? "z-10" : "z-0"
           }`}
         >
           <CardContent className="p-8 h-full flex flex-col items-center justify-center">
             <div className="text-center">
-              <h3 className="text-lg font-semibold mb-1 text-gray-500">Front</h3>
+              <h3 className="text-lg font-semibold mb-1 text-muted-foreground">Front</h3>
               <div className="text-xl">{flashcard.front}</div>
             </div>
 
-            <div className="mt-8 text-sm text-gray-400">Click to flip</div>
+            <div className="mt-8 text-sm text-muted-foreground">Click to flip</div>
           </CardContent>
         </Card>
 
         {/* Back of card */}
         <Card
-          className={`absolute w-full h-full backface-hidden rotate-y-180 border-2 border-gray-200 shadow-md ${
+          className={`absolute w-full h-full backface-hidden rotate-y-180 border-2 border-border shadow-md ${
             isFrontVisible ? "z-0" : "z-10"
           }`}
         >
           <CardContent className="p-8 h-full flex flex-col items-center justify-center">
             <div className="text-center">
-              <h3 className="text-lg font-semibold mb-1 text-gray-500">Back</h3>
+              <h3 className="text-lg font-semibold mb-1 text-muted-foreground">Back</h3>
               <div className="text-xl">{flashcard.back}</div>
             </div>
 
-            <div className="mt-8 text-sm text-gray-400">Rate your answer below</div>
+            <div className="mt-8 text-sm text-muted-foreground">Rate your answer below</div>
           </CardContent>
         </Card>
       </div>
