@@ -256,7 +256,7 @@ export function useCollectionDetail(initialCollectionName: string) {
   }, [deleteFlashcardTargetId]);
 
   // URLs for navigation buttons
-  const studyUrl = `/study/${encodeURIComponent(state.collectionName)}`;
+  const studyUrl = `/study?collection=${encodeURIComponent(state.collectionName)}`;
   const createUrl = `/create?collection=${encodeURIComponent(state.collectionName)}`;
   const generateUrl = `/generate?collection=${encodeURIComponent(state.collectionName)}`;
 

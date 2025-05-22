@@ -23,7 +23,7 @@ export default function FlashcardView({ flashcard, isFrontVisible, onFlip }: Fla
 
   return (
     <button
-      className="w-full max-w-xl my-8 perspective-1000 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-400 rounded-md"
+      className="w-full max-w-xl my-8 perspective-1000 cursor-pointer focus:outline-none rounded-md"
       onClick={onFlip}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {

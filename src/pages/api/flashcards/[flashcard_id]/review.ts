@@ -162,7 +162,6 @@ export const POST: APIRoute = async ({ params, request, locals }) => {
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error in review endpoint:", error);
     return new Response(
       JSON.stringify({
         error: "Internal server error",

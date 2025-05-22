@@ -57,7 +57,6 @@ export default function CollectionSelector() {
                 errorCount: null,
               };
             } catch (err) {
-              console.error(`Error fetching count for ${name}:`, err);
               return {
                 name,
                 flashcardCount: null,
@@ -74,7 +73,6 @@ export default function CollectionSelector() {
         setCollections(updatedCollections);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load collections");
-        console.error("Error fetching collections:", err);
       } finally {
         setIsLoading(false);
       }

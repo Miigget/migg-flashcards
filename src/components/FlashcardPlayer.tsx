@@ -186,7 +186,6 @@ export default function FlashcardPlayer({ collection }: FlashcardPlayerProps) {
           type: "LOAD_FLASHCARDS_FAILURE",
           payload: err instanceof Error ? err.message : "Failed to load flashcards",
         });
-        console.error("Error fetching flashcards:", err);
       }
     };
 
@@ -219,13 +218,13 @@ export default function FlashcardPlayer({ collection }: FlashcardPlayerProps) {
       });
 
       if (!response.ok) {
-        console.error("Failed to update flashcard review:", await response.json());
+        // Failed to update flashcard review
       }
 
       // Move to the next card regardless of API response
       dispatch({ type: "NEXT_CARD" });
-    } catch (err) {
-      console.error("Error updating flashcard review:", err);
+    } catch {
+      // Error updating flashcard review
       // Still move to the next card even if there was an error
       dispatch({ type: "NEXT_CARD" });
     }
