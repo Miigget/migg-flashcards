@@ -1,0 +1,11 @@
+---
+import StudySessionLayout from "../layouts/StudySessionLayout.astro";
+
+// Authentication is handled by middleware in src/middleware/index.ts
+export const prerender = false;
+
+// Get collection name from URL query parameter
+const collection = Astro.url.searchParams.get("collection") || undefined;
+---
+
+<StudySessionLayout collection={collection} /> 

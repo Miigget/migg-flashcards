@@ -64,6 +64,72 @@ export interface Database {
           },
         ];
       };
+      flashcard_srs_metadata: {
+        Row: {
+          flashcard_id: number;
+          user_id: string;
+          due: string;
+          stability: number;
+          difficulty: number;
+          elapsed_days: number;
+          scheduled_days: number;
+          reps: number;
+          lapses: number;
+          state: number;
+          last_review: string | null;
+          fsrs_params_hash: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          flashcard_id: number;
+          user_id: string;
+          due: string;
+          stability: number;
+          difficulty: number;
+          elapsed_days: number;
+          scheduled_days: number;
+          reps: number;
+          lapses: number;
+          state: number;
+          last_review?: string | null;
+          fsrs_params_hash?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          flashcard_id?: number;
+          user_id?: string;
+          due?: string;
+          stability?: number;
+          difficulty?: number;
+          elapsed_days?: number;
+          scheduled_days?: number;
+          reps?: number;
+          lapses?: number;
+          state?: number;
+          last_review?: string | null;
+          fsrs_params_hash?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "flashcard_srs_metadata_flashcard_id_fkey";
+            columns: ["flashcard_id"];
+            isOneToOne: false;
+            referencedRelation: "flashcards";
+            referencedColumns: ["flashcard_id"];
+          },
+          {
+            foreignKeyName: "flashcard_srs_metadata_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       generation_error_logs: {
         Row: {
           created_at: string;

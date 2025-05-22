@@ -1,6 +1,7 @@
 // src/types.ts
 
 import type { Database } from "./db/database.types";
+import type { State as FSRSState, Rating as FSRSRating } from "ts-fsrs";
 
 // --------------------------------------------------------------------------
 // Flashcards and related commands/models
@@ -30,6 +31,55 @@ export type BulkCreateFlashcardsCommand = FlashcardCandidateDto[];
 // AIGenerateFlashcardsCommand: Payload for the AI flashcards generation endpoint.
 export interface AIGenerateFlashcardsCommand {
   text: string;
+}
+
+// --------------------------------------------------------------------------
+// Spaced Repetition models
+// --------------------------------------------------------------------------
+
+// FlashcardSRSMetadataDTO: Represents the SRS metadata for a flashcard
+export type FlashcardSRSMetadataDTO = Database["public"]["Tables"]["flashcard_srs_metadata"]["Row"];
+
+// SpacedRepetitionCard: Represents a flashcard with its SRS state
+export interface SpacedRepetitionCard extends FlashcardDTO {
+  fsrsCard: {
+    due: Date;
+    stability: number;
+    difficulty: number;
+    elapsed_days: number;
+    scheduled_days: number;
+    reps: number;
+    lapses: number;
+    state: FSRSState;
+    last_review: Date | null;
+  };
+  history: { rating: FSRSRating; state: FSRSState; review_date: Date }[]; // History of ratings
+}
+
+// StudySessionState: State of the entire study session
+export interface StudySessionState {
+  collectionName: string;
+  allFlashcards: SpacedRepetitionCard[]; // All flashcards in the collection
+  currentCard: SpacedRepetitionCard | null;
+  currentIndex: number; // Index of current card in allFlashcards
+  sessionQueue: SpacedRepetitionCard[]; // Cards to review in this session, sorted by FSRS
+  reviewedInSession: { cardId: number; rating: FSRSRating }[]; // Cards reviewed in this session
+  isFrontVisible: boolean;
+  isSessionActive: boolean;
+  isSessionFinished: boolean;
+  studySummaryData: StudySummaryData | null;
+  isLoading: boolean;
+  error: string | null;
+}
+
+// StudySummaryData: Data to display in the session summary
+export interface StudySummaryData {
+  collectionName: string;
+  cardsReviewed: number;
+  againCount: number; // Count of "Again" ratings
+  hardCount?: number;
+  goodCount?: number;
+  easyCount?: number;
 }
 
 // --------------------------------------------------------------------------
