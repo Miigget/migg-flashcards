@@ -6,13 +6,14 @@ frontend:
         - npm ci --cache .npm --prefer-offline
     build:
       commands:
-        - env >> .env
         - npm run build
-        - cp package.json ./.amplify-hosting/compute/default/package.json
-        - cp package-lock.json ./.amplify-hosting/compute/default/package-lock.json
-        - cp .env ./.amplify-hosting/compute/default/.env
+        - cp package.json dist/
+        - cp package-lock.json dist/
+    postBuild:
+      commands:
+        - cd dist && npm ci --only=production --cache .npm --prefer-offline
   artifacts:
-    baseDirectory: .amplify-hosting
+    baseDirectory: dist
     files:
       - '**/*'
   cache:
