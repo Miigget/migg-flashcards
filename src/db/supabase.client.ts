@@ -47,7 +47,6 @@ export const createSupabaseServerInstance = (context: { headers: Headers; cookie
 // const supabaseUrl = import.meta.env.SUPABASE_URL;
 // const supabaseAnonKey = import.meta.env.SUPABASE_KEY;
 // export const supabaseClient = createSupabaseClient<Database>(supabaseUrl, supabaseAnonKey);
-// export const DEFAULT_USER_ID = "09f88a9c-62f5-4c10-9b76-914ee25ee50f";
 // export const createClient = () => {
 //   return createSupabaseClient<Database>(supabaseUrl, supabaseAnonKey);
 // };
