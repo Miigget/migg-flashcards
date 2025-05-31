@@ -22,4 +22,6 @@ frontend:
       - node_modules/**/*
 compute:
   commands:
-    - npm ci --only=production --cache .npm --prefer-offline 
+    - npm start
+  env:
+    PORT: 3000 
