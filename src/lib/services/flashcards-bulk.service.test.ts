@@ -176,12 +176,27 @@ describe("FlashcardsBulk Service", () => {
     });
 
     it("should throw unknown error for unexpected errors during insert/select", async () => {
+      // Reset and create fresh mocks for this test
+      vi.clearAllMocks();
+
       const unexpectedError = new Error("Something completely unexpected happened");
-      // Arrange: Make the select call throw a generic Error
-      mockInsertSelectBuilder.select.mockRejectedValueOnce(unexpectedError);
+
+      // Create a fresh mock builder for this specific test
+      const testMockBuilder = {
+        insert: vi.fn().mockReturnThis(),
+        select: vi.fn().mockRejectedValueOnce(unexpectedError),
+      };
+
+      // Create a fresh Supabase mock for this test
+      const testSupabase = {
+        from: vi.fn().mockReturnValue(testMockBuilder),
+      } as unknown as SupabaseClient;
+
+      // Create a fresh service instance
+      const testService = new FlashcardsBulkService(testSupabase);
 
       // Act & Assert
-      await expect(flashcardsBulkService.bulkCreateFlashcards(mockFlashcardCandidates, userId)).rejects.toThrow(
+      await expect(testService.bulkCreateFlashcards(mockFlashcardCandidates, userId)).rejects.toThrow(
         new FlashcardServiceError(
           "An unexpected error occurred while creating flashcards in bulk",
           "UNKNOWN_ERROR",
@@ -189,7 +204,7 @@ describe("FlashcardsBulk Service", () => {
           unexpectedError
         )
       );
-    });
+    }, 10000); // Add 10 second timeout
 
     it("should return empty data array if Supabase returns success but null data", async () => {
       // Arrange

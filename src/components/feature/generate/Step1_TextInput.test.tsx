@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import Step1_TextInput from "./Step1_TextInput";
 import "@testing-library/jest-dom";
+import { waitFor } from "@testing-library/react";
 
 // Mock child components that are not the focus of this test
 vi.mock("../../ui/CharacterCounter", () => ({
@@ -92,7 +93,7 @@ describe("Step1_TextInput Component", () => {
     // Instead, we check the final state in other tests by controlling the 'text' prop.
   });
 
-  it("should enable the submit button only when text is valid (correct length, no validation error)", () => {
+  it("should enable the submit button only when text is valid (correct length, no validation error)", async () => {
     // Test Case 1: Text too short
     const { rerender } = render(
       <Step1_TextInput
@@ -105,7 +106,10 @@ describe("Step1_TextInput Component", () => {
         onRetryGenerate={mockOnRetryGenerate}
       />
     );
-    expect(screen.getByRole("button", { name: /Generate flashcards/i })).toBeDisabled();
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /Generate flashcards/i })).toBeDisabled();
+    });
 
     // Test Case 2: Valid text
     rerender(
@@ -119,7 +123,10 @@ describe("Step1_TextInput Component", () => {
         onRetryGenerate={mockOnRetryGenerate}
       />
     );
-    expect(screen.getByRole("button", { name: /Generate flashcards/i })).toBeEnabled();
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /Generate flashcards/i })).toBeEnabled();
+    });
 
     // Test Case 3: Valid text but with validation error
     rerender(
@@ -133,8 +140,11 @@ describe("Step1_TextInput Component", () => {
         onRetryGenerate={mockOnRetryGenerate}
       />
     );
-    expect(screen.getByRole("button", { name: /Generate flashcards/i })).toBeDisabled();
-    expect(screen.getByTestId("error-message")).toHaveTextContent("Some validation error");
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /Generate flashcards/i })).toBeDisabled();
+      expect(screen.getByTestId("error-message")).toHaveTextContent("Some validation error");
+    });
 
     // Test Case 4: Valid text but loading
     rerender(
@@ -148,7 +158,10 @@ describe("Step1_TextInput Component", () => {
         onRetryGenerate={mockOnRetryGenerate}
       />
     );
-    expect(screen.getByRole("button", { name: /Generate flashcards/i })).toBeDisabled();
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /Generate flashcards/i })).toBeDisabled();
+    });
   });
 
   it("should call onGenerateClick when the enabled button is clicked", async () => {

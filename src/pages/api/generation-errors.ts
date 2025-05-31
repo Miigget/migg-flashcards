@@ -2,7 +2,6 @@ import type { APIRoute } from "astro";
 import { z } from "zod";
 import type { GenerationErrorLogDTO, PaginatedResponse } from "../../types";
 import { getGenerationErrorLogs } from "../../lib/services/generationErrors.service";
-import { DEFAULT_USER_ID } from "../../db/supabase.client";
 
 export const prerender = false;
 
@@ -17,8 +16,16 @@ export const GET: APIRoute = async ({ request, locals }) => {
     // Use Supabase from locals
     const supabase = locals.supabase;
 
-    // Use DEFAULT_USER_ID instead of authentication
-    const userId = DEFAULT_USER_ID;
+    // Check if user is authenticated
+    if (!locals.user) {
+      return new Response(JSON.stringify({ message: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    // Use authenticated user's ID
+    const userId = locals.user.id;
 
     // Query parameter validation
     const url = new URL(request.url);

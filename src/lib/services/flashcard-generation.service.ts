@@ -6,10 +6,6 @@ import type { Database } from "../../db/database.types";
 import { getOpenRouterClient } from "./openrouter";
 import { z } from "zod";
 
-// Assuming DEFAULT_USER_ID might be needed elsewhere or passed differently
-// Remove the direct import if it's not available or needed globally
-// import { DEFAULT_USER_ID } from "../../db/supabase.client";
-
 type GenerationRecord = Database["public"]["Tables"]["generations"]["Row"];
 
 interface GenerateFlashcardsResult {

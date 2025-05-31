@@ -1,5 +1,5 @@
 /// <reference types="vitest/globals" />
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { vi, describe, it, expect, beforeEach, type Mock } from "vitest";
 
@@ -215,9 +215,12 @@ describe("CollectionsListView", () => {
     });
     render(<CollectionsListView />);
 
-    const dialog = await screen.findByRole("alertdialog", { name: /delete dialog/i });
-    expect(dialog).toBeInTheDocument();
-    expect(within(dialog).getByText(`Delete ${targetName}`)).toBeInTheDocument();
+    // Use waitFor instead of findByRole to be more reliable
+    await waitFor(() => {
+      const dialog = screen.getByRole("alertdialog", { name: /delete dialog/i });
+      expect(dialog).toBeInTheDocument();
+      expect(within(dialog).getByText(`Delete ${targetName}`)).toBeInTheDocument();
+    });
   });
 
   it("should call handleRenameClick from hook when rename button is clicked", async () => {

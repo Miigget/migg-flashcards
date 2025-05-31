@@ -127,9 +127,6 @@ describe("ResetPasswordForm", () => {
   });
 
   it("submits the form, calls fetch, shows success toast, and redirects after delay", async () => {
-    // Removed fake timers to rely on async/await and waitFor
-    // vi.useFakeTimers({ toFake: ['setTimeout'] });
-    // try {
     const successMsg = "Password updated successfully.";
     (fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
@@ -161,20 +158,15 @@ describe("ResetPasswordForm", () => {
     // Check that redirect hasn't happened immediately after toast
     expect(window.location.href).toBe("");
 
-    // Check if redirection happened after the actual setTimeout duration
-    // waitFor will wait for the timeout and the subsequent update
+    // Check if redirection happened after the actual setTimeout duration (1 second in component)
     await waitFor(
       () => {
         expect(window.location.href).toBe("/auth/login");
       },
-      { timeout: 2000 }
-    ); // Explicitly increase timeout to 2 seconds
+      { timeout: 1500 } // Set timeout to 1.5 seconds to accommodate 1 second delay
+    );
 
     expect(toast.error).not.toHaveBeenCalled();
-    // } finally {
-    // Restore real timers after this test - No longer needed as we didn't switch
-    // vi.useRealTimers();
-    // }
   });
 
   it("shows loading state during submission", async () => {

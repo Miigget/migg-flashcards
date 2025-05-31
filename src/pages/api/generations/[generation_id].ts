@@ -1,70 +1,65 @@
-import { z } from "zod";
 import type { APIRoute } from "astro";
+import { z } from "zod";
 import { getGenerationById } from "../../../lib/services/generations.service";
-import { DEFAULT_USER_ID } from "../../../db/supabase.client";
 
 // Prerender should be false for API routes
 export const prerender = false;
 
-// Schema for validating the generation_id parameter
+// Parameter validation schema
 const paramsSchema = z.object({
-  generation_id: z.coerce
-    .number({
-      invalid_type_error: "generation_id must be a number",
-    })
-    .positive("generation_id must be a positive number"),
+  generation_id: z.string().regex(/^\d+$/, "Generation ID must be a number"),
 });
 
 export const GET: APIRoute = async ({ params, locals }) => {
   try {
-    // 1. Validate generation_id parameter
+    // Use Supabase from locals
+    const supabase = locals.supabase;
+
+    // Check if user is authenticated
+    if (!locals.user) {
+      return new Response(JSON.stringify({ message: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    // Validate generation_id parameter
     const validationResult = paramsSchema.safeParse(params);
 
     if (!validationResult.success) {
       return new Response(
         JSON.stringify({
-          error: "Invalid request parameters",
-          details: validationResult.error.format(),
+          message: "Invalid generation ID",
+          errors: validationResult.error.errors,
         }),
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
-    const { generation_id } = validationResult.data;
+    const generationId = parseInt(validationResult.data.generation_id, 10);
 
-    // 2. Use Supabase client from locals
-    const supabase = locals.supabase;
+    // Use authenticated user's ID
+    const user_id = locals.user.id;
 
-    // Using DEFAULT_USER_ID instead of authentication
-    const user_id = DEFAULT_USER_ID;
-
-    // 3. Get generation using the service
-    const { generation, error } = await getGenerationById(supabase, generation_id, user_id);
-
-    if (error) {
-      return new Response(
-        JSON.stringify({
-          error: "Failed to retrieve generation",
-          details: error.message,
-        }),
-        { status: 500, headers: { "Content-Type": "application/json" } }
-      );
-    }
+    // Fetch the generation
+    const generation = await getGenerationById(supabase, generationId, user_id);
 
     if (!generation) {
-      return new Response(JSON.stringify({ error: "Generation not found" }), {
+      return new Response(JSON.stringify({ message: "Generation not found" }), {
         status: 404,
         headers: { "Content-Type": "application/json" },
       });
     }
 
-    // 4. Return the generation data
-    return new Response(JSON.stringify(generation), { status: 200, headers: { "Content-Type": "application/json" } });
+    // Return the generation data
+    return new Response(JSON.stringify(generation), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
   } catch (error) {
     // eslint-disable-next-line no-console
-    console.error("Unexpected error in GET /api/generations/[generation_id]:", error);
-
-    return new Response(JSON.stringify({ error: "Internal server error" }), {
+    console.error("Error fetching generation:", error);
+    return new Response(JSON.stringify({ message: "Internal server error" }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
     });

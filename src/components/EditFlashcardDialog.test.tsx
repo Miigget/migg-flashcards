@@ -222,19 +222,22 @@ describe("EditFlashcardDialog", () => {
 
   // --- Submission State Tests ---
 
-  it("should disable inputs and buttons, show loading text when isSubmitting is true", () => {
+  it("should disable inputs and buttons, show loading text when isSubmitting is true", async () => {
     render(<EditFlashcardDialog {...defaultProps} isSubmitting={true} />);
 
-    const submitButton = screen.getByRole("button", { name: /Saving.../i });
-    const cancelButton = screen.getByRole("button", { name: /Cancel/i });
-    const frontInput = screen.getByLabelText("Front");
-    const backInput = screen.getByLabelText("Back");
+    // Wait for the dialog to render with loading state
+    await waitFor(() => {
+      const submitButton = screen.getByRole("button", { name: /Saving.../i });
+      const cancelButton = screen.getByRole("button", { name: /Cancel/i });
+      const frontInput = screen.getByLabelText("Front");
+      const backInput = screen.getByLabelText("Back");
 
-    expect(submitButton).toBeDisabled();
-    expect(cancelButton).toBeDisabled();
-    expect(frontInput).toBeDisabled();
-    expect(backInput).toBeDisabled();
-    expect(screen.queryByRole("button", { name: /Save changes/i })).not.toBeInTheDocument();
+      expect(submitButton).toBeDisabled();
+      expect(cancelButton).toBeDisabled();
+      expect(frontInput).toBeDisabled();
+      expect(backInput).toBeDisabled();
+      expect(screen.queryByRole("button", { name: /Save changes/i })).not.toBeInTheDocument();
+    });
   });
 
   it("should display error message from error prop", () => {
