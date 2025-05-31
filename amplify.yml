@@ -8,8 +8,9 @@ frontend:
       commands:
         - env >> .env
         - npm run build
-        - mv node_modules ./.amplify-hosting/compute/default
-        - mv .env ./.amplify-hosting/compute/default/.env
+        - cp package.json ./.amplify-hosting/compute/default/package.json
+        - cp package-lock.json ./.amplify-hosting/compute/default/package-lock.json
+        - cp .env ./.amplify-hosting/compute/default/.env
   artifacts:
     baseDirectory: .amplify-hosting
     files:
@@ -17,4 +18,7 @@ frontend:
   cache:
     paths:
       - .npm/**/*
-      - node_modules/**/* 
+      - node_modules/**/*
+compute:
+  commands:
+    - npm ci --only=production --cache .npm --prefer-offline 

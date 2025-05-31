@@ -11,6 +11,28 @@ export const cookieOptions: CookieOptionsWithName = {
   maxAge: 60 * 60 * 24 * 7, // 1 week
 };
 
+// Validate Supabase environment variables
+function validateSupabaseEnv() {
+  const url = import.meta.env.SUPABASE_URL;
+  const key = import.meta.env.SUPABASE_KEY;
+
+  if (!url || !key) {
+    throw new Error(
+      "Missing Supabase environment variables. Please set SUPABASE_URL and SUPABASE_KEY in your .env file.\n" +
+        "You can find these values in your Supabase Dashboard > Settings > API"
+    );
+  }
+
+  // Basic URL validation
+  try {
+    new URL(url);
+  } catch {
+    throw new Error(`Invalid SUPABASE_URL: ${url}. Must be a valid URL.`);
+  }
+
+  return { url, key };
+}
+
 // Helper function to parse cookies from the request header
 function parseCookieHeader(cookieHeader: string | null): { name: string; value: string }[] {
   if (!cookieHeader) {
@@ -23,7 +45,9 @@ function parseCookieHeader(cookieHeader: string | null): { name: string; value: 
 }
 
 export const createSupabaseServerInstance = (context: { headers: Headers; cookies: AstroCookies }) => {
-  const supabase = createServerClient<Database>(import.meta.env.SUPABASE_URL, import.meta.env.SUPABASE_KEY, {
+  const { url, key } = validateSupabaseEnv();
+
+  const supabase = createServerClient<Database>(url, key, {
     cookieOptions,
     cookies: {
       getAll() {
