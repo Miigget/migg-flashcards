@@ -1,0 +1,24 @@
+---
+// Debug page to check environment variables
+const envVars = {
+  SUPABASE_URL: process.env.SUPABASE_URL ? "✅ SET" : "❌ MISSING",
+  SUPABASE_KEY: process.env.SUPABASE_KEY ? "✅ SET" : "❌ MISSING", 
+  OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY ? "✅ SET" : "❌ MISSING",
+  NODE_ENV: process.env.NODE_ENV || "not set"
+};
+---
+
+<html>
+<head>
+  <title>Debug - Environment Variables</title>
+</head>
+<body>
+  <h1>Environment Variables Status</h1>
+  <ul>
+    {Object.entries(envVars).map(([key, value]) => (
+      <li><strong>{key}:</strong> {value}</li>
+    ))}
+  </ul>
+  <p>If you see ❌ MISSING, set those variables in AWS Amplify Console</p>
+</body>
+</html> 
