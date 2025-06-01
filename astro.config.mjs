@@ -25,8 +25,8 @@ export default defineConfig({
     ssr: {
       external: ["fs", "path", "crypto"],
       noExternal: isBuilding
-        ? ["@supabase/supabase-js", "@supabase/ssr", "react", "react-dom", "dotenv"] // Bundle React and dotenv for production
-        : ["@supabase/supabase-js", "@supabase/ssr"], // Don't bundle React for dev
+        ? true // Bundle everything for AWS Lambda (except Node.js built-ins)
+        : ["@supabase/supabase-js", "@supabase/ssr"], // Selective bundling for dev
     },
   },
 });
