@@ -11,17 +11,8 @@ function loadProductionEnv() {
     typeof window !== "undefined" || // Skip in browser environment
     import.meta.env?.DEV // Skip in dev mode
   ) {
-    // eslint-disable-next-line no-console
-    console.log("[env-loader] Skipping env loading - browser/dev environment");
     return;
   }
-
-  // eslint-disable-next-line no-console
-  console.log("[env-loader] Starting env loading process...");
-  // eslint-disable-next-line no-console
-  console.log("[env-loader] Current working directory:", process.cwd());
-  // eslint-disable-next-line no-console
-  console.log("[env-loader] __dirname:", typeof __dirname !== "undefined" ? __dirname : "undefined");
 
   // Possible locations for .env.production in AWS Lambda
   const possiblePaths = [
@@ -38,21 +29,11 @@ function loadProductionEnv() {
     possiblePaths.push(join(__dirname, ".env.production"));
   }
 
-  // eslint-disable-next-line no-console
-  console.log("[env-loader] Searching in paths:", possiblePaths);
-
   for (const envPath of possiblePaths) {
     try {
-      // eslint-disable-next-line no-console
-      console.log(`[env-loader] Checking path: ${envPath}`);
-
       if (existsSync(envPath)) {
-        // eslint-disable-next-line no-console
-        console.log(`[env-loader] Found file at: ${envPath}`);
-
         const envContent = readFileSync(envPath, "utf8");
-        // eslint-disable-next-line no-console
-        console.log(`[env-loader] File content length: ${envContent.length}`);
+        let loadedCount = 0;
 
         // Simple .env parser that handles KEY=VALUE lines
         envContent.split("\n").forEach((line: string) => {
@@ -72,21 +53,14 @@ function loadProductionEnv() {
             // Only set if not already in process.env (environment takes precedence)
             if (!process.env[key]) {
               process.env[key] = value;
-              // eslint-disable-next-line no-console
-              console.log(`[env-loader] Set ${key}=${value.substring(0, 20)}...`);
-            } else {
-              // eslint-disable-next-line no-console
-              console.log(`[env-loader] Variable ${key} already exists in process.env`);
+              loadedCount++;
             }
           }
         });
 
         // eslint-disable-next-line no-console
-        console.log(`[env-loader] Successfully loaded .env.production from: ${envPath}`);
+        console.log(`[env-loader] Successfully loaded ${loadedCount} environment variables from .env.production`);
         return; // Exit after finding and loading the first valid file
-      } else {
-        // eslint-disable-next-line no-console
-        console.log(`[env-loader] File not found at: ${envPath}`);
       }
     } catch (error) {
       // eslint-disable-next-line no-console
@@ -95,12 +69,7 @@ function loadProductionEnv() {
   }
 
   // eslint-disable-next-line no-console
-  console.log("[env-loader] No .env.production file found in any of the expected locations");
-  // eslint-disable-next-line no-console
-  console.log(
-    "[env-loader] Current process.env keys:",
-    Object.keys(process.env).filter((key) => key.includes("SUPABASE"))
-  );
+  console.log("[env-loader] No .env.production file found");
 }
 
 // Load environment variables immediately when this module is imported

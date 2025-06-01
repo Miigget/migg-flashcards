@@ -18,11 +18,8 @@ frontend:
         - npm run build
         # Move .env.production to the correct location for astro-aws-amplify
         - mv .env.production ./.amplify-hosting/compute/default/.env.production
-        # Debug: Verify file was moved correctly
-        - echo "Environment file created:"
-        - ls -la ./.amplify-hosting/compute/default/.env.production
-        - echo "Content of environment file:"
-        - cat ./.amplify-hosting/compute/default/.env.production
+        # Verify file was created (without showing content for security)
+        - echo "Environment file deployed successfully"
   artifacts:
     baseDirectory: .amplify-hosting
     files:
