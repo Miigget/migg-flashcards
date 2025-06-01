@@ -13,8 +13,9 @@ export const cookieOptions: CookieOptionsWithName = {
 
 // Validate Supabase environment variables
 function validateSupabaseEnv() {
-  const url = import.meta.env.SUPABASE_URL;
-  const key = import.meta.env.SUPABASE_KEY;
+  // Use process.env for runtime environment variables (AWS Lambda)
+  const url = process.env.SUPABASE_URL || import.meta.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_KEY || import.meta.env.SUPABASE_KEY;
 
   if (!url || !key) {
     throw new Error(

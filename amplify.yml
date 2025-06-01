@@ -6,6 +6,10 @@ frontend:
         - npm ci --prefer-offline --no-audit --no-fund
     build:
       commands:
+        # Export environment variables to .env.production for SSR runtime
+        - env | grep -e SUPABASE_URL >> .env.production
+        - env | grep -e SUPABASE_KEY >> .env.production
+        - env | grep -e OPENROUTER_API_KEY >> .env.production
         - npm run build
   artifacts:
     baseDirectory: .amplify-hosting

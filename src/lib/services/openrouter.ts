@@ -70,9 +70,9 @@ export function createOpenRouterClient(config: {
  */
 function validateEnv() {
   const result = envSchema.safeParse({
-    OPENROUTER_API_KEY: import.meta.env.OPENROUTER_API_KEY,
-    PUBLIC_APP_URL: import.meta.env.PUBLIC_APP_URL,
-    PUBLIC_APP_NAME: import.meta.env.PUBLIC_APP_NAME,
+    OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY || import.meta.env.OPENROUTER_API_KEY,
+    PUBLIC_APP_URL: process.env.PUBLIC_APP_URL || import.meta.env.PUBLIC_APP_URL,
+    PUBLIC_APP_NAME: process.env.PUBLIC_APP_NAME || import.meta.env.PUBLIC_APP_NAME,
   });
 
   if (!result.success) {
