@@ -3,22 +3,19 @@ frontend:
   phases:
     preBuild:
       commands:
-        - npm ci --cache .npm --prefer-offline
+        - npm i -g pnpm
+        - pnpm config set store-dir .pnpm-store
+        - pnpm i
     build:
       commands:
-        - env >> .env
-        - npm run build
-        - mv node_modules ./.amplify-hosting/compute/default
-        - mv .env ./.amplify-hosting/compute/default/.env
+        - pnpm run build
+        - cd .amplify-hosting/compute/default
+        - cp ../../../package.json .
+        - pnpm i --prod --prefer-offline
   artifacts:
     baseDirectory: .amplify-hosting
     files:
       - '**/*'
   cache:
     paths:
-      - '.npm/**/*'
-compute:
-  commands:
-    - npm start
-  env:
-    PORT: 3000 
+      - .pnpm-store/**/* 
