@@ -1,3 +1,6 @@
+// Load environment variables from .env.production in AWS Lambda runtime
+import "@/lib/env-loader";
+
 import { defineMiddleware } from "astro:middleware";
 // import { type MiddlewareHandler } from "astro";
 import { createSupabaseServerInstance } from "@/db/supabase.client";

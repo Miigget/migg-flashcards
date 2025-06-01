@@ -7,9 +7,9 @@ frontend:
     build:
       commands:
         # Export environment variables to .env.production for SSR runtime
-        - env | grep -e SUPABASE_URL >> .env.production
-        - env | grep -e SUPABASE_KEY >> .env.production
-        - env | grep -e OPENROUTER_API_KEY >> .env.production
+        - echo "SUPABASE_URL=${SUPABASE_URL}" >> .env.production
+        - echo "SUPABASE_KEY=${SUPABASE_KEY}" >> .env.production
+        - echo "OPENROUTER_API_KEY=${OPENROUTER_API_KEY}" >> .env.production
         - npm run build
         # Move .env.production to the correct location for astro-aws-amplify
         - mv .env.production ./.amplify-hosting/compute/default/.env.production
