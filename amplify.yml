@@ -10,6 +10,11 @@ frontend:
         - echo "SUPABASE_URL=${SUPABASE_URL}" >> .env.production
         - echo "SUPABASE_KEY=${SUPABASE_KEY}" >> .env.production
         - echo "OPENROUTER_API_KEY=${OPENROUTER_API_KEY}" >> .env.production
+        # Also export to build environment (these will be available as process.env in runtime)
+        - export SUPABASE_URL="${SUPABASE_URL}"
+        - export SUPABASE_KEY="${SUPABASE_KEY}"
+        - export OPENROUTER_API_KEY="${OPENROUTER_API_KEY}"
+        # Build the application
         - npm run build
         # Move .env.production to the correct location for astro-aws-amplify
         - mv .env.production ./.amplify-hosting/compute/default/.env.production
