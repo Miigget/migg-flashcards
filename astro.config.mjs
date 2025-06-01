@@ -6,6 +6,10 @@ import sitemap from "@astrojs/sitemap";
 import tailwindcss from "@tailwindcss/vite";
 import awsAmplify from "astro-aws-amplify";
 
+// Detect if we're building for production (AWS Lambda needs React bundled)
+// eslint-disable-next-line no-undef
+const isBuilding = process.argv.includes("build");
+
 // https://astro.build/config
 export default defineConfig({
   site: "https://main.d2k1nzj1fqurn2.amplifyapp.com", // Your AWS Amplify domain
@@ -20,7 +24,9 @@ export default defineConfig({
     plugins: [tailwindcss()],
     ssr: {
       external: ["fs", "path", "crypto"],
-      noExternal: ["@supabase/supabase-js", "@supabase/ssr"],
+      noExternal: isBuilding
+        ? ["@supabase/supabase-js", "@supabase/ssr", "react", "react-dom"] // Bundle React for production
+        : ["@supabase/supabase-js", "@supabase/ssr"], // Don't bundle React for dev
     },
   },
 });

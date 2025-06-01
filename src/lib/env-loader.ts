@@ -11,7 +11,7 @@ function loadProductionEnv() {
     import.meta.env?.DEV ||
     typeof process === "undefined" ||
     typeof window !== "undefined" || // Skip in browser environment
-    process.env.NODE_ENV !== "production"
+    (process.env.NODE_ENV && process.env.NODE_ENV !== "production") // Check if defined and not production
   ) {
     return;
   }
