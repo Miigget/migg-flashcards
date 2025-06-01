@@ -1,7 +1,7 @@
-// Load environment variables from .env.production in AWS Lambda runtime (only in production)
-// Skip in dev mode to avoid Node.js module resolution issues
-if (typeof window === "undefined" && import.meta.env?.PROD) {
-  // Use dynamic import for production only (when PROD is true)
+// Load environment variables from .env.production in AWS Lambda runtime
+// AWS Amplify creates this file during build and moves it to compute directory
+if (typeof window === "undefined" && !import.meta.env?.DEV) {
+  // Use dynamic import for server environments (not dev mode)
   import("@/lib/env-loader").catch((error) => {
     // eslint-disable-next-line no-console
     console.warn("Failed to load env-loader:", error);
