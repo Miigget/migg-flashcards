@@ -4,17 +4,15 @@ import { defineConfig } from "astro/config";
 import react from "@astrojs/react";
 import sitemap from "@astrojs/sitemap";
 import tailwindcss from "@tailwindcss/vite";
-import node from "@astrojs/node";
+import awsAmplify from "astro-aws-amplify";
 
 // https://astro.build/config
 export default defineConfig({
-  site: "https://your-app-domain.com", // Will be updated during deployment
+  site: "https://main.d2xet1u7h33bft.amplifyapp.com", // Your AWS Amplify domain
   output: "server",
-  adapter: node({
-    mode: "standalone",
-  }),
-  experimental: {
-    session: true,
+  adapter: awsAmplify(),
+  image: {
+    service: { entrypoint: "astro/assets/services/noop" },
   },
   integrations: [react(), sitemap()],
   server: { port: 3000 },
