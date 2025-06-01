@@ -11,6 +11,13 @@ frontend:
         - env | grep -e SUPABASE_KEY >> .env.production
         - env | grep -e OPENROUTER_API_KEY >> .env.production
         - npm run build
+        # Move .env.production to the correct location for astro-aws-amplify
+        - mv .env.production ./.amplify-hosting/compute/default/.env.production
+        # Debug: Verify file was moved correctly
+        - echo "Environment file created:"
+        - ls -la ./.amplify-hosting/compute/default/.env.production
+        - echo "Content of environment file:"
+        - cat ./.amplify-hosting/compute/default/.env.production
   artifacts:
     baseDirectory: .amplify-hosting
     files:
