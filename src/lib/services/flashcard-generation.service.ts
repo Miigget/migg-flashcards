@@ -252,7 +252,7 @@ class FlashcardGenerationService {
         8. For longer texts, aim to cover all major concepts and important details
         9. IMPORTANT: Do not create more than 50 flashcards, as this will cause the generation to fail
         
-        Respond ONLY with the JSON structure of flashcards.
+        Respond ONLY with the JSON structure of flashcards, do not include any other text or comments.
       `;
 
       // Send request to OpenRouter
