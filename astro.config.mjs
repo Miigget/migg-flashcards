@@ -8,7 +8,7 @@ import awsAmplify from "astro-aws-amplify";
 
 // https://astro.build/config
 export default defineConfig({
-  site: "https://main.d2xet1u7h33bft.amplifyapp.com", // Your AWS Amplify domain
+  site: "https://main.d2k1nzj1fqurn2.amplifyapp.com", // Your AWS Amplify domain
   output: "server",
   adapter: awsAmplify(),
   image: {
@@ -18,5 +18,8 @@ export default defineConfig({
   server: { port: 3000 },
   vite: {
     plugins: [tailwindcss()],
+    ssr: {
+      noExternal: true,
+    },
   },
 });
