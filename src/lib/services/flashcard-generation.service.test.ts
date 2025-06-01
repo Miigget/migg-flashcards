@@ -350,12 +350,13 @@ describe("Flashcard Generation Service", () => {
       // 2. Mock error log insert success (as fallback mechanism logs the error)
       mockErrorLogsChain.mockQueryResult({ data: null, error: null });
 
-      // 3. Mock OpenRouter failure
+      // 3. Mock OpenRouter failure for all models
       mockChat.mockRejectedValue(aiError);
 
       // Act & Assert: Call the service method and expect it to throw
+      // Note: With the new multi-model approach, error will include model name
       await expect(flashcardGenerationService.generateFlashcards(inputText)).rejects.toThrow(
-        `Flashcard generation failed: ${aiError.message}`
+        `${aiError.message} (meta-llama/llama-3.1-8b-instruct)`
       );
 
       // Assert: Ensure the error log was inserted into the DB
@@ -433,12 +434,13 @@ describe("Flashcard Generation Service", () => {
       mockGenerationsChain.mockQueryResult({ data: mockGenerationRecord });
       // 2. Mock error log insert success
       mockErrorLogsChain.mockQueryResult({ data: null, error: null });
-      // 3. Mock OpenRouter success with invalid response
+      // 3. Mock OpenRouter success with invalid response for all models
       mockChat.mockResolvedValue(invalidAiResponse);
 
       // Act & Assert: Call the service method and expect it to throw
+      // Note: With the new multi-model approach, error will include model name and may be duplicated
       await expect(flashcardGenerationService.generateFlashcards(inputText)).rejects.toThrow(
-        "Flashcard generation failed: Empty content returned from AI service"
+        "Empty content returned from AI service (meta-llama/llama-3.1-8b-instruct)"
       );
 
       // Assert: Ensure the error log was inserted into the DB

@@ -92,7 +92,16 @@ export class OpenRouterService {
           this.handleErrorResponse(response.status, errorData);
         }
 
-        return response.json();
+        // Add error handling for JSON parsing
+        try {
+          return await response.json();
+        } catch {
+          // Log the original response for debugging
+          const responseText = await response.text().catch(() => "Unable to read response text");
+          throw new NetworkError(
+            `Failed to parse JSON response from OpenRouter API. Response was: ${responseText.substring(0, 200)}...`
+          );
+        }
       });
 
       // Parse and return response
@@ -129,7 +138,17 @@ export class OpenRouterService {
         this.handleErrorResponse(response.status, errorData);
       }
 
-      const data = await response.json();
+      // Add error handling for JSON parsing
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        // Log the original response for debugging
+        const responseText = await response.text().catch(() => "Unable to read response text");
+        throw new NetworkError(
+          `Failed to parse JSON response from OpenRouter API. Response was: ${responseText.substring(0, 200)}...`
+        );
+      }
 
       // Map API response to our Model interface
       if (Array.isArray(data.data)) {

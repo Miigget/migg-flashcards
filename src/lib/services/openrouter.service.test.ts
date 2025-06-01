@@ -170,23 +170,39 @@ describe("OpenRouterService", () => {
       await expect(service.chat({})).rejects.toThrow(InvalidRequestError);
     });
 
-    it("should handle API error responses", async () => {
-      const testCases = [
-        { status: 400, error: InvalidRequestError, errorData: { error: { message: "Bad request" } } },
-        { status: 401, error: AuthenticationError, errorData: { error: { message: "Invalid key" } } },
-        { status: 402, error: NetworkError, errorData: { error: { message: "Quota exceeded" } } },
-        { status: 403, error: AuthenticationError, errorData: { error: { message: "Content filtered" } } },
-        { status: 429, error: NetworkError, errorData: { error: { message: "Rate limit" } } },
-        { status: 503, error: NetworkError, errorData: { error: { message: "Model down" } } },
-        { status: 500, error: OpenRouterError, errorData: { error: { message: "Server error" } } },
-      ];
+    it("should handle API error responses - 400 Bad Request", async () => {
+      mockFetch.mockResolvedValueOnce(createMockResponse(400, { error: { message: "Bad request" } }, false));
+      await expect(service.chat(chatOptions)).rejects.toThrow(InvalidRequestError);
+    });
 
-      for (const { status, error, errorData } of testCases) {
-        mockFetch.mockResolvedValueOnce(createMockResponse(status, errorData, false));
-        // We expect chat to throw, not return a specific structure on error
-        await expect(service.chat(chatOptions), `Status ${status}`).rejects.toThrow(error);
-        mockFetch.mockClear();
-      }
+    it("should handle API error responses - 401 Unauthorized", async () => {
+      mockFetch.mockResolvedValueOnce(createMockResponse(401, { error: { message: "Invalid key" } }, false));
+      await expect(service.chat(chatOptions)).rejects.toThrow(AuthenticationError);
+    });
+
+    it("should handle API error responses - 402 Payment Required", async () => {
+      mockFetch.mockResolvedValueOnce(createMockResponse(402, { error: { message: "Quota exceeded" } }, false));
+      await expect(service.chat(chatOptions)).rejects.toThrow(NetworkError);
+    });
+
+    it("should handle API error responses - 403 Forbidden", async () => {
+      mockFetch.mockResolvedValueOnce(createMockResponse(403, { error: { message: "Content filtered" } }, false));
+      await expect(service.chat(chatOptions)).rejects.toThrow(AuthenticationError);
+    });
+
+    it("should handle API error responses - 429 Rate Limited", async () => {
+      mockFetch.mockResolvedValueOnce(createMockResponse(429, { error: { message: "Rate limit" } }, false));
+      await expect(service.chat(chatOptions)).rejects.toThrow(NetworkError);
+    });
+
+    it("should handle API error responses - 503 Service Unavailable", async () => {
+      mockFetch.mockResolvedValueOnce(createMockResponse(503, { error: { message: "Model down" } }, false));
+      await expect(service.chat(chatOptions)).rejects.toThrow(NetworkError);
+    });
+
+    it("should handle API error responses - 500 Internal Server Error", async () => {
+      mockFetch.mockResolvedValueOnce(createMockResponse(500, { error: { message: "Server error" } }, false));
+      await expect(service.chat(chatOptions)).rejects.toThrow(OpenRouterError);
     });
 
     it("should handle non-json error response", async () => {

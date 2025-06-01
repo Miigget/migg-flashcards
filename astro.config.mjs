@@ -19,7 +19,8 @@ export default defineConfig({
   vite: {
     plugins: [tailwindcss()],
     ssr: {
-      noExternal: true,
+      external: ["fs", "path", "crypto"],
+      noExternal: ["@supabase/supabase-js", "@supabase/ssr"],
     },
   },
 });

@@ -1,5 +1,12 @@
-// Load environment variables from .env.production in AWS Lambda runtime
-import "@/lib/env-loader";
+// Load environment variables from .env.production in AWS Lambda runtime (only in production)
+// Skip in dev mode to avoid Node.js module resolution issues
+if (typeof window === "undefined" && !import.meta.env?.DEV && process.env.NODE_ENV === "production") {
+  // Use dynamic import for production only
+  import("@/lib/env-loader").catch((error) => {
+    // eslint-disable-next-line no-console
+    console.warn("Failed to load env-loader:", error);
+  });
+}
 
 import { defineMiddleware } from "astro:middleware";
 // import { type MiddlewareHandler } from "astro";

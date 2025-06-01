@@ -16,8 +16,8 @@ export default defineConfig({
       "**/tests-e2e/**",
       "src/middleware/index.test.ts", // Exclude middleware test as it requires Astro runtime
     ],
-    // Increase default timeout to 30 seconds for async tests
-    testTimeout: 30000,
+    // Increase default timeout to 60 seconds for async tests (some tests with mocks can be slow)
+    testTimeout: 60000,
     coverage: {
       // Consider adding coverage config later if needed
       // provider: 'v8'

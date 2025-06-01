@@ -125,7 +125,17 @@ export function useGenerateFlashcards() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch {
+          // Handle JSON parsing error for error responses
+          throw {
+            message: "Błąd serwera - nieprawidłowa odpowiedź",
+            status: response.status,
+            code: "JSON_PARSE_ERROR",
+          };
+        }
         throw {
           message: errorData.message || "Błąd podczas generowania fiszek",
           status: response.status,
@@ -133,7 +143,17 @@ export function useGenerateFlashcards() {
         };
       }
 
-      const data: GenerateApiResponse = await response.json();
+      let data: GenerateApiResponse;
+      try {
+        data = await response.json();
+      } catch {
+        // Handle JSON parsing error for successful responses
+        throw {
+          message: "Błąd podczas parsowania odpowiedzi serwera",
+          status: response.status,
+          code: "JSON_PARSE_ERROR",
+        };
+      }
 
       // Tworzenie kandydatów na fiszki
       const candidates: CandidateViewModel[] = data.candidates.map((candidate) => ({
@@ -278,7 +298,17 @@ export function useGenerateFlashcards() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch {
+          // Handle JSON parsing error for error responses
+          throw {
+            message: "Błąd serwera podczas pobierania kolekcji",
+            status: response.status,
+            code: "JSON_PARSE_ERROR",
+          };
+        }
         throw {
           message: errorData.message || "Błąd podczas pobierania kolekcji",
           status: response.status,
@@ -286,7 +316,17 @@ export function useGenerateFlashcards() {
         };
       }
 
-      const collections: CollectionsApiResponse = await response.json();
+      let collections: CollectionsApiResponse;
+      try {
+        collections = await response.json();
+      } catch {
+        // Handle JSON parsing error for successful responses
+        throw {
+          message: "Błąd podczas parsowania odpowiedzi serwera",
+          status: response.status,
+          code: "JSON_PARSE_ERROR",
+        };
+      }
 
       updateViewModel({
         availableCollections: collections,
@@ -353,7 +393,17 @@ export function useGenerateFlashcards() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch {
+          // Handle JSON parsing error for error responses
+          throw {
+            message: "Błąd serwera podczas zapisywania fiszek",
+            status: response.status,
+            code: "JSON_PARSE_ERROR",
+          };
+        }
         throw {
           message: errorData.message || "Błąd podczas zapisywania fiszek",
           status: response.status,
@@ -361,7 +411,17 @@ export function useGenerateFlashcards() {
         };
       }
 
-      const savedFlashcards: FlashcardDTO[] = await response.json();
+      let savedFlashcards: FlashcardDTO[];
+      try {
+        savedFlashcards = await response.json();
+      } catch {
+        // Handle JSON parsing error for successful responses
+        throw {
+          message: "Błąd podczas parsowania odpowiedzi serwera",
+          status: response.status,
+          code: "JSON_PARSE_ERROR",
+        };
+      }
 
       // Wyświetl komunikat sukcesu i zresetuj stan
       toast.success(`Zapisano ${savedFlashcards.length} fiszek do kolekcji "${viewModel.selectedCollection}"`, {

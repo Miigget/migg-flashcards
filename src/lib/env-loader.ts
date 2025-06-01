@@ -6,8 +6,13 @@ import { join } from "path";
  * This is needed because Node.js doesn't automatically load .env.production
  */
 function loadProductionEnv() {
-  // Skip if not in production or if we're in build-time
-  if (import.meta.env?.DEV || typeof process === "undefined") {
+  // Skip if not in production, if we're in build-time, or if we're not in a Node.js environment
+  if (
+    import.meta.env?.DEV ||
+    typeof process === "undefined" ||
+    typeof window !== "undefined" || // Skip in browser environment
+    process.env.NODE_ENV !== "production"
+  ) {
     return;
   }
 
@@ -19,7 +24,7 @@ function loadProductionEnv() {
       const envContent = readFileSync(envPath, "utf8");
 
       // Simple .env parser that handles KEY=VALUE lines
-      envContent.split("\n").forEach((line) => {
+      envContent.split("\n").forEach((line: string) => {
         const trimmedLine = line.trim();
 
         // Skip empty lines and comments
@@ -40,11 +45,14 @@ function loadProductionEnv() {
         }
       });
 
+      // eslint-disable-next-line no-console
       console.log("[env-loader] Successfully loaded .env.production");
     } else {
+      // eslint-disable-next-line no-console
       console.log("[env-loader] No .env.production file found at:", envPath);
     }
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error("[env-loader] Failed to load .env.production:", error);
   }
 }

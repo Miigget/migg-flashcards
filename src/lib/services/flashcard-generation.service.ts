@@ -213,6 +213,37 @@ class FlashcardGenerationService {
    * Calls the OpenRouter AI service to generate flashcards
    */
   private async callAIService(inputText: string, userId: string): Promise<FlashcardCandidateDto[]> {
+    const models = ["openai/gpt-4o-mini", "anthropic/claude-3-haiku", "meta-llama/llama-3.1-8b-instruct"];
+
+    for (const model of models) {
+      try {
+        return await this.tryGenerateWithModel(inputText, userId, model);
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          `Failed to generate flashcards with model ${model}:`,
+          error instanceof Error ? error.message : error
+        );
+
+        // If this is the last model, throw the error
+        if (model === models[models.length - 1]) {
+          throw error;
+        }
+        // Otherwise, continue to next model
+      }
+    }
+
+    throw new Error("All models failed to generate flashcards");
+  }
+
+  /**
+   * Attempts to generate flashcards with a specific model
+   */
+  private async tryGenerateWithModel(
+    inputText: string,
+    userId: string,
+    model: string
+  ): Promise<FlashcardCandidateDto[]> {
     try {
       // Get the OpenRouter client
       const openRouter = getOpenRouterClient();
@@ -220,23 +251,7 @@ class FlashcardGenerationService {
       // Create a timestamp for all flashcards
       const now = new Date().toISOString();
 
-      // Create a JSON schema for structured response
-      const jsonSchema = openRouter
-        .createJsonSchema("FlashcardResponse")
-        .addProperty("flashcards", "array", true, {
-          items: {
-            type: "object",
-            properties: {
-              front: { type: "string", description: "The front side of the flashcard, containing the question" },
-              back: { type: "string", description: "The back side of the flashcard, containing the answer" },
-            },
-            required: ["front", "back"],
-            additionalProperties: false,
-          },
-        })
-        .build();
-
-      // Build the system prompt
+      // Build the system prompt with clear JSON format instructions
       const systemPrompt = `
         You are a helpful AI assistant specialized in creating high-quality flashcards from educational content.
         Your task is to extract key concepts and knowledge from the provided text and create flashcards.
@@ -252,60 +267,68 @@ class FlashcardGenerationService {
         8. For longer texts, aim to cover all major concepts and important details
         9. IMPORTANT: Do not create more than 50 flashcards, as this will cause the generation to fail
         
-        Respond ONLY with the JSON structure of flashcards, do not include any other text or comments.
+        IMPORTANT: You must respond with a valid JSON object in exactly this format:
+        {
+          "flashcards": [
+            {
+              "front": "Question text here",
+              "back": "Answer text here"
+            }
+          ]
+        }
+        
+        Do not include any other text, explanations, or comments. Only return the JSON object.
       `;
 
-      // Send request to OpenRouter
+      // Send request to OpenRouter WITHOUT structured output
       const response = await openRouter.chat({
         message: `Create flashcards from this text: ${inputText}`,
         systemMessage: systemPrompt,
-        model: "openai/gpt-4o-mini", // Can be configured as needed
-        responseFormat: jsonSchema,
+        model: model,
+        // Remove responseFormat to avoid compatibility issues
         parameters: {
           temperature: 0.3, // Niższa temperatura dla bardziej spójnych wyników
           max_tokens: 4000, // Zwiększony limit tokenów dla większej liczby fiszek
         },
       });
 
-      // Debug the response
-      // eslint-disable-next-line no-console
-      console.log("OpenRouter response:", JSON.stringify(response, null, 2));
-
       // Check if response has the expected structure
       if (!response || !response.choices || !response.choices.length || !response.choices[0].message) {
-        throw new Error("Invalid response structure from AI service");
+        throw new Error(`Invalid response structure from AI service (${model})`);
       }
 
       // Extract and validate the response
       const content = response.choices[0].message.content;
 
       if (!content) {
-        throw new Error("Empty content returned from AI service");
+        throw new Error(`Empty content returned from AI service (${model})`);
+      }
+
+      // Clean the content - remove markdown code blocks if present
+      let cleanContent = content.trim();
+      if (cleanContent.startsWith("```json")) {
+        cleanContent = cleanContent.replace(/^```json\s*/, "").replace(/\s*```$/, "");
+      } else if (cleanContent.startsWith("```")) {
+        cleanContent = cleanContent.replace(/^```\s*/, "").replace(/\s*```$/, "");
       }
 
       // Try to parse the JSON content
       let jsonResponse;
       try {
-        jsonResponse = JSON.parse(content);
-      } catch (parseError) {
+        jsonResponse = JSON.parse(cleanContent);
+      } catch {
         // eslint-disable-next-line no-console
-        console.error("Failed to parse JSON response:", content);
-        // eslint-disable-next-line no-console
-        console.error("Parse error details:", parseError);
-        throw new Error("Failed to parse AI response: invalid JSON format");
+        console.error(`Failed to parse AI response as JSON from ${model}. Content:`, cleanContent.substring(0, 500));
+        throw new Error(`Failed to parse AI response: invalid JSON format (${model})`);
       }
-
-      // Log the parsed response
-      // eslint-disable-next-line no-console
-      console.log("Parsed JSON response:", JSON.stringify(jsonResponse, null, 2));
 
       // Validate with Zod
       const validationResult = flashcardSchema.safeParse(jsonResponse);
 
       if (!validationResult.success) {
         // eslint-disable-next-line no-console
-        console.error("Validation error:", validationResult.error);
-        throw new Error("AI response validation failed: " + validationResult.error.message);
+        console.error(`AI response validation failed for ${model}:`, validationResult.error.message);
+        throw new Error(`AI response validation failed: ${validationResult.error.message} (${model})`);
       }
 
       // Transform the validated response into FlashcardCandidateDto[]
@@ -324,49 +347,17 @@ class FlashcardGenerationService {
 
       return candidates;
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error("Error calling OpenRouter service:", error);
-
-      // Szczegółowe logowanie błędów OpenRouter
-      if (error && typeof error === "object" && "message" in error) {
-        // eslint-disable-next-line no-console
-        console.error("Error message:", error.message);
-
-        // Sprawdź czy to błąd od OpenRouter z metadanymi
-        if ("error" in error && typeof error.error === "object" && error.error !== null) {
-          const openRouterError = error.error as Record<string, unknown>;
-          // eslint-disable-next-line no-console
-          console.error("OpenRouter error details:", openRouterError);
-
-          // Sprawdź czy są dostępne szczegółowe metadane
-          if (
-            "metadata" in openRouterError &&
-            typeof openRouterError.metadata === "object" &&
-            openRouterError.metadata !== null
-          ) {
-            const metadata = openRouterError.metadata as Record<string, unknown>;
-            // eslint-disable-next-line no-console
-            console.error("Provider metadata:", metadata);
-
-            // Wypisz surową odpowiedź od providera (np. OpenAI)
-            if ("raw" in metadata && typeof metadata.raw === "string") {
-              try {
-                const rawError = JSON.parse(metadata.raw);
-                // eslint-disable-next-line no-console
-                console.error("Raw provider error:", rawError);
-              } catch {
-                // eslint-disable-next-line no-console
-                console.error("Raw provider response (not JSON):", metadata.raw);
-              }
-            }
-          }
-        }
+      // Check if this is a JSON parsing error
+      if (error instanceof Error && error.message.includes("Failed to parse JSON response")) {
+        throw new Error(
+          `Flashcard generation failed due to invalid API response from ${model}. This might be a temporary issue with the AI service.`
+        );
       }
 
-      // Throw the error instead of returning fallback data
+      // Re-throw the error with model information
       throw error instanceof Error
-        ? new Error(`Flashcard generation failed: ${error.message}`)
-        : new Error("Flashcard generation failed: Unknown error");
+        ? new Error(`${error.message} (${model})`)
+        : new Error(`Flashcard generation failed: Unknown error (${model})`);
     }
   }
 
