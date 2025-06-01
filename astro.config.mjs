@@ -25,7 +25,7 @@ export default defineConfig({
     ssr: {
       external: ["fs", "path", "crypto"],
       noExternal: isBuilding
-        ? ["@supabase/supabase-js", "@supabase/ssr", "react", "react-dom"] // Bundle React for production
+        ? ["@supabase/supabase-js", "@supabase/ssr", "react", "react-dom", "dotenv"] // Bundle React and dotenv for production
         : ["@supabase/supabase-js", "@supabase/ssr"], // Don't bundle React for dev
     },
   },
